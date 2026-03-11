@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Route
+from .models import Route, Customer
 from accounts.serializers import UserSerializer
 
 class RouteSerializer(serializers.ModelSerializer):
@@ -22,3 +22,15 @@ class AssignDriverSerializer(serializers.Serializer):
         except User.DoesNotExist:
             raise serializers.ValidationError("Driver not found.")
         return value
+
+class CustomerSerializer(serializers.ModelSerializer):
+    route_name = serializers.CharField(source='route.name', read_only=True)
+
+    class Meta:
+        model = Customer
+        fields = (
+            'id', 'user', 'full_name', 'phone_number', 'route', 
+            'route_name', 'milk_type', 'daily_qty', 'rate_per_liter', 
+            'status', 'created_at'
+        )
+        read_only_fields = ('created_at',)
