@@ -48,22 +48,21 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # <--- Add this
-    'django.contrib.sessions.middleware.SessionMiddleware'
 ]
-...
+
 CORS_ALLOWED_ORIGINS = [
-    "https://rasad-production.up.railway.app/api", # Add your actual frontend URL here
     "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://rasad-production.up.railway.app",
 ]
+
 ROOT_URLCONF = 'Rasad.urls'
 
 TEMPLATES = [
@@ -136,7 +135,10 @@ SPECTACULAR_SETTINGS = {
 }
 CSRF_TRUSTED_ORIGINS = [
     "https://rasad-production.up.railway.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
 ]
+
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
