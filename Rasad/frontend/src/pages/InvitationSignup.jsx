@@ -13,6 +13,7 @@ const InvitationSignup = () => {
   const [formData, setFormData] = useState({
     username: '',
     full_name: '',
+    email: '',
     password: '',
     phone_number: '',
     license_number: '',
@@ -103,8 +104,17 @@ const InvitationSignup = () => {
 
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
-            <label>Email (Pre-filled)</label>
-            <input type="email" value={invitation.email} disabled className="glass-input muted" />
+            <label>Email Address</label>
+            <input
+              type="email"
+              name="email"
+              placeholder="e.g. user@gmail.com"
+              required
+              className="glass-input"
+              value={formData.email}
+              onChange={handleChange}
+            />
+            <p className="field-hint">Only Gmail addresses are supported.</p>
           </div>
 
           <div className="form-group">

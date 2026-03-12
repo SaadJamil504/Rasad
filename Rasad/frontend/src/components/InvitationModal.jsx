@@ -51,19 +51,7 @@ const InvitationModal = ({ isOpen, onClose, role, onInviteSuccess }) => {
         
         {!generatedLink ? (
           <form onSubmit={handleSubmit} className="modal-body">
-            <p>Enter the {role}'s email to generate a secure invitation link.</p>
-            <div className="form-group">
-              <label htmlFor="email">Email Address</label>
-              <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="e.g. driver@example.com"
-                required
-                className="glass-input"
-              />
-            </div>
+            <p>Generate a secure invitation link for a new {role}.</p>
             {error && <div className="error-message">{error}</div>}
             <div className="modal-footer">
               <button type="button" onClick={onClose} className="btn-secondary" disabled={loading}>

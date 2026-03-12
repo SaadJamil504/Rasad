@@ -30,7 +30,7 @@ class Route(models.Model):
         return f"{self.name} - {self.owner.username}"
 
 class Invitation(models.Model):
-    email = models.EmailField()
+    email = models.EmailField(null=True, blank=True)
     token = models.CharField(max_length=100, unique=True)
     role = models.CharField(max_length=20, choices=User.ROLE_CHOICES)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_invitations')

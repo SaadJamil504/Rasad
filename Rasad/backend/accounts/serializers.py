@@ -108,6 +108,9 @@ class InvitationSerializer(serializers.ModelSerializer):
         model = Invitation
         fields = ('id', 'email', 'role', 'token', 'is_used', 'created_at', 'expires_at')
         read_only_fields = ('token', 'is_used', 'created_at', 'expires_at')
+        extra_kwargs = {
+            'email': {'required': False, 'allow_null': True, 'allow_blank': True}
+        }
 
     def create(self, validated_data):
         validated_data['token'] = str(uuid.uuid4())
@@ -121,7 +124,7 @@ class InvitationSignupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('token', 'username', 'password', 'full_name', 'phone_number', 'license_number', 'milk_type', 'daily_quantity', 'address')
+        fields = ('token', 'username', 'email', 'password', 'full_name', 'phone_number', 'license_number', 'milk_type', 'daily_quantity', 'address')
 
     def validate_token(self, value):
         try:
@@ -131,6 +134,14 @@ class InvitationSignupSerializer(serializers.ModelSerializer):
             return value
         except Invitation.DoesNotExist:
             raise serializers.ValidationError("Invalid or used invitation token.")
+
+    def validate_email(self, value):
+        email = value.lower()
+        if not email.endswith('@gmail.com'):
+            raise serializers.ValidationError("Only Gmail addresses are accepted.")
+        if User.objects.filter(email=email).exists():
+            raise serializers.ValidationError("This email is already registered. Please login.")
+        return email
 
     def create(self, validated_data):
         token = validated_data.pop('token')
@@ -144,7 +155,6 @@ class InvitationSignupSerializer(serializers.ModelSerializer):
             password=password,
             role=invitation.role,
             parent_owner=invitation.owner,
-            email=invitation.email,
             **validated_data
         )
         
