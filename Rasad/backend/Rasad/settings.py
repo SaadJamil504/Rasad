@@ -61,10 +61,9 @@ MIDDLEWARE = [
 ]
 ...
 CORS_ALLOWED_ORIGINS = [
-    "https://your-frontend-url.up.railway.app",
-    "http://127.0.0.1:5173",
+    "https://rasad-production.up.railway.app/api", # Add your actual frontend URL here
+    "http://localhost:5173",
 ]
-
 ROOT_URLCONF = 'Rasad.urls'
 
 TEMPLATES = [
@@ -135,7 +134,12 @@ SPECTACULAR_SETTINGS = {
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }
-
+CSRF_TRUSTED_ORIGINS = [
+    "https://rasad-production.up.railway.app",
+]
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 # Email Settings
 EMAIL_BACKEND = env('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = env('EMAIL_HOST')
