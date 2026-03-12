@@ -1,0 +1,1 @@
+web: gunicorn Rasad.wsgi:application
