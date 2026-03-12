@@ -48,6 +48,15 @@ api.interceptors.response.use(
     }
 
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // Check for "user_not_found" error which happens if database is reset
+      const errorData = error.response.data;
+      if (errorData.code === 'user_not_found' || (typeof errorData.detail === 'string' && errorData.detail.includes('not found'))) {
+        console.warn('[API] Current user not found in database. Logging out.');
+        localStorage.clear();
+        window.location.href = '/login?error=account_deleted';
+        return Promise.reject(error);
+      }
+
       if (isRefreshing) {
         console.log('[API] Token refresh already in progress, queueing request...');
         return new Promise((resolve, reject) => {
@@ -70,13 +79,12 @@ api.interceptors.response.use(
 
         const response = await axios.post('https://rasad-production.up.railway.app/api/accounts/login/refresh/', {
           refresh: refreshToken,
-        }, { timeout: 10000 }); // Dedicated timeout for refresh
+        }, { timeout: 10000 });
         
         const newAccessToken = response.data.access;
         localStorage.setItem('access_token', newAccessToken);
         console.log('[API] Token refresh successful. Retrying original request.');
         
-        // Use default headers AND the original request headers
         api.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
         originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
         
@@ -86,12 +94,13 @@ api.interceptors.response.use(
         console.error('[API] Token refresh failed:', refreshError);
         processQueue(refreshError, null);
         
-        // Avoid infinite logout loop
+        // Handle "user_not_found" during refresh too
+        const isUserGone = refreshError.response?.data?.code === 'user_not_found' || 
+                           refreshError.response?.data?.detail?.includes('not found');
+
         if (!window.location.pathname.includes('/login')) {
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
-          localStorage.removeItem('user');
-          window.location.href = '/login?session_expired=true';
+          localStorage.clear();
+          window.location.href = isUserGone ? '/login?error=account_deleted' : '/login?session_expired=true';
         }
         return Promise.reject(refreshError);
       } finally {
