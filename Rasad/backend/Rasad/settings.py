@@ -19,7 +19,7 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = ['rasad-production.up.railway.app', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['rasad-production.up.railway.app', 'localhost', '127.0.0.1'])
 
 FRONTEND_URL = env('FRONTEND_URL', default='http://localhost:5173')
 
@@ -60,8 +60,11 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "https://rasad-production.up.railway.app",
 ]
+if env('FRONTEND_URL', default=None):
+    CORS_ALLOWED_ORIGINS.append(env('FRONTEND_URL').rstrip('/'))
+# Add production backend if needed for Swagger/Internal
+CORS_ALLOWED_ORIGINS.append("https://rasad-production.up.railway.app")
 
 ROOT_URLCONF = 'Rasad.urls'
 
@@ -134,10 +137,12 @@ SPECTACULAR_SETTINGS = {
     'SERVE_INCLUDE_SCHEMA': False,
 }
 CSRF_TRUSTED_ORIGINS = [
-    "https://rasad-production.up.railway.app",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
+if env('FRONTEND_URL', default=None):
+    CSRF_TRUSTED_ORIGINS.append(env('FRONTEND_URL').rstrip('/'))
+CSRF_TRUSTED_ORIGINS.append("https://rasad-production.up.railway.app")
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SESSION_COOKIE_SECURE = True

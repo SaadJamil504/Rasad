@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://rasad-production.up.railway.app/api/',
+  baseURL: import.meta.env.VITE_API_URL || 'https://rasad-production.up.railway.app/api/',
   timeout: 15000, // 15 seconds timeout for slow Railway instances
   headers: {
     'Content-Type': 'application/json',
@@ -77,7 +77,7 @@ api.interceptors.response.use(
         const refreshToken = localStorage.getItem('refresh_token');
         if (!refreshToken) throw new Error('No refresh token available');
 
-        const response = await axios.post('https://rasad-production.up.railway.app/api/accounts/login/refresh/', {
+        const response = await axios.post(`${import.meta.env.VITE_API_URL || 'https://rasad-production.up.railway.app/api/'}accounts/login/refresh/`, {
           refresh: refreshToken,
         }, { timeout: 10000 });
         
