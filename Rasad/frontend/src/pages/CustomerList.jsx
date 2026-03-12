@@ -12,10 +12,13 @@ const CustomerList = () => {
   const fetchCustomers = async (skipLoading = false) => {
     try {
       if (!skipLoading) setLoading(true);
+      setError(null);
       const response = await staffAPI.getStaff('customer');
       setCustomers(response.data);
-    } catch (_) {
-      setError('Failed to fetch customers.');
+    } catch (err) {
+      console.error('Fetch customers error:', err);
+      const msg = err.response?.data?.error || err.response?.data?.message || err.message || 'Failed to fetch customers.';
+      setError(msg);
     } finally {
       if (!skipLoading) setLoading(false);
     }
