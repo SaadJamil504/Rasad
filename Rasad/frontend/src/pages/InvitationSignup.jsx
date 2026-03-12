@@ -76,7 +76,17 @@ const InvitationSignup = () => {
       localStorage.setItem('user', JSON.stringify(response.data.user));
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.error || 'Registration failed. Please try again.');
+      if (err.response?.data) {
+        // If the server returns a dictionary of errors, format it nicely
+        const errorData = err.response.data;
+        const messages = Object.keys(errorData).map(key => {
+          const detail = errorData[key];
+          return `${key.replace('_', ' ').toUpperCase()}: ${Array.isArray(detail) ? detail.join(', ') : detail}`;
+        });
+        setError(messages.join(' | '));
+      } else {
+        setError('Registration failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

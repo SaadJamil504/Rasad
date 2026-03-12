@@ -125,6 +125,12 @@ class InvitationSignupSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('token', 'username', 'email', 'password', 'full_name', 'phone_number', 'license_number', 'milk_type', 'daily_quantity', 'address')
+        extra_kwargs = {
+            'license_number': {'required': False},
+            'milk_type': {'required': False},
+            'daily_quantity': {'required': False},
+            'address': {'required': False},
+        }
 
     def validate_token(self, value):
         try:
@@ -142,6 +148,20 @@ class InvitationSignupSerializer(serializers.ModelSerializer):
         if User.objects.filter(email=email).exists():
             raise serializers.ValidationError("This email is already registered. Please login.")
         return email
+
+    def validate_password(self, value):
+        if len(value) < 6:
+            raise serializers.ValidationError("Password must be at least 6 characters.")
+        if not any(char.islower() for char in value):
+            raise serializers.ValidationError("Password must contain at least one lowercase letter.")
+        if not any(char.isdigit() for char in value):
+            raise serializers.ValidationError("Password must contain at least one number.")
+        return value
+
+    def validate_phone_number(self, value):
+        if User.objects.filter(phone_number=value).exists():
+            raise serializers.ValidationError("This phone number is already in use.")
+        return value
 
     def create(self, validated_data):
         token = validated_data.pop('token')

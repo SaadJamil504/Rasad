@@ -115,7 +115,7 @@ class InvitationListCreateView(APIView):
     )
     def post(self, request):
         if request.user.role != 'owner':
-            return Response({'error': 'Only owners can send invitations.'}, status=status.HTTP_03_FORBIDDEN)
+            return Response({'error': 'Only owners can send invitations.'}, status=status.HTTP_403_FORBIDDEN)
             
         serializer = InvitationSerializer(data=request.data)
         if serializer.is_valid():
@@ -179,6 +179,8 @@ class InvitationSignupView(APIView):
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
             }, status=status.HTTP_201_CREATED)
+        
+        logger.error(f"Invitation signup failed: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class StaffListView(APIView):
