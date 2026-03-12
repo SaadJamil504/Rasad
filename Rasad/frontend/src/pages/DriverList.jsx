@@ -8,15 +8,15 @@ const DriverList = () => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const fetchDrivers = async () => {
+  const fetchDrivers = async (skipLoading = false) => {
     try {
-      setLoading(true);
+      if (!skipLoading) setLoading(true);
       const response = await staffAPI.getStaff('driver');
       setDrivers(response.data);
     } catch (error) {
       console.error('Error fetching drivers:', error);
     } finally {
-      setLoading(false);
+      if (!skipLoading) setLoading(false);
     }
   };
 
@@ -76,7 +76,7 @@ const DriverList = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         role="driver"
-        onInviteSuccess={fetchDrivers}
+        onInviteSuccess={() => fetchDrivers(true)}
       />
     </div>
   );

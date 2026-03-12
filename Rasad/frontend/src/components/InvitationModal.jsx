@@ -9,6 +9,15 @@ const InvitationModal = ({ isOpen, onClose, role, onInviteSuccess }) => {
   const [success, setSuccess] = useState('');
   const [generatedLink, setGeneratedLink] = useState('');
 
+  React.useEffect(() => {
+    if (isOpen) {
+      setGeneratedLink('');
+      setError('');
+      setSuccess('');
+      setEmail('');
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e) => {
