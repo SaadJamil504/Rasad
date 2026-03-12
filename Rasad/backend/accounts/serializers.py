@@ -41,8 +41,30 @@ class SignupSerializer(serializers.ModelSerializer):
         fields = ('username', 'password', 'full_name', 'phone_number', 'email', 'role', 'address', 'dairy_name')
         extra_kwargs = {
             'phone_number': {'required': True},
-            'email': {'required': False},
+            'email': {'required': True},
         }
+
+    def validate_email(self, value):
+        email = value.lower()
+        if not email.endswith('@gmail.com'):
+            raise serializers.ValidationError("Only Gmail addresses are accepted.")
+        if User.objects.filter(email=email).exists():
+            raise serializers.ValidationError("This email is already registered. Please login.")
+        return email
+
+    def validate_password(self, value):
+        if len(value) < 6:
+            raise serializers.ValidationError("Password must be at least 6 characters.")
+        if not any(char.islower() for char in value):
+            raise serializers.ValidationError("Password must contain at least one lowercase letter.")
+        if not any(char.isdigit() for char in value):
+            raise serializers.ValidationError("Password must contain at least one number.")
+        return value
+
+    def validate_phone_number(self, value):
+        if User.objects.filter(phone_number=value).exists():
+            raise serializers.ValidationError("This phone number is already in use.")
+        return value
 
     def create(self, validated_data):
         full_name = validated_data.pop('full_name')

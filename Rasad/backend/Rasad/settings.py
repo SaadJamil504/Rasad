@@ -21,6 +21,9 @@ DEBUG = env('DEBUG')
 
 ALLOWED_HOSTS = ['rasad-production.up.railway.app', 'localhost', '127.0.0.1']
 
+FRONTEND_URL = env('FRONTEND_URL', default='http://localhost:5173')
+
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -58,7 +61,7 @@ MIDDLEWARE = [
 ]
 ...
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
+    "https://your-frontend-url.up.railway.app",
     "http://127.0.0.1:5173",
 ]
 

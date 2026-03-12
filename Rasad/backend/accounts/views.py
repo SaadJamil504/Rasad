@@ -59,6 +59,8 @@ class SignupView(APIView):
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
             }, status=status.HTTP_201_CREATED)
+        
+        logger.error(f"Signup failed: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class PasswordResetRequestView(APIView):
@@ -119,31 +121,14 @@ class InvitationListCreateView(APIView):
         if serializer.is_valid():
             invitation = serializer.save(owner=request.user)
             
-            # Send Email
-            # Send Email in background
-            signup_url = f"http://localhost:5173/join/{invitation.token}"
-            subject = f"Invitation to join Rasad as a {invitation.role.capitalize()}"
-            message = f"Hello,\n\nYou have been invited by {request.user.first_name} to join Rasad as a {invitation.role}.\n\nPlease click the link below to sign up:\n{signup_url}\n\nThis link will expire in 7 days."
+            # Generate Link instead of sending email
+            frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173').rstrip('/')
+            signup_url = f"{frontend_url}/join/{invitation.token}"
             
-            def send_invitation_email(subject, message, recipient):
-                try:
-                    send_mail(
-                        subject,
-                        message,
-                        settings.EMAIL_HOST_USER,
-                        [recipient],
-                        fail_silently=False,
-                    )
-                except Exception as e:
-                    logger.error(f"Background email failed: {str(e)}")
-
-            thread = threading.Thread(
-                target=send_invitation_email,
-                args=(subject, message, invitation.email)
-            )
-            thread.start()
-
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response({
+                **serializer.data,
+                'signup_url': signup_url
+            }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @extend_schema(

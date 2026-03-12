@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://127.0.0.1:8000/api/',
+  baseURL: 'https://rasad-production.up.railway.app/api/',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -28,7 +28,7 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       try {
         const refreshToken = localStorage.getItem('refresh_token');
-        const response = await axios.post('http://127.0.0.1:8000/api/accounts/login/refresh/', {
+        const response = await axios.post('https://rasad-production.up.railway.app/api/accounts/login/refresh/', {
           refresh: refreshToken,
         });
         localStorage.setItem('access_token', response.data.access);
