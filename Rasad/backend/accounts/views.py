@@ -115,6 +115,7 @@ class InvitationListCreateView(APIView):
     )
     def post(self, request):
         if request.user.role != 'owner':
+            logger.warning(f"Unauthorized invitation attempt by user {request.user.username} with role {request.user.role}")
             return Response({'error': 'Only owners can send invitations.'}, status=status.HTTP_403_FORBIDDEN)
             
         serializer = InvitationSerializer(data=request.data)
@@ -129,6 +130,8 @@ class InvitationListCreateView(APIView):
                 **serializer.data,
                 'signup_url': signup_url
             }, status=status.HTTP_201_CREATED)
+            
+        logger.error(f"Invitation creation failed for user {request.user.username}: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @extend_schema(
