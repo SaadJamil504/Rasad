@@ -31,8 +31,14 @@ api.interceptors.response.use(
         const response = await axios.post('https://rasad-production.up.railway.app/api/accounts/login/refresh/', {
           refresh: refreshToken,
         });
-        localStorage.setItem('access_token', response.data.access);
-        api.defaults.headers.common['Authorization'] = `Bearer ${response.data.access}`;
+        
+        const newAccessToken = response.data.access;
+        localStorage.setItem('access_token', newAccessToken);
+        
+        // Update both defaults and the specific request that failed
+        api.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
+        originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
+        
         return api(originalRequest);
       } catch (refreshError) {
         localStorage.removeItem('access_token');
