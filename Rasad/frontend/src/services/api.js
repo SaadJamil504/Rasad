@@ -2,6 +2,7 @@ import axios from 'axios';
 
 const api = axios.create({
   baseURL: 'https://rasad-production.up.railway.app/api/',
+  timeout: 15000, // 15 seconds timeout for slow Railway instances
   headers: {
     'Content-Type': 'application/json',
   },
@@ -40,8 +41,15 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // Handle Connection Timeout
+    if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+      console.error('[API] Backend Connection Timeout. Railway might be slow.');
+      return Promise.reject(new Error('Backend server is taking too long to respond. Please try again.'));
+    }
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
+        console.log('[API] Token refresh already in progress, queueing request...');
         return new Promise((resolve, reject) => {
           refreshQueue.push({ resolve, reject });
         })
@@ -54,26 +62,37 @@ api.interceptors.response.use(
 
       originalRequest._retry = true;
       isRefreshing = true;
+      console.log('[API] Access Token expired. Attempting refresh...');
 
       try {
         const refreshToken = localStorage.getItem('refresh_token');
+        if (!refreshToken) throw new Error('No refresh token available');
+
         const response = await axios.post('https://rasad-production.up.railway.app/api/accounts/login/refresh/', {
           refresh: refreshToken,
-        });
+        }, { timeout: 10000 }); // Dedicated timeout for refresh
         
         const newAccessToken = response.data.access;
         localStorage.setItem('access_token', newAccessToken);
+        console.log('[API] Token refresh successful. Retrying original request.');
         
+        // Use default headers AND the original request headers
         api.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
         originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
         
         processQueue(null, newAccessToken);
         return api(originalRequest);
       } catch (refreshError) {
+        console.error('[API] Token refresh failed:', refreshError);
         processQueue(refreshError, null);
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        window.location.href = '/login';
+        
+        // Avoid infinite logout loop
+        if (!window.location.pathname.includes('/login')) {
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+          localStorage.removeItem('user');
+          window.location.href = '/login?session_expired=true';
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
@@ -82,6 +101,7 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
 
 
 export const authAPI = {

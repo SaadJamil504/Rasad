@@ -4,6 +4,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User, Invitation, Route
 import uuid
 from django.utils import timezone
+from datetime import timedelta
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.tokens import default_token_generator
@@ -114,7 +115,7 @@ class InvitationSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data['token'] = str(uuid.uuid4())
-        validated_data['expires_at'] = timezone.now() + timezone.timedelta(days=7)
+        validated_data['expires_at'] = timezone.now() + timedelta(days=7)
         return super().create(validated_data)
 
 class InvitationSignupSerializer(serializers.ModelSerializer):

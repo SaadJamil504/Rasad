@@ -27,13 +27,29 @@ const InvitationModal = ({ isOpen, onClose, role, onInviteSuccess }) => {
     setSuccess('');
 
     try {
-      const response = await invitationAPI.invite({ email, role });
-      setSuccess(`Invitation created successfully!`);
+      const payload = { role };
+      if (email.trim()) payload.email = email.trim();
+      
+      const response = await invitationAPI.invite(payload);
       setGeneratedLink(response.data.signup_url);
+      setSuccess(`Invitation link generated successfully!`);
       setEmail('');
       if (onInviteSuccess) onInviteSuccess();
     } catch (err) {
-      const serverError = err.response?.data?.error || err.response?.data?.message || 'Failed to create invitation. Please try again.';
+      console.error('Invitation creation failed:', err);
+      let serverError = 'Failed to create invitation.';
+      
+      if (err.response?.data) {
+        if (typeof err.response.data === 'object') {
+          // Flatten nested error messages
+          serverError = Object.values(err.response.data).flat().join(' ') || serverError;
+        } else if (typeof err.response.data === 'string') {
+          serverError = err.response.data;
+        }
+      } else if (err.message) {
+        serverError = err.message;
+      }
+      
       setError(serverError);
     } finally {
       setLoading(false);

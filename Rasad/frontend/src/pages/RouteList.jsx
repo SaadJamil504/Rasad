@@ -9,15 +9,18 @@ const RouteList = () => {
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const fetchRoutes = async () => {
+  const fetchRoutes = async (skipLoading = false) => {
     try {
-      setLoading(true);
+      if (!skipLoading) setLoading(true);
+      setError(null);
       const response = await routeAPI.getRoutes();
       setRoutes(response.data);
-    } catch (_) {
-      setError('Failed to fetch routes.');
+    } catch (err) {
+      console.error('Fetch routes error:', err);
+      const msg = err.response?.data?.error || err.response?.data?.detail || err.message || 'Failed to fetch routes';
+      setError(msg);
     } finally {
-      setLoading(false);
+      if (!skipLoading) setLoading(false);
     }
   };
 
@@ -25,61 +28,65 @@ const RouteList = () => {
     fetchRoutes();
   }, []);
 
-  if (loading) return <div className="loading">Loading routes...</div>;
-  if (error) return <div className="error">{error}</div>;
-
   return (
-    <div className="table-container fade-in">
-      <div className="table-header">
+    <div className="page-container">
+      <div className="page-header">
         <h1>Delivery Routes</h1>
-        <button className="btn-primary" onClick={() => setIsModalOpen(true)}>
-          + Create Route
+        <button className="primary-btn" onClick={() => setIsModalOpen(true)}>
+          <span>+</span> Create Route
         </button>
       </div>
       
-      <div className="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Route Name</th>
-              <th>Driver</th>
-              <th>Customers</th>
-              <th>Created</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {routes.map(route => (
-              <tr key={route.id}>
-                <td>#{route.id}</td>
-                <td className="font-bold">{route.name}</td>
-                <td>{route.driver_name}</td>
-                <td>
-                  <span className="badge-blue">{route.customer_count} Customers</span>
-                </td>
-                <td className="muted">{new Date(route.created_at).toLocaleDateString()}</td>
-                <td>
-                  <button className="text-btn">Details</button>
-                </td>
-              </tr>
-            ))}
-            {routes.length === 0 && (
+      {loading ? (
+        <div className="loading">Loading routes...</div>
+      ) : error ? (
+        <div className="error">{error}</div>
+      ) : (
+        <div className="glass-table-wrapper">
+          <table className="glass-table">
+            <thead>
               <tr>
-                <td colSpan="6" className="text-center">No routes found.</td>
+                <th>ID</th>
+                <th>Route Name</th>
+                <th>Driver Assigned</th>
+                <th>Customers</th>
+                <th>Date Created</th>
+                <th>Actions</th>
               </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {routes.map(route => (
+                <tr key={route.id}>
+                  <td className="text-muted">#{route.id}</td>
+                  <td className="font-bold">{route.name}</td>
+                  <td>{route.driver_name}</td>
+                  <td>
+                    <span className="badge-blue">{route.customer_count} Customers</span>
+                  </td>
+                  <td className="text-muted">{new Date(route.created_at).toLocaleDateString()}</td>
+                  <td>
+                    <button className="text-btn">Details</button>
+                  </td>
+                </tr>
+              ))}
+              {routes.length === 0 && (
+                <tr>
+                  <td colSpan="6" className="empty-row">No routes found. Create your first delivery route!</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <RouteModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onRouteCreated={fetchRoutes}
+        onRouteCreated={() => fetchRoutes(true)}
       />
     </div>
   );
+
 };
 
 export default RouteList;

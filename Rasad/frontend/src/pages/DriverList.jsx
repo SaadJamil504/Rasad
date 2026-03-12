@@ -13,8 +13,10 @@ const DriverList = () => {
       if (!skipLoading) setLoading(true);
       const response = await staffAPI.getStaff('driver');
       setDrivers(response.data);
-    } catch (error) {
-      console.error('Error fetching drivers:', error);
+    } catch (err) {
+      console.error('Fetch drivers error:', err);
+      const msg = err.response?.data?.error || err.response?.data?.detail || err.message || 'Failed to fetch drivers';
+      setError(msg);
     } finally {
       if (!skipLoading) setLoading(false);
     }
@@ -25,11 +27,11 @@ const DriverList = () => {
   }, []);
 
   return (
-    <div className="table-container fade-in">
-      <div className="table-header">
+    <div className="page-container">
+      <div className="page-header">
         <h1>Drivers Management</h1>
-        <button className="btn-primary" onClick={() => setIsModalOpen(true)}>
-          + Add New Driver
+        <button className="primary-btn" onClick={() => setIsModalOpen(true)}>
+          <span>+</span> Add New Driver
         </button>
       </div>
 
@@ -42,7 +44,7 @@ const DriverList = () => {
               <tr>
                 <th>Full Name</th>
                 <th>Username</th>
-                <th>Email</th>
+                <th>Email Address</th>
                 <th>Phone Number</th>
                 <th>License Number</th>
                 <th>Status</th>
@@ -52,7 +54,7 @@ const DriverList = () => {
               {drivers.length > 0 ? (
                 drivers.map((driver) => (
                   <tr key={driver.id}>
-                    <td>{driver.first_name || 'N/A'}</td>
+                    <td className="font-bold">{driver.first_name || 'N/A'}</td>
                     <td>{driver.username}</td>
                     <td>{driver.email}</td>
                     <td>{driver.phone_number || 'N/A'}</td>
@@ -64,7 +66,7 @@ const DriverList = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="empty-row">No drivers found.</td>
+                  <td colSpan="6" className="empty-row">No drivers found. Recruit your first driver!</td>
                 </tr>
               )}
             </tbody>

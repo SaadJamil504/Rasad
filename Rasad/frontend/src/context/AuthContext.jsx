@@ -12,17 +12,14 @@ export const AuthProvider = ({ children }) => {
     const initAuth = async () => {
       const token = localStorage.getItem('access_token');
       const savedUser = localStorage.getItem('user');
+      
       if (token && savedUser) {
         try {
-          const decoded = jwtDecode(token);
-          const currentTime = Date.now() / 1000;
-          if (decoded.exp < currentTime) {
-            localStorage.clear();
-            setUser(null);
-          } else {
-            setUser(JSON.parse(savedUser));
-          }
+          // Just set the user from local storage
+          // The API interceptor will handle token refresh if it's expired
+          setUser(JSON.parse(savedUser));
         } catch (e) {
+          console.error('Failed to parse saved user:', e);
           localStorage.clear();
           setUser(null);
         }

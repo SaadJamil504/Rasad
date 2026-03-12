@@ -16,8 +16,8 @@ const CustomerList = () => {
       const response = await staffAPI.getStaff('customer');
       setCustomers(response.data);
     } catch (err) {
-      console.error('Fetch customers error:', err);
-      const msg = err.response?.data?.error || err.response?.data?.message || err.message || 'Failed to fetch customers.';
+      console.error('Fetch error:', err);
+      const msg = err.response?.data?.error || err.response?.data?.detail || err.message || 'Failed to fetch data';
       setError(msg);
     } finally {
       if (!skipLoading) setLoading(false);
@@ -29,11 +29,11 @@ const CustomerList = () => {
   }, []);
 
   return (
-    <div className="table-container fade-in">
-      <div className="table-header">
+    <div className="page-container">
+      <div className="page-header">
         <h1>Customers Management</h1>
-        <button className="btn-primary" onClick={() => setIsModalOpen(true)}>
-          + Add New Customer
+        <button className="primary-btn" onClick={() => setIsModalOpen(true)}>
+          <span>+</span> Add New Customer
         </button>
       </div>
       
@@ -42,14 +42,14 @@ const CustomerList = () => {
       ) : error ? (
         <div className="error">{error}</div>
       ) : (
-        <div className="table-container">
-          <table>
+        <div className="glass-table-wrapper">
+          <table className="glass-table">
             <thead>
               <tr>
                 <th>ID</th>
                 <th>Full Name</th>
-                <th>Email</th>
-                <th>Phone</th>
+                <th>Email Address</th>
+                <th>Phone Number</th>
                 <th>Milk Type</th>
                 <th>Qty (L)</th>
                 <th>Actions</th>
@@ -58,14 +58,14 @@ const CustomerList = () => {
             <tbody>
               {customers.map(customer => (
                 <tr key={customer.id}>
-                  <td>#{customer.id}</td>
+                  <td className="text-muted">#{customer.id}</td>
                   <td className="font-bold">{customer.first_name || customer.username}</td>
                   <td>{customer.email}</td>
                   <td>{customer.phone_number || 'N/A'}</td>
                   <td>
                     <span className="badge-blue">{customer.milk_type?.toUpperCase() || 'N/A'}</span>
                   </td>
-                  <td>{customer.daily_quantity || '0'}L</td>
+                  <td className="font-bold">{customer.daily_quantity || '0'}L</td>
                   <td>
                     <button className="text-btn">Details</button>
                   </td>
@@ -73,7 +73,7 @@ const CustomerList = () => {
               ))}
               {customers.length === 0 && (
                 <tr>
-                  <td colSpan="6" className="text-center">No customers found.</td>
+                  <td colSpan="7" className="empty-row">No customers found. Start by inviting some!</td>
                 </tr>
               )}
             </tbody>
