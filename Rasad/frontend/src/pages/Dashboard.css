@@ -117,3 +117,68 @@
   color: var(--primary);
   border: 1px solid rgba(59, 130, 246, 0.2);
 }
+.profile-card {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 3rem;
+  text-align: center;
+}
+
+.avatar-large {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: var(--grad-main);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  font-weight: 800;
+  margin: 0 auto 2rem;
+  box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+}
+
+.profile-header h2 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.badge-green {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.profile-details {
+  margin-top: 3rem;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 2rem;
+  border-radius: 1.5rem;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.detail-item:last-child {
+  border-bottom: none;
+}
+
+.detail-item label {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.detail-item span {
+  font-weight: 700;
+  color: white;
+}

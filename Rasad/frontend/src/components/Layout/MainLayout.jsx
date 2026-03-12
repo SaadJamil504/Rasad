@@ -23,15 +23,22 @@ const MainLayout = () => {
           <h2>Rasad</h2>
         </div>
         <nav className="sidebar-nav">
-          <Link to="/" className="nav-item active">
+          <Link to="/" className={`nav-item ${window.location.pathname === '/' ? 'active' : ''}`}>
             <span className="icon">📊</span> Dashboard
           </Link>
-          <Link to="/routes" className="nav-item">
-            <span className="icon">🛣️</span> Routes
-          </Link>
-          <Link to="/customers" className="nav-item">
-            <span className="icon">👥</span> Customers
-          </Link>
+          {user.role === 'owner' && (
+            <>
+              <Link to="/routes" className={`nav-item ${window.location.pathname === '/routes' ? 'active' : ''}`}>
+                <span className="icon">🛣️</span> Routes
+              </Link>
+              <Link to="/drivers" className={`nav-item ${window.location.pathname === '/drivers' ? 'active' : ''}`}>
+                <span className="icon">🚛</span> Drivers
+              </Link>
+              <Link to="/customers" className={`nav-item ${window.location.pathname === '/customers' ? 'active' : ''}`}>
+                <span className="icon">👥</span> Customers
+              </Link>
+            </>
+          )}
         </nav>
         <div className="sidebar-footer">
           <div className="user-profile">

@@ -45,4 +45,27 @@ api.interceptors.response.use(
   }
 );
 
+export const authAPI = {
+  login: (data) => api.post('accounts/login/', data),
+  signup: (data) => api.post('accounts/signup/', data),
+  invitationSignup: (data) => api.post('accounts/invitations/signup/', data),
+  validateToken: (token) => api.get(`accounts/invitations/validate/${token}/`),
+};
+
+export const invitationAPI = {
+  invite: (data) => api.post('accounts/invitations/', data),
+  getInvitations: () => api.get('accounts/invitations/'),
+};
+
+export const staffAPI = {
+  getStaff: (role) => api.get('accounts/staff/', { params: { role } }),
+};
+
+export const routeAPI = {
+  getRoutes: () => api.get('accounts/routes/'),
+  createRoute: (data) => api.post('accounts/routes/', data),
+  updateRoute: (id, data) => api.put(`accounts/routes/${id}/`, data),
+  deleteRoute: (id) => api.delete(`accounts/routes/${id}/`),
+};
+
 export default api;

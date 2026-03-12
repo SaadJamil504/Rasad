@@ -8,8 +8,14 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (!authLoading && user) {
+      navigate('/');
+    }
+  }, [user, authLoading, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -60,7 +66,7 @@ const Login = () => {
         </form>
         
         <p className="auth-footer">
-          Don't have an account? <Link to="/signup">Sign up</Link>
+          Are you a new Owner? <Link to="/signup">Register as a New Owner</Link>
         </p>
       </div>
     </div>

@@ -9,17 +9,27 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      try {
-        const decoded = jwtDecode(token);
-        // Basic check for expiration could be added here
-        setUser(decoded);
-      } catch (e) {
-        localStorage.removeItem('access_token');
+    const initAuth = async () => {
+      const token = localStorage.getItem('access_token');
+      const savedUser = localStorage.getItem('user');
+      if (token && savedUser) {
+        try {
+          const decoded = jwtDecode(token);
+          const currentTime = Date.now() / 1000;
+          if (decoded.exp < currentTime) {
+            localStorage.clear();
+            setUser(null);
+          } else {
+            setUser(JSON.parse(savedUser));
+          }
+        } catch (e) {
+          localStorage.clear();
+          setUser(null);
+        }
       }
-    }
-    setLoading(false);
+      setLoading(false);
+    };
+    initAuth();
   }, []);
 
   const login = async (username, password) => {
@@ -27,6 +37,7 @@ export const AuthProvider = ({ children }) => {
     const { access, refresh, user: userData } = response.data;
     localStorage.setItem('access_token', access);
     localStorage.setItem('refresh_token', refresh);
+    localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
     return response.data;
   };
@@ -36,6 +47,7 @@ export const AuthProvider = ({ children }) => {
     const { access, refresh, user: createdUser } = response.data;
     localStorage.setItem('access_token', access);
     localStorage.setItem('refresh_token', refresh);
+    localStorage.setItem('user', JSON.stringify(createdUser));
     setUser(createdUser);
     return response.data;
   };

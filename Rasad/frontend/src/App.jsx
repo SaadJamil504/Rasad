@@ -6,7 +6,11 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import RouteList from './pages/RouteList';
 import CustomerList from './pages/CustomerList';
+import DriverList from './pages/DriverList';
 import Dashboard from './pages/Dashboard';
+import InvitationSignup from './pages/InvitationSignup';
+
+import RoleRoute from './components/Auth/RoleRoute';
 
 function App() {
   return (
@@ -15,10 +19,21 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/join/:token" element={<InvitationSignup />} />
           <Route path="/" element={<MainLayout />}>
             <Route index element={<Dashboard />} />
-            <Route path="routes" element={<RouteList />} />
-            <Route path="customers" element={<CustomerList />} />
+            <Route 
+              path="routes" 
+              element={<RoleRoute><RouteList /></RoleRoute>} 
+            />
+            <Route 
+              path="customers" 
+              element={<RoleRoute><CustomerList /></RoleRoute>} 
+            />
+            <Route 
+              path="drivers" 
+              element={<RoleRoute><DriverList /></RoleRoute>} 
+            />
           </Route>
         </Routes>
       </Router>

@@ -10,7 +10,9 @@ const Signup = () => {
     email: '',
     phone_number: '',
     password: '',
-    role: 'owner'
+    role: 'owner',
+    dairy_name: '',
+    address: ''
   });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -25,6 +27,18 @@ const Signup = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    // Basic validation
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters.');
+      setLoading(false);
+      return;
+    }
+    if (!formData.dairy_name) {
+      setError('Dairy Name is required.');
+      setLoading(false);
+      return;
+    }
+
     try {
       await signup(formData);
       navigate('/');
@@ -38,8 +52,8 @@ const Signup = () => {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h2>Create Account</h2>
-        <p className="auth-subtitle">Join Rasad Milk Delivery System</p>
+        <h2>Owner Registration</h2>
+        <p className="auth-subtitle">Create an account to manage your delivery network</p>
         
         {error && <div className="error-message">{error}</div>}
         
@@ -89,6 +103,29 @@ const Signup = () => {
             />
           </div>
           <div className="form-group">
+            <label>Dairy Name</label>
+            <input 
+              name="dairy_name"
+              type="text" 
+              value={formData.dairy_name} 
+              onChange={handleChange} 
+              required 
+              placeholder="e.g. Ahmad Milk Dairy"
+            />
+          </div>
+          <div className="form-group">
+            <label>Address</label>
+            <textarea 
+              name="address"
+              value={formData.address} 
+              onChange={handleChange} 
+              placeholder="Your dairy path or office address"
+              rows="2"
+              className="glass-input"
+              style={{ padding: '0.8rem', width: '100%', borderRadius: '12px' }}
+            />
+          </div>
+          <div className="form-group">
             <label>Password</label>
             <input 
               name="password"
@@ -99,16 +136,8 @@ const Signup = () => {
               placeholder="••••••••"
             />
           </div>
-          <div className="form-group">
-            <label>Role</label>
-            <select name="role" value={formData.role} onChange={handleChange}>
-              <option value="owner">Owner</option>
-              <option value="driver">Driver</option>
-              <option value="customer">Customer</option>
-            </select>
-          </div>
           <button type="submit" disabled={loading}>
-            {loading ? 'Creating Account...' : 'Sign Up'}
+            {loading ? 'Creating Owner Account...' : 'Sign Up as Owner'}
           </button>
         </form>
         
