@@ -635,10 +635,18 @@ class DashboardStatsView(APIView):
         today = timezone.now().date()
         yesterday = today - timezone.timedelta(days=1)
         
-        # 1. Today's Deliveries
+        # 1. Today's Deliveries 
+        # If deliveries aren't explicitly created by a script yet, we should look at active customers
+        # to know how many deliveries are EXPECTED today.
         deliveries_today = Delivery.objects.filter(route__owner=request.user, date=today)
-        total_d = deliveries_today.count()
         done_d = deliveries_today.filter(status__in=['delivered', 'paused']).count()
+        
+        # Total expected deliveries = total active customers assigned to a route
+        # (Assuming all assigned customers should get a delivery unless paused/delivered)
+        active_customers_assigned = User.objects.filter(parent_owner=request.user, role='customer', route__isnull=False).count()
+        
+        # If deliveries_today exist, use that count, otherwise fallback to the number of active assigned customers
+        total_d = max(deliveries_today.count(), active_customers_assigned)
         pending_d = total_d - done_d
         
         # 2. Today's Revenue
