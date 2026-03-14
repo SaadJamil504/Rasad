@@ -56,10 +56,12 @@ class UserSerializer(serializers.ModelSerializer):
 class SignupSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(write_only=True)
     password = serializers.CharField(write_only=True)
+    cow_price = serializers.DecimalField(max_digits=10, decimal_places=2, required=True)
+    buffalo_price = serializers.DecimalField(max_digits=10, decimal_places=2, required=True)
 
     class Meta:
         model = User
-        fields = ('username', 'password', 'full_name', 'phone_number', 'email', 'role', 'address', 'dairy_name')
+        fields = ('username', 'password', 'full_name', 'phone_number', 'email', 'role', 'address', 'dairy_name', 'cow_price', 'buffalo_price')
         extra_kwargs = {
             'phone_number': {'required': True},
             'email': {'required': True},
@@ -90,6 +92,8 @@ class SignupSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         full_name = validated_data.pop('full_name')
         password = validated_data.pop('password')
+        cow_price = validated_data.get('cow_price', 0)
+        buffalo_price = validated_data.get('buffalo_price', 0)
         
         # Map full_name to first_name for AbstractUser usage
         user = User.objects.create_user(
@@ -97,6 +101,10 @@ class SignupSerializer(serializers.ModelSerializer):
             password=password,
             **validated_data
         )
+        # Ensure prices are explicitly set/saved if create_user didn't catch them
+        user.cow_price = cow_price
+        user.buffalo_price = buffalo_price
+        user.save()
         return user
 
 class PasswordResetRequestSerializer(serializers.Serializer):

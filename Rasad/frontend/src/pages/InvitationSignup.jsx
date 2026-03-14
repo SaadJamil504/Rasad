@@ -190,7 +190,6 @@ const InvitationSignup = () => {
                   >
                     <option value="cow">Cow Milk</option>
                     <option value="buffalo">Buffalo Milk</option>
-                    <option value="both">Both</option>
                   </select>
                 </>
               )}

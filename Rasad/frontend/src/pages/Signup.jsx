@@ -12,7 +12,9 @@ const Signup = () => {
     password: '',
     role: 'owner',
     dairy_name: '',
-    address: ''
+    address: '',
+    cow_price: '',
+    buffalo_price: ''
   });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -38,12 +40,37 @@ const Signup = () => {
       setLoading(false);
       return;
     }
+    if (!formData.cow_price || !formData.buffalo_price) {
+      setError('Cow and Buffalo milk prices are required.');
+      setLoading(false);
+      return;
+    }
 
     try {
-      await signup(formData);
+      // Create a copy of the data and ensure prices are numbers
+      const submissionData = {
+        ...formData,
+        cow_price: parseFloat(formData.cow_price),
+        buffalo_price: parseFloat(formData.buffalo_price)
+      };
+      
+      await signup(submissionData);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data ? JSON.stringify(err.response.data) : 'Sign up failed.');
+      if (err.response?.data) {
+        // If it's an object of field errors (typical DRF), show them cleanly
+        const errors = err.response.data;
+        if (typeof errors === 'object') {
+          const errorMsg = Object.entries(errors)
+            .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(' ') : msgs}`)
+            .join(' | ');
+          setError(errorMsg);
+        } else {
+          setError(JSON.stringify(errors));
+        }
+      } else {
+        setError('Sign up failed. Please check your connection.');
+      }
     } finally {
       setLoading(false);
     }
@@ -107,6 +134,31 @@ const Signup = () => {
                 onChange={handleChange} 
                 required 
                 placeholder="+92..."
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form-group-clean">
+              <label>COW MILK PRICE (Rs)</label>
+              <input 
+                name="cow_price"
+                type="number" 
+                value={formData.cow_price} 
+                onChange={handleChange} 
+                required 
+                placeholder="e.g. 180"
+              />
+            </div>
+            <div className="form-group-clean">
+              <label>BUFFALO MILK PRICE (Rs)</label>
+              <input 
+                name="buffalo_price"
+                type="number" 
+                value={formData.buffalo_price} 
+                onChange={handleChange} 
+                required 
+                placeholder="e.g. 210"
               />
             </div>
           </div>
