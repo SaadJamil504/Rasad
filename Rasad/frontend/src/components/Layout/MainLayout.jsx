@@ -82,7 +82,6 @@ const MainLayout = () => {
                 <span className="role">{user.role || 'User'}</span>
               </div>
             </div>
-            <button onClick={handleLogout} className="logout-btn">Logout</button>
           </div>
         </aside>
       )}
@@ -99,7 +98,9 @@ const MainLayout = () => {
                   Adjust Price
                 </button>
               )}
-              <button className="icon-btn">🔔</button>
+              <button onClick={handleLogout} className="logout-top-btn">
+                Logout
+              </button>
             </div>
           </header>
         )}
