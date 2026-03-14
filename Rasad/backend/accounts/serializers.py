@@ -21,10 +21,13 @@ class LoginSerializer(serializers.Serializer):
 
 class UserSerializer(serializers.ModelSerializer):
     owner_dairy_name = serializers.SerializerMethodField()
+    route_name = serializers.SerializerMethodField()
+    cow_price = serializers.SerializerMethodField()
+    buffalo_price = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'role', 'phone_number', 'first_name', 'license_number', 'milk_type', 'daily_quantity', 'address', 'dairy_name', 'owner_dairy_name', 'route', 'buffalo_price', 'cow_price', 'outstanding_balance', 'total_paid')
+        fields = ('id', 'username', 'email', 'role', 'phone_number', 'first_name', 'license_number', 'milk_type', 'daily_quantity', 'address', 'dairy_name', 'owner_dairy_name', 'route', 'route_name', 'buffalo_price', 'cow_price', 'outstanding_balance', 'total_paid')
 
     def get_owner_dairy_name(self, obj):
         if obj.role == 'owner':
@@ -32,6 +35,23 @@ class UserSerializer(serializers.ModelSerializer):
         if obj.parent_owner:
             return obj.parent_owner.dairy_name
         return None
+
+    def get_route_name(self, obj):
+        return obj.route.name if obj.route else None
+        
+    def get_cow_price(self, obj):
+        if obj.role == 'owner':
+            return obj.cow_price
+        if obj.parent_owner:
+            return obj.parent_owner.cow_price
+        return obj.cow_price
+
+    def get_buffalo_price(self, obj):
+        if obj.role == 'owner':
+            return obj.buffalo_price
+        if obj.parent_owner:
+            return obj.parent_owner.buffalo_price
+        return obj.buffalo_price
 
 class SignupSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(write_only=True)
@@ -191,10 +211,12 @@ class RouteSerializer(serializers.ModelSerializer):
     driver_name = serializers.SerializerMethodField()
     customer_count = serializers.SerializerMethodField()
     assigned_customer_ids = serializers.SerializerMethodField()
+    customer_details = serializers.SerializerMethodField()
+    total_quantity = serializers.SerializerMethodField()
 
     class Meta:
         model = Route
-        fields = ('id', 'name', 'driver', 'driver_name', 'customer_ids', 'assigned_customer_ids', 'customer_count', 'created_at')
+        fields = ('id', 'name', 'driver', 'driver_name', 'customer_ids', 'assigned_customer_ids', 'customer_count', 'customer_details', 'total_quantity', 'created_at')
 
     def get_driver_name(self, obj):
         return obj.driver.first_name if obj.driver else "No Driver"
@@ -204,6 +226,14 @@ class RouteSerializer(serializers.ModelSerializer):
 
     def get_assigned_customer_ids(self, obj):
         return list(obj.customers.values_list('id', flat=True))
+
+    def get_customer_details(self, obj):
+        return list(obj.customers.values('id', 'first_name', 'username'))
+
+    def get_total_quantity(self, obj):
+        from django.db.models import Sum
+        total = obj.customers.aggregate(total=Sum('daily_quantity'))['total']
+        return float(total) if total else 0.0
 
     def create(self, validated_data):
         customer_ids = validated_data.pop('customer_ids', [])

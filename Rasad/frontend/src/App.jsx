@@ -9,6 +9,8 @@ import CustomerList from './pages/CustomerList';
 import DriverList from './pages/DriverList';
 import Dashboard from './pages/Dashboard';
 import InvitationSignup from './pages/InvitationSignup';
+import MonthlyBills from './pages/MonthlyBills';
+import Reports from './pages/Reports';
 
 import RoleRoute from './components/Auth/RoleRoute';
 
@@ -22,17 +24,25 @@ function App() {
           <Route path="/join/:token" element={<InvitationSignup />} />
           <Route path="/" element={<MainLayout />}>
             <Route index element={<Dashboard />} />
-            <Route 
-              path="routes" 
-              element={<RoleRoute><RouteList /></RoleRoute>} 
+            <Route
+              path="routes"
+              element={<RoleRoute><RouteList /></RoleRoute>}
             />
-            <Route 
-              path="customers" 
-              element={<RoleRoute><CustomerList /></RoleRoute>} 
+            <Route
+              path="customers"
+              element={<RoleRoute><CustomerList /></RoleRoute>}
             />
-            <Route 
-              path="drivers" 
-              element={<RoleRoute><DriverList /></RoleRoute>} 
+            <Route
+              path="bills"
+              element={<RoleRoute><MonthlyBills /></RoleRoute>}
+            />
+            <Route
+              path="reports"
+              element={<RoleRoute><Reports /></RoleRoute>}
+            />
+            <Route
+              path="drivers"
+              element={<RoleRoute><DriverList /></RoleRoute>}
             />
           </Route>
         </Routes>

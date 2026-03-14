@@ -31,13 +31,13 @@ const RouteList = () => {
 
   return (
     <div className="page-container">
-      <div className="page-header">
+      <div className="page-header" style={{ marginBottom: '1.5rem' }}>
         <h1>Delivery Routes</h1>
-        <button className="primary-btn" onClick={() => {
+        <button className="premium-btn-green" onClick={() => {
           setSelectedRoute(null);
           setIsModalOpen(true);
         }}>
-          <span>+</span> Create Route
+          <span>+</span> Add Route
         </button>
       </div>
       
@@ -46,48 +46,59 @@ const RouteList = () => {
       ) : error ? (
         <div className="error">{error}</div>
       ) : (
-        <div className="glass-table-wrapper">
-          <table className="glass-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Route Name</th>
-                <th>Driver Assigned</th>
-                <th>Customers</th>
-                <th>Date Created</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {routes.map(route => (
-                <tr key={route.id}>
-                  <td className="text-muted">#{route.id}</td>
-                  <td className="font-bold">{route.name}</td>
-                  <td>{route.driver_name}</td>
-                  <td>
-                    <span className="badge-blue">{route.customer_count} Customers</span>
-                  </td>
-                  <td className="text-muted">{new Date(route.created_at).toLocaleDateString()}</td>
-                  <td>
-                    <button 
-                      className="text-btn" 
-                      onClick={() => {
-                        setSelectedRoute(route);
-                        setIsModalOpen(true);
-                      }}
-                    >
-                      Details
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {routes.length === 0 && (
-                <tr>
-                  <td colSpan="6" className="empty-row">No routes found. Create your first delivery route!</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+        <div className="route-grid">
+          {routes.map((route, index) => (
+            <div className="route-card-premium" key={route.id}>
+              <div className="route-card-header">
+                <div className="route-title-area">
+                  <div className="route-dot" style={{ backgroundColor: index % 3 === 0 ? '#9333ea' : index % 3 === 1 ? '#f59e0b' : '#10b981' }}></div>
+                  <div className="route-info-stack">
+                    <span className="route-name-text">{route.name}</span>
+                    <div className="route-driver-info">
+                      <span>Driver: {route.driver_name}</span>
+                      <span>•</span>
+                      <span>{route.customer_count} customers</span>
+                      <span>•</span>
+                      <span>{route.total_quantity}L/day</span>
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                  <span className={index % 3 === 2 ? 'pending-start-label' : 'active-today-label'}>
+                    {index % 3 === 2 ? 'Pending Start' : 'Active Today'}
+                  </span>
+                  <button 
+                    className="edit-action-btn"
+                    onClick={() => {
+                      setSelectedRoute(route);
+                      setIsModalOpen(true);
+                    }}
+                  >
+                    Edit
+                  </button>
+                </div>
+              </div>
+              
+              <div className="route-stats-badges">
+                {route.customer_details?.slice(0, 5).map(cust => (
+                  <span key={cust.id} className="customer-small-pill">
+                    #{cust.id} {cust.first_name || cust.username}
+                  </span>
+                ))}
+                {route.customer_count > 5 && (
+                  <span className="customer-small-pill">+{route.customer_count - 5} more</span>
+                )}
+                {route.customer_count === 0 && (
+                  <span className="text-muted" style={{ fontSize: '0.8rem' }}>No customers assigned</span>
+                )}
+              </div>
+            </div>
+          ))}
+          {routes.length === 0 && (
+            <div className="empty-row" style={{ background: 'white', borderRadius: '20px' }}>
+              No routes found. Create your first delivery route!
+            </div>
+          )}
         </div>
       )}
 

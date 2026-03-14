@@ -142,14 +142,17 @@ export const deliveryAPI = {
   toggleDelivery: (id) => api.post(`accounts/deliveries/toggle/${id}/`),
   getCustomerStatus: () => api.get('accounts/deliveries/status/'),
   getHistory: () => api.get('accounts/deliveries/history/'),
-  getDeliveryHistory: (month, year) => api.get('accounts/deliveries/history/', { params: { month, year } }),
+  getDeliveryHistory: (month, year, customer_id) => api.get('accounts/deliveries/history/', { params: { month, year, customer_id } }),
   updatePrices: (prices) => api.post('accounts/prices/update/', prices),
   reportPayment: (data) => api.post('accounts/payments/report/', data),
-  getPayments: () => api.get('accounts/payments/list/'),
+  getPayments: (customer_id) => api.get('accounts/payments/list/', { params: { customer_id } }),
   confirmPayment: (id, action = 'confirm') => api.post(`accounts/payments/confirm/${id}/`, { action }),
   createAdjustment: (data) => api.post('accounts/adjustments/create/', data),
   getAdjustments: () => api.get('accounts/adjustments/list/'),
   actionAdjustment: (id, data) => api.post(`accounts/adjustments/action/${id}/`, data),
+  getDashboardStats: () => api.get('accounts/dashboard/stats/'),
+  getDashboardAlerts: () => api.get('accounts/dashboard/alerts/'),
+  getReports: () => api.get('accounts/dashboard/reports/'),
 };
 
 export default api;

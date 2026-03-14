@@ -1,0 +1,140 @@
+import React, { useState, useEffect } from 'react';
+import { deliveryAPI } from '../services/api';
+
+const Reports = () => {
+  const [reportData, setReportData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const res = await deliveryAPI.getReports();
+        setReportData(res.data);
+      } catch (err) {
+        console.error('Failed to fetch reports:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReports();
+  }, []);
+
+  if (loading) {
+    return <div className="page-container fade-in"><div className="loading">Loading reports...</div></div>;
+  }
+
+  if (!reportData) {
+    return <div className="page-container fade-in"><div className="error">Failed to load reports data.</div></div>;
+  }
+
+  // Find max revenue and round to the next 10k interval
+  const maxDataRev = Math.max(...reportData.monthly_revenue.map(d => d.revenue), 0);
+  const maxRev = Math.max(Math.ceil(maxDataRev / 10000) * 10000, 40000); // ensure at least 40k to have 4 steps
+  const stepsCount = maxRev / 10000;
+  const yAxisSteps = Array.from({length: stepsCount + 1}, (_, i) => i * 10000).reverse();
+
+  return (
+    <div className="page-container fade-in">
+      <div className="page-header" style={{ marginBottom: '2rem' }}>
+        <h1>Analysis & Reports</h1>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
+        {/* Total Milk This Month */}
+        <div className="glass-card" style={{ padding: '2rem', display: 'flex', alignItems: 'center', gap: '1.5rem', borderLeft: '4px solid #3b82f6' }}>
+          <div style={{ background: '#eff6ff', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem' }}>
+            🥛
+          </div>
+          <div>
+            <div style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 600, marginBottom: '0.2rem' }}>MILK DELIVERED (THIS MONTH)</div>
+            <div style={{ fontSize: '2rem', fontWeight: 800, color: '#1e293b' }}>{reportData.this_month_milk}L</div>
+          </div>
+        </div>
+
+        {/* Total Revenue This Month */}
+        <div className="glass-card" style={{ padding: '2rem', display: 'flex', alignItems: 'center', gap: '1.5rem', borderLeft: '4px solid #10b981' }}>
+          <div style={{ background: '#f0fdf4', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem' }}>
+            💰
+          </div>
+          <div>
+            <div style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 600, marginBottom: '0.2rem' }}>REVENUE (THIS MONTH)</div>
+            <div style={{ fontSize: '2rem', fontWeight: 800, color: '#1e293b' }}>Rs {reportData.this_month_revenue.toLocaleString()}</div>
+          </div>
+        </div>
+
+        {/* Collection Percentage */}
+        <div className="glass-card" style={{ padding: '2rem', display: 'flex', alignItems: 'center', gap: '1.5rem', borderLeft: '4px solid #8b5cf6' }}>
+          <div style={{ background: '#f5f3ff', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem' }}>
+            📈
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.2rem' }}>
+              <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 600 }}>COLLECTION RATE</span>
+              <span style={{ fontSize: '0.9rem', color: '#8b5cf6', fontWeight: 800 }}>{reportData.collection_percentage.toFixed(1)}%</span>
+            </div>
+            <div style={{ background: '#e2e8f0', height: '8px', borderRadius: '4px', overflow: 'hidden', marginTop: '0.5rem' }}>
+              <div style={{ background: '#8b5cf6', height: '100%', width: `${reportData.collection_percentage}%`, borderRadius: '4px' }}></div>
+            </div>
+            <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.5rem' }}>
+              Overall Collected vs Overdue
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="glass-card" style={{ padding: '2.5rem' }}>
+        <h3 style={{ margin: '0 0 2rem 0', color: '#1e293b' }}>Monthly Revenue Overview</h3>
+        
+        {/* Simple CSS Bar Chart */}
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '2rem', height: '300px', paddingBottom: '2rem', borderBottom: '2px solid #e2e8f0', position: 'relative' }}>
+          
+          {/* Y-Axis Labels */}
+          <div style={{ position: 'absolute', left: '-10px', top: '0', bottom: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', color: '#94a3b8', fontSize: '0.8rem', fontWeight: 600, alignItems: 'flex-end', transform: 'translateX(-100%)' }}>
+            {yAxisSteps.map((step, i) => (
+              <span key={i}>{step === 0 ? '0' : `Rs ${(step/1000).toFixed(0)}k`}</span>
+            ))}
+          </div>
+
+          {/* Grid Lines */}
+          <div style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', pointerEvents: 'none', zIndex: 0 }}>
+            {yAxisSteps.map((step, i) => (
+              <div key={i} style={{ width: '100%', height: '1px', borderBottom: step === 0 ? 'none' : '1px dashed #e2e8f0' }}></div>
+            ))}
+          </div>
+
+          {/* Bars */}
+          {reportData.monthly_revenue.map((data, index) => {
+            const heightPct = (data.revenue / maxRev) * 100;
+            return (
+              <div key={index} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end', zIndex: 1, group: 'bar' }}>
+                <div 
+                  className="chart-bar"
+                  style={{ 
+                    width: '60%', 
+                    maxWidth: '80px',
+                    height: `${heightPct}%`, 
+                    background: 'linear-gradient(to top, #10b981, #34d399)',
+                    borderRadius: '8px 8px 0 0',
+                    transition: 'all 0.5s ease',
+                    position: 'relative',
+                    boxShadow: '0 4px 6px rgba(16, 185, 129, 0.2)'
+                  }}
+                  title={`Rs ${data.revenue.toLocaleString()}`}
+                >
+                  <div style={{ position: 'absolute', top: '-25px', width: '100%', textAlign: 'center', fontSize: '0.8rem', fontWeight: 700, color: '#1e293b' }}>
+                    Rs {data.revenue >= 1000 ? (data.revenue/1000).toFixed(1) + 'k' : data.revenue}
+                  </div>
+                </div>
+                <div style={{ position: 'absolute', bottom: '-2rem', fontSize: '0.9rem', fontWeight: 600, color: '#64748b', whiteSpace: 'nowrap' }}>
+                  {data.month}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Reports;

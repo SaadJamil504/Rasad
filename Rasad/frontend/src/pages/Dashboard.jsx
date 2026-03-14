@@ -32,6 +32,13 @@ const Dashboard = () => {
   const [filterYear, setFilterYear] = useState(new Date().getFullYear());
   const [filteredHistory, setFilteredHistory] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [ownerStats, setOwnerStats] = useState({
+    deliveries: { total: 0, done: 0, pending: 0 },
+    revenue: { amount: 0, change_pct: 0 },
+    overdue: { count: 0, total_amount: 0 },
+    customers: { total: 0, paused_today: 0 }
+  });
+  const [alerts, setAlerts] = useState({ overdue: [], paused: [] });
 
   useEffect(() => {
     if (!user) return;
@@ -53,12 +60,16 @@ const Dashboard = () => {
             cow_price: user.cow_price || 0,
             buffalo_price: user.buffalo_price || 0
           });
-          const [paymentsRes, adjustmentsRes] = await Promise.all([
+          const [paymentsRes, adjustmentsRes, statsRes, alertsRes] = await Promise.all([
             deliveryAPI.getPayments(),
-            deliveryAPI.getAdjustments()
+            deliveryAPI.getAdjustments(),
+            deliveryAPI.getDashboardStats(),
+            deliveryAPI.getDashboardAlerts()
           ]);
           setPendingPayments(paymentsRes.data);
           setAdjustments(adjustmentsRes.data);
+          setOwnerStats(statsRes.data);
+          setAlerts(alertsRes.data);
         } else if (user.role === 'driver') {
           const [dailyRes, historyRes, adjustmentsRes] = await Promise.all([
             deliveryAPI.getDailyDeliveries(),
@@ -264,8 +275,8 @@ const Dashboard = () => {
             <p style={{ margin: '1rem 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
               Pause delivery for today. Your driver will need to accept this request.
             </p>
-            <textarea 
-              className="form-input" 
+            <textarea
+              className="form-input"
               placeholder="Message for driver (optional)"
               value={adjMessage}
               onChange={(e) => setAdjMessage(e.target.value)}
@@ -290,16 +301,16 @@ const Dashboard = () => {
             </p>
             <div className="input-group" style={{ marginBottom: '1.5rem' }}>
               <label>New Quantity (Liters)</label>
-              <input 
-                type="number" 
+              <input
+                type="number"
                 className="form-input"
                 value={adjQty}
                 onChange={(e) => setAdjQty(e.target.value)}
                 placeholder="e.g. 4"
               />
             </div>
-            <textarea 
-              className="form-input" 
+            <textarea
+              className="form-input"
               placeholder="Message for driver (optional)"
               value={adjMessage}
               onChange={(e) => setAdjMessage(e.target.value)}
@@ -322,8 +333,8 @@ const Dashboard = () => {
             <p style={{ margin: '1rem 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
               Send a message to your driver regarding any issues (e.g. spoiled milk).
             </p>
-            <textarea 
-              className="form-input" 
+            <textarea
+              className="form-input"
               placeholder="Write your complaint here..."
               value={complaintMessage}
               onChange={(e) => setComplaintMessage(e.target.value)}
@@ -346,7 +357,7 @@ const Dashboard = () => {
               <h3>Past Bills & History</h3>
               <button className="btn-secondary" style={{ padding: '0.4rem 0.8rem' }} onClick={() => setShowHistoryModal(false)}>Close</button>
             </div>
-            
+
             <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
               <div style={{ flex: 1 }}>
                 <label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Month</label>
@@ -400,8 +411,8 @@ const Dashboard = () => {
             <form onSubmit={handleReportPayment}>
               <div className="input-group" style={{ marginBottom: '1.5rem' }}>
                 <label>Amount (Rs.)</label>
-                <input 
-                  type="number" 
+                <input
+                  type="number"
                   className="form-input"
                   placeholder="Enter amount"
                   value={paymentAmount}
@@ -430,7 +441,7 @@ const Dashboard = () => {
     const today = new Date();
     const currentMonthName = today.toLocaleString('default', { month: 'long' }).toUpperCase();
     const currentYear = today.getFullYear();
-    
+
     // Calculate Monthly Stats
     const currentMonthHistory = history.filter(item => {
       const itemDate = new Date(item.date);
@@ -444,9 +455,17 @@ const Dashboard = () => {
       <div className="dashboard fade-in">
         <div className="customer-dashboard">
           <div className="customer-header-banner">
-            <div className="greeting">السلام علیکم</div>
-            <h2>{user.first_name || user.username}</h2>
-            <div className="sub-header">#{user.id} - {user.address || 'Gulberg III'} - {user.owner_dairy_name || 'Dairy'}</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <div className="greeting">السلام علیکم</div>
+                <h2>{user.first_name || user.username}</h2>
+                <div className="sub-header">#{user.id} - {user.address || 'Gulberg III'} - {user.owner_dairy_name || 'Dairy'}</div>
+              </div>
+              <button className="logout-pill" onClick={() => {
+                localStorage.clear();
+                window.location.href = '/login';
+              }}>Logout</button>
+            </div>
           </div>
 
           <div className="customer-stats-row">
@@ -478,7 +497,7 @@ const Dashboard = () => {
               ) : (
                 <p style={{ textAlign: 'center', color: '#888', padding: '1rem' }}>No deliveries recorded for this month.</p>
               )}
-              
+
               {currentMonthHistory.length > 0 && (
                 <div className="bill-item total-row">
                   <span className="bill-day" style={{ visibility: 'hidden' }}>0</span>
@@ -496,14 +515,14 @@ const Dashboard = () => {
                 <div>
                   <span className="btn-text-main">⏸ Pause Delivery</span>
                 </div>
-                <div className="btn-text-urdu">ڈیلیوری<br/>روکیں</div>
+                <div className="btn-text-urdu">ڈیلیوری<br />روکیں</div>
               </div>
-              
+
               <div className="action-card-btn" onClick={() => setShowQtyModal(true)}>
                 <div>
                   <span className="btn-text-main">📊 Change Qty</span>
                 </div>
-                <div className="btn-text-urdu">مقدار<br/>بدلیں</div>
+                <div className="btn-text-urdu">مقدار<br />بدلیں</div>
               </div>
 
               <div className="action-card-btn" onClick={() => setShowHistoryModal(true)}>
@@ -524,7 +543,7 @@ const Dashboard = () => {
 
           <div className="payment-report-section" style={{ paddingBottom: '0.5rem' }}>
             <button className="btn-primary-large" onClick={() => setShowPaymentModal(true)} style={{ background: '#1e8449' }}>
-               💸 Report Payment to Owner
+              💸 Report Payment to Owner
             </button>
           </div>
 
@@ -549,13 +568,13 @@ const Dashboard = () => {
 
     // Separate complaints
     const pendingComplaints = adjustments.filter(a => a.adjustment_type === 'complaint' && a.status === 'pending');
-    
+
     // Correlate deliveries with adjustments
     const todayStr = new Date().toISOString().split('T')[0];
     const enrichedDeliveries = deliveries.map(d => {
-      const pendingAdj = adjustments.find(a => 
-        a.customer === d.customer && 
-        a.date === d.date && 
+      const pendingAdj = adjustments.find(a =>
+        a.customer === d.customer &&
+        a.date === d.date &&
         a.status === 'pending'
       );
       return { ...d, pendingAdj };
@@ -567,7 +586,13 @@ const Dashboard = () => {
           <div className="driver-header-banner">
             <div className="banner-top">
               <span>Driver App . ڈرائیور ایپ</span>
-              <span className="banner-date">{new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <span className="banner-date">{new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                <button className="logout-pill-white" onClick={() => {
+                  localStorage.clear();
+                  window.location.href = '/login';
+                }}>Logout</button>
+              </div>
             </div>
             <h2>{user.first_name || user.username} — {user.assigned_route_name || 'Route A'}</h2>
           </div>
@@ -578,7 +603,7 @@ const Dashboard = () => {
               <span className="stat-lbl">Total</span>
             </div>
             <div className="stat-box">
-              <span className="stat-val green">{done} <span style={{fontSize: '1rem'}}>✅</span></span>
+              <span className="stat-val green">{done} <span style={{ fontSize: '1rem' }}>✅</span></span>
               <span className="stat-lbl">Done</span>
             </div>
             <div className="stat-box">
@@ -645,7 +670,7 @@ const Dashboard = () => {
                       <div className="item-info">
                         <div className="customer-name">{delivery.customer_name || delivery.customer_username}</div>
                         <div className="customer-addr">{delivery.customer_address}</div>
-                        
+
                         {statusClass === 'changed' ? (
                           <div className="adjustment-note">
                             {delivery.pendingAdj.adjustment_type === 'pause' ? (
@@ -664,7 +689,7 @@ const Dashboard = () => {
                       <div className="item-actions">
                         {statusClass === 'done' && <span className="status-label green">Done</span>}
                         {statusClass === 'paused' && <span className="status-label gray">Paused</span>}
-                        
+
                         {statusClass === 'changed' && (
                           <div style={{ display: 'flex', gap: '0.5rem' }}>
                             <button className="btn-deliver" onClick={() => handleActionAdjustment(delivery.pendingAdj.id, 'accept')}>Accept</button>
@@ -687,13 +712,8 @@ const Dashboard = () => {
               )}
             </div>
           </div>
-          
-          <div style={{ padding: '0 2rem 2rem' }}>
-            <button className="btn-secondary" onClick={() => {
-              localStorage.clear();
-              window.location.href = '/login';
-            }} style={{ width: '100%', borderRadius: '0.5rem' }}>Logout</button>
-          </div>
+
+
         </div>
         {renderModals()}
       </div>
@@ -702,32 +722,130 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard fade-in">
-      <div className="welcome-banner">
-        <h1>Welcome to Rasad Dashboard! 👋</h1>
-        <p>Manage your drivers and customers efficiently.</p>
-        <button className="btn-secondary" onClick={() => {
-          localStorage.clear();
-          window.location.href = '/login';
-        }} style={{marginTop: '1rem'}}>
-          Logout / Switch Account
-        </button>
-      </div>
-      
-      <div className="stats-grid">
-        <div className="stat-card" onClick={() => window.location.href='/drivers'}>
-          <div className="stat-label">Total Drivers</div>
-          <div className="stat-value">{counts.drivers}</div>
-          <div className="stat-change positive">Invite new drivers</div>
+      <div className="owner-stats-row stats-grid-owner">
+        <div className="stat-card owner-card green-top" onClick={() => window.location.href = '/customers'}>
+          <div className="card-icon">🚴</div>
+          <div className="stat-value">{ownerStats.deliveries.total}</div>
+          <div className="stat-label">Today's Deliveries</div>
+          <div className="stat-sub">
+            <span className="sc-done">✅ {ownerStats.deliveries.done} done</span>
+            <span className="sc-dot">·</span>
+            <span className="sc-pending">{ownerStats.deliveries.pending} pending</span>
+          </div>
         </div>
-        <div className="stat-card" onClick={() => window.location.href='/customers'}>
+
+        <div className="stat-card owner-card yellow-top">
+          <div className="card-icon">💰</div>
+          <div className="stat-value">Rs {ownerStats.revenue.amount.toLocaleString()}</div>
+          <div className="stat-label">Today's Revenue</div>
+          <div className="stat-sub">
+            <span className={`sc-change ${ownerStats.revenue.change_pct >= 0 ? 'pos' : 'neg'}`}>
+              {ownerStats.revenue.change_pct >= 0 ? '↑' : '↓'} {Math.abs(ownerStats.revenue.change_pct).toFixed(1)}% vs yesterday
+            </span>
+          </div>
+        </div>
+
+        <div className="stat-card owner-card red-top">
+          <div className="card-icon">⚠️</div>
+          <div className="stat-value">{ownerStats.overdue.count}</div>
+          <div className="stat-label">Overdue Payments</div>
+          <div className="stat-sub">
+            <span className="sc-total">Rs {ownerStats.overdue.total_amount.toLocaleString()} total due</span>
+          </div>
+        </div>
+
+        <div className="stat-card owner-card purple-top" onClick={() => window.location.href = '/customers'}>
+          <div className="card-icon">👥</div>
+          <div className="stat-value">{ownerStats.customers.total}</div>
           <div className="stat-label">Active Customers</div>
-          <div className="stat-value">{counts.customers}</div>
-          <div className="stat-change positive">Invite new customers</div>
+          <div className="stat-sub sc-paused">{ownerStats.customers.paused_today} paused today</div>
         </div>
-        <div className="stat-card" style={{ cursor: 'default' }}>
-          <div className="stat-label">Total Outstanding</div>
-          <div className="stat-value" style={{ color: '#ff4d4d' }}>Rs. {counts.totalOutstanding?.toFixed(2)}</div>
-          <div className="stat-change">Amount to be received</div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
+        {/* Overdue Alerts Section */}
+        <div className="glass-card" style={{ padding: '2rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              ⚠️ Overdue Alerts <span style={{ fontFamily: '"Noto Nastaliq Urdu", serif', fontSize: '1.2rem', color: '#64748b' }}>واجب الادا</span>
+            </h3>
+            <button className="btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', borderRadius: '1rem', background: '#f8fafc' }} onClick={() => window.location.href = '/customers'}>View All</button>
+          </div>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {Array.isArray(alerts?.overdue) && alerts.overdue.length > 0 ? alerts.overdue.map((customer, index) => {
+              const bgColors = ['rgba(254, 226, 226, 0.5)', 'rgba(254, 243, 199, 0.5)', 'rgba(254, 243, 199, 0.5)'];
+              const borderColors = ['#ef4444', '#f59e0b', '#f59e0b'];
+              const dotColors = ['linear-gradient(135deg, #f87171, #dc2626)', 'linear-gradient(135deg, #fbbf24, #d97706)', 'linear-gradient(135deg, #fbbf24, #d97706)'];
+              
+              const styleIdx = index < 3 ? index : 2;
+              
+              return (
+                <div key={customer.id} style={{ 
+                  background: bgColors[styleIdx], 
+                  borderLeft: `4px solid ${borderColors[styleIdx]}`,
+                  padding: '1.25rem',
+                  borderRadius: '1rem',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '1rem'
+                }}>
+                  <div style={{ 
+                    width: '16px', height: '16px', borderRadius: '50%', background: dotColors[styleIdx], 
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)', flexShrink: 0, marginTop: '0.2rem'
+                  }}></div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 800, color: '#1e293b', marginBottom: '0.25rem' }}>
+                      {customer.name} — <span style={{ fontWeight: 600, color: '#475569' }}>Rs {customer.amount} overdue</span>
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
+                      {customer.address}, {customer.route}
+                    </div>
+                  </div>
+                </div>
+              );
+            }) : (
+              <p style={{ color: '#94a3b8', textAlign: 'center', padding: '1rem 0' }}>No overdue customers at the moment.</p>
+            )}
+          </div>
+        </div>
+
+        {/* Today's Paused Deliveries Section */}
+        <div className="glass-card" style={{ padding: '2rem' }}>
+          <h3 style={{ margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            📦 Today's Paused Deliveries
+          </h3>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {Array.isArray(alerts?.paused) && alerts.paused.length > 0 ? alerts.paused.map(delivery => (
+              <div key={delivery.id} style={{ 
+                background: '#f0fdf4',
+                borderLeft: '4px solid #16a34a',
+                padding: '1.25rem',
+                borderRadius: '1rem',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '1rem'
+              }}>
+                <div style={{ 
+                  background: '#3b82f6', width: '24px', height: '24px', borderRadius: '4px', 
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '0.1rem'
+                }}>
+                  <span style={{ color: 'white', fontSize: '0.7rem', fontWeight: 800 }}>II</span>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 800, color: '#1e293b', marginBottom: '0.25rem' }}>
+                    {delivery.customer_name} — <span style={{ fontWeight: 600, color: '#475569' }}>{delivery.route}</span>
+                  </div>
+                  <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
+                    "{delivery.reason}"
+                  </div>
+                </div>
+              </div>
+            )) : (
+              <p style={{ color: '#94a3b8', textAlign: 'center', padding: '1rem 0' }}>No paused deliveries for today.</p>
+            )}
+          </div>
         </div>
       </div>
 
@@ -752,38 +870,9 @@ const Dashboard = () => {
         </div>
       )}
 
-      <div className="recent-activity glass-card" style={{ padding: '2.5rem' }}>
-        <h3>Set Daily Milk Prices</h3>
-        <form onSubmit={handleUpdatePrices} className="pricing-form" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '2rem', marginTop: '1.5rem' }}>
-          <div className="input-group">
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Cow Milk Price (per Liter)</label>
-            <input 
-              type="number" 
-              className="form-input"
-              value={prices.cow_price} 
-              onChange={(e) => setPrices({...prices, cow_price: e.target.value})}
-              required
-            />
-          </div>
-          <div className="input-group">
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Buffalo Milk Price (per Liter)</label>
-            <input 
-              type="number" 
-              className="form-input"
-              value={prices.buffalo_price} 
-              onChange={(e) => setPrices({...prices, buffalo_price: e.target.value})}
-              required
-            />
-          </div>
-          <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-            <button type="submit" className="btn-primary" disabled={updatingPrices} style={{ width: '100%' }}>
-              {updatingPrices ? 'Updating...' : 'Save Prices'}
-            </button>
-          </div>
-        </form>
-      </div>
-      
-      <div className="recent-activity" style={{ marginTop: '2rem' }}>
+
+
+      <div className="recent-activity glass-card" style={{ padding: '2.5rem', marginBottom: '2rem' }}>
         <h3>Activity Logs (Requests)</h3>
         <div className="history-list" style={{ marginTop: '1.5rem' }}>
           {adjustments.length > 0 ? (
@@ -792,15 +881,15 @@ const Dashboard = () => {
                 <div>
                   <div style={{ fontWeight: 800 }}>{adj.customer_name || adj.customer_username}</div>
                   <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                    {adj.adjustment_type === 'pause' ? 'Pause Request' : 
-                     adj.adjustment_type === 'quantity' ? `Qty Change: ${adj.new_quantity}L` : 
-                     'Complaint'} - {adj.date}
+                    {adj.adjustment_type === 'pause' ? 'Pause Request' :
+                      adj.adjustment_type === 'quantity' ? `Qty Change: ${adj.new_quantity}L` :
+                        'Complaint'} - {adj.date}
                   </div>
                 </div>
-                <div style={{ 
-                  padding: '0.3rem 0.8rem', 
-                  borderRadius: '20px', 
-                  fontSize: '0.75rem', 
+                <div style={{
+                  padding: '0.3rem 0.8rem',
+                  borderRadius: '20px',
+                  fontSize: '0.75rem',
                   fontWeight: 700,
                   textTransform: 'uppercase',
                   background: adj.status === 'accepted' ? 'rgba(77, 255, 140, 0.1)' : adj.status === 'rejected' ? 'rgba(255, 77, 77, 0.1)' : 'rgba(255, 255, 255, 0.05)',
@@ -814,7 +903,7 @@ const Dashboard = () => {
             <p style={{ color: 'var(--text-muted)' }}>No recent activity requests.</p>
           )}
         </div>
-           </div>
+      </div>
 
 
       {/* Modals for Quick Actions */}

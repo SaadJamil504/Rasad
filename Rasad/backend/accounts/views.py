@@ -426,6 +426,16 @@ class DeliveryHistoryView(APIView):
                 )
             except Route.DoesNotExist:
                 return Response({'error': 'No route assigned.'}, status=status.HTTP_404_NOT_FOUND)
+        elif request.user.role == 'owner':
+            customer_id = request.query_params.get('customer_id')
+            if customer_id:
+                try:
+                    customer = User.objects.get(pk=customer_id, parent_owner=request.user, role='customer')
+                    queryset = Delivery.objects.filter(customer=customer)
+                except User.DoesNotExist:
+                    return Response({'error': 'Customer not found.'}, status=status.HTTP_404_NOT_FOUND)
+            else:
+                return Response({'error': 'Customer ID is required for owners.'}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({'error': 'Unauthorized.'}, status=status.HTTP_403_FORBIDDEN)
 
@@ -464,11 +474,15 @@ class PaymentListView(APIView):
         description="List payments. Owners see pending payments from their customers. Customers see their own history."
     )
     def get(self, request):
+        customer_id = request.query_params.get('customer_id')
         if request.user.role == 'customer':
             payments = Payment.objects.filter(customer=request.user).order_by('-created_at')
         elif request.user.role == 'owner':
-            # Payments from customers linked to this owner
-            payments = Payment.objects.filter(customer__parent_owner=request.user, status='pending').order_by('-created_at')
+            if customer_id:
+                payments = Payment.objects.filter(customer__parent_owner=request.user, customer_id=customer_id).order_by('-created_at')
+            else:
+                # Payments from customers linked to this owner
+                payments = Payment.objects.filter(customer__parent_owner=request.user, status='pending').order_by('-created_at')
         else:
             return Response({'error': 'Unauthorized.'}, status=status.HTTP_403_FORBIDDEN)
             
@@ -606,3 +620,210 @@ class DeliveryAdjustmentActionView(APIView):
             return Response(DeliveryAdjustmentSerializer(adjustment).data)
         except DeliveryAdjustment.DoesNotExist:
             return Response({'error': 'Adjustment request not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+class DashboardStatsView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    @extend_schema(
+        responses={200: dict},
+        description="Get summary stats for the owner's dashboard."
+    )
+    def get(self, request):
+        if request.user.role != 'owner':
+            return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+        
+        today = timezone.now().date()
+        yesterday = today - timezone.timedelta(days=1)
+        
+        # 1. Today's Deliveries
+        deliveries_today = Delivery.objects.filter(route__owner=request.user, date=today)
+        total_d = deliveries_today.count()
+        done_d = deliveries_today.filter(status__in=['delivered', 'paused']).count()
+        pending_d = total_d - done_d
+        
+        # 2. Today's Revenue
+        revenue_today = deliveries_today.filter(status='delivered').aggregate(total=models.Sum('total_amount'))['total'] or 0
+        revenue_yesterday = Delivery.objects.filter(
+            route__owner=request.user, 
+            date=yesterday, 
+            status='delivered'
+        ).aggregate(total=models.Sum('total_amount'))['total'] or 0
+        
+        revenue_change_pct = 0
+        if revenue_yesterday > 0:
+            revenue_change_pct = ((revenue_today - revenue_yesterday) / revenue_yesterday) * 100
+            
+        # 3. Overdue/Outstanding
+        customers = User.objects.filter(parent_owner=request.user, role='customer')
+        overdue_customers_count = customers.filter(outstanding_balance__gt=0).count()
+        total_outstanding = customers.aggregate(total=models.Sum('outstanding_balance'))['total'] or 0
+        
+        # 4. Active Customers
+        total_customers = customers.count()
+        paused_today = deliveries_today.filter(status='paused').count()
+        
+        return Response({
+            'deliveries': {
+                'total': total_d,
+                'done': done_d,
+                'pending': pending_d
+            },
+            'revenue': {
+                'amount': float(revenue_today),
+                'change_pct': float(revenue_change_pct)
+            },
+            'overdue': {
+                'count': overdue_customers_count,
+                'total_amount': float(total_outstanding)
+            },
+            'customers': {
+                'total': total_customers,
+                'paused_today': paused_today
+            }
+        })
+
+class DashboardAlertsView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    @extend_schema(
+        responses={200: dict},
+        description="Get overdue customers and today's paused deliveries for owner."
+    )
+    def get(self, request):
+        if request.user.role != 'owner':
+            return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+            
+        today = timezone.now().date()
+
+        # 1. Overdue Customers
+        overdue_customers = User.objects.filter(
+            parent_owner=request.user, 
+            role='customer', 
+            outstanding_balance__gt=0
+        ).order_by('-outstanding_balance')[:10]
+        
+        overdue_data = [{
+            'id': c.id,
+            'name': c.first_name or c.username,
+            'amount': c.outstanding_balance,
+            'route': c.route.name if c.route else 'Unassigned',
+            'address': c.address or 'N/A'
+        } for c in overdue_customers]
+
+        # 2. Paused Deliveries Today
+        paused_deliveries = Delivery.objects.filter(
+            route__owner=request.user,
+            date=today,
+            status='paused'
+        ).select_related('customer')
+
+        paused_data = []
+        for d in paused_deliveries:
+            # Check if there's a corresponding accepted pause adjustment to show reason
+            adj = DeliveryAdjustment.objects.filter(
+                customer=d.customer,
+                date=today,
+                status='accepted',
+                adjustment_type='pause'
+            ).first()
+            
+            paused_data.append({
+                'id': d.id,
+                'customer_name': d.customer.first_name or d.customer.username,
+                'route': d.route.name,
+                'reason': adj.message if adj and adj.message else 'Paused'
+            })
+
+        return Response({
+            'overdue': overdue_data,
+            'paused': paused_data
+        })
+
+class DashboardReportsView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    @extend_schema(
+        responses={200: dict},
+        description="Get an analytical report for the owner including total milk, revenue and chart data."
+    )
+    def get(self, request):
+        if request.user.role != 'owner':
+            return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+            
+        today = timezone.now().date()
+        current_month = today.month
+        current_year = today.year
+
+        # 1 & 2. Total milk and revenue of this month (Calculated based on active customers and current day)
+        # Assuming the dashboard should show the *expected* milk/revenue up to today, 
+        # or the *total* for the month based on current subscriptions. 
+        # The user seems to want actual delivered/billed amounts. 
+        # If Deliveries are only generated day-by-day, we might need to sum up all past deliveries 
+        # PLUS today's deliveries (whether delivered or not, as long as they aren't paused)
+        
+        # Let's get all deliveries created in this month that are NOT paused
+        deliveries_this_month = Delivery.objects.filter(
+            route__owner=request.user,
+            date__month=current_month,
+            date__year=current_year
+        ).exclude(status='paused')
+        
+        total_milk_this_month = deliveries_this_month.aggregate(total=models.Sum('quantity'))['total'] or 0
+        total_revenue_this_month = deliveries_this_month.aggregate(total=models.Sum('total_amount'))['total'] or 0
+
+        # If zero (e.g., cron jobs haven't run or records are missing), calculate based on active customers * days passed
+        if total_milk_this_month == 0:
+            customers = User.objects.filter(parent_owner=request.user, role='customer', route__isnull=False)
+            daily_milk = sum(c.daily_quantity or 0 for c in customers)
+            
+            daily_revenue = 0
+            for c in customers:
+                qty = c.daily_quantity or 0
+                price = c.cow_price if c.milk_type == 'cow' else c.buffalo_price
+                daily_revenue += (qty * price)
+
+            days_passed = today.day
+            total_milk_this_month = daily_milk * days_passed
+            total_revenue_this_month = daily_revenue * days_passed
+
+        # 3. Percentage of total collected amount to overdue amount
+        customers = User.objects.filter(parent_owner=request.user, role='customer')
+        total_overdue = customers.aggregate(total=models.Sum('outstanding_balance'))['total'] or 0
+        total_collected = customers.aggregate(total=models.Sum('total_paid'))['total'] or 0
+
+        collection_percentage = 0
+        if (total_collected + total_overdue) > 0:
+            collection_percentage = (total_collected / (total_collected + total_overdue)) * 100
+
+        # 4. Graph data: Month on x axis and revenue on y axis (Static starting from Mar '26)
+        monthly_revenue_data = []
+        start_month = 3
+        start_year = 2026
+        
+        for i in range(6):
+            target_month = start_month + i
+            target_year = start_year
+            if target_month > 12:
+                target_month -= 12
+                target_year += 1
+                
+            rev = Delivery.objects.filter(
+                route__owner=request.user,
+                date__month=target_month,
+                date__year=target_year
+            ).exclude(status='paused').aggregate(total=models.Sum('total_amount'))['total'] or 0
+            
+            month_name = timezone.datetime(target_year, target_month, 1).strftime('%b')
+            monthly_revenue_data.append({
+                'month': f"{month_name} '{str(target_year)[-2:]}",
+                'revenue': float(rev)
+            })
+
+        return Response({
+            'this_month_milk': float(total_milk_this_month),
+            'this_month_revenue': float(total_revenue_this_month),
+            'total_overdue': float(total_overdue),
+            'total_collected': float(total_collected),
+            'collection_percentage': float(collection_percentage),
+            'monthly_revenue': monthly_revenue_data
+        })

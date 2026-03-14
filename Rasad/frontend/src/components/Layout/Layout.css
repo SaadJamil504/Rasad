@@ -192,10 +192,12 @@
   background: rgba(0, 0, 0, 0.3);
 }
 
-.page-body {
-  padding: 3rem;
-  flex: 1;
-  overflow-y: auto;
+.app-layout.no-sidebar .main-content {
+  width: 100%;
+}
+
+.page-body.full-width {
+  padding: 0;
 }
 
 .loading-screen {
@@ -206,4 +208,122 @@
   font-weight: 800;
   font-size: 1.5rem;
   color: var(--primary);
+}
+
+/* Owner Theme Overrides - Green Sidebar & White Background */
+.app-layout.role-owner {
+  background: #f8fafc !important; /* Extremely light gray almost white */
+  color: #1e293b;
+}
+
+.app-layout.role-owner .sidebar {
+  background: #27ae60 !important; /* Lush Green */
+  backdrop-filter: none;
+  border-right: none;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+}
+
+.app-layout.role-owner .sidebar-header h2 {
+  color: white;
+}
+
+.app-layout.role-owner .nav-item {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.app-layout.role-owner .nav-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.app-layout.role-owner .nav-item.active {
+  background: white;
+  color: #27ae60; /* Green text for active item */
+}
+
+.app-layout.role-owner .user-info .name {
+  color: white;
+}
+
+.app-layout.role-owner .sidebar-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.app-layout.role-owner .main-content {
+  background: #f8fafc;
+}
+
+.app-layout.role-owner .top-bar {
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.app-layout.role-owner .breadcrumb {
+  color: #64748b;
+}
+
+.app-layout.role-owner .search-bar input {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #1e293b;
+}
+
+.app-layout.role-owner .search-bar input::placeholder {
+  color: #94a3b8;
+}
+
+.app-layout.role-owner .search-bar input:focus {
+  border-color: #27ae60;
+  background: white;
+}
+
+.app-layout.role-owner .logo-icon,
+.app-layout.role-owner .avatar {
+  background: white;
+  color: #27ae60;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.app-layout.role-owner .glass-card,
+.app-layout.role-owner .stat-card:not(.owner-card) {
+  background: white !important;
+  color: #1e293b !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+}
+
+.app-layout.role-owner h1,
+.app-layout.role-owner h2,
+.app-layout.role-owner h3,
+.app-layout.role-owner h4 {
+  color: #1e293b !important;
+}
+
+.app-layout.role-owner .recent-activity {
+  background: white !important;
+  color: #1e293b !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.app-layout.role-owner .form-input {
+  background: #f1f5f9 !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+.app-layout.role-owner .history-item {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+.app-layout.role-owner .history-item div {
+  color: #1e293b !important;
+}
+
+.app-layout.role-owner .btn-secondary {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
 }
