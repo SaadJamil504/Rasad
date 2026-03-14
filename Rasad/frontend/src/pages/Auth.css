@@ -58,6 +58,7 @@
   margin-bottom: 0.75rem;
   background: linear-gradient(to right, #fff, #94a3b8);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -144,4 +145,143 @@ button[type="submit"]:active {
   font-weight: 700;
   color: white;
   margin-left: 0.5rem;
+}
+
+/* --- NEW LOGIN PAGE DESIGN --- */
+.login-page-bg {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #1e5c3e; /* Dark green background as per requested design */
+  font-family: 'Inter', sans-serif;
+}
+
+.login-white-card {
+  background: white;
+  border-radius: 12px;
+  padding: 3rem;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  animation: authFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.login-header-area {
+  margin-bottom: 2.5rem;
+}
+
+.login-icon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.login-brand-title {
+  color: #15803d; /* brand green */
+  font-weight: 800;
+  font-size: 1.8rem;
+  margin: 0 0 0.25rem 0;
+  letter-spacing: -0.5px;
+}
+
+.login-brand-subtitle {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.login-brand-urdu {
+  color: #64748b;
+  font-family: 'Noto Nastaliq Urdu', serif; /* Or fallback */
+  font-size: 1.1rem;
+  margin: 0.25rem 0 0 0;
+}
+
+.login-form-clean {
+  text-align: left;
+}
+
+.form-group-clean {
+  margin-bottom: 1.25rem;
+}
+
+.form-group-clean label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.5px;
+}
+
+.form-group-clean input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #1e293b;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.form-group-clean input:focus {
+  outline: none;
+  border-color: #15803d;
+  box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.1);
+}
+
+.form-group-clean input::placeholder {
+  color: #cbd5e1;
+}
+
+.login-submit-btn {
+  width: 100%;
+  background: #1e5c3e;
+  color: white;
+  padding: 0.875rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 1rem;
+  border: none;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: background 0.2s ease;
+  font-family: 'Inter', 'Noto Nastaliq Urdu', sans-serif;
+}
+
+.login-submit-btn:hover {
+  background: #154c30;
+}
+
+.login-footer-clean {
+  margin-top: 2rem;
+  font-size: 0.85rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.login-footer-clean a {
+  color: #1e5c3e;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.login-footer-clean a:hover {
+  text-decoration: underline;
+}
+
+.error-message-clean {
+  background: #fef2f2;
+  color: #dc2626;
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: 1px solid #fecaca;
 }

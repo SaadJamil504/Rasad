@@ -32,42 +32,46 @@ const Login = () => {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <h2>Welcome Back</h2>
-        <p className="auth-subtitle">Log in to manage your delivery system</p>
+    <div className="login-page-bg">
+      <div className="login-white-card">
+        <div className="login-header-area">
+          <div className="login-icon">🥛</div>
+          <h1 className="login-brand-title">Rasad</h1>
+          <p className="login-brand-subtitle">Milk Delivery Management</p>
+          <p className="login-brand-urdu">دودھ ڈیلیوری مینجمنٹ</p>
+        </div>
         
-        {error && <div className="error-message">{error}</div>}
+        {error && <div className="error-message-clean">{error}</div>}
         
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Username</label>
+        <form onSubmit={handleSubmit} className="login-form-clean">
+          <div className="form-group-clean">
+            <label>PHONE NUMBER <span style={{fontFamily: 'Noto Nastaliq Urdu, sans-serif', fontSize: '0.9rem'}}>فون نمبر</span></label>
             <input 
               type="text" 
               value={username} 
               onChange={(e) => setUsername(e.target.value)} 
               required 
-              placeholder="Enter your username"
+              placeholder="0300-1234567"
             />
           </div>
-          <div className="form-group">
-            <label>Password</label>
+          <div className="form-group-clean">
+            <label>PASSWORD <span style={{fontFamily: 'Noto Nastaliq Urdu, sans-serif', fontSize: '0.9rem'}}>پاس ورڈ</span></label>
             <input 
               type="password" 
               value={password} 
               onChange={(e) => setPassword(e.target.value)} 
               required 
-              placeholder="Enter your password"
+              placeholder="........"
             />
           </div>
-          <button type="submit" disabled={loading}>
-            {loading ? 'Logging in...' : 'Log In'}
+          <button type="submit" className="login-submit-btn" disabled={loading}>
+            {loading ? 'Logging in...' : 'لاگ ان - Login'}
           </button>
         </form>
         
-        <p className="auth-footer">
+        <div className="login-footer-clean">
           Are you a new Owner? <Link to="/signup">Register as a New Owner</Link>
-        </p>
+        </div>
       </div>
     </div>
   );
