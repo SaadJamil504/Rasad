@@ -60,6 +60,7 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "https://rasad-ten.vercel.app",
 ]
 if env('FRONTEND_URL', default=None):
     CORS_ALLOWED_ORIGINS.append(env('FRONTEND_URL').rstrip('/'))
@@ -139,6 +140,7 @@ SPECTACULAR_SETTINGS = {
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "https://rasad-ten.vercel.app",
 ]
 if env('FRONTEND_URL', default=None):
     CSRF_TRUSTED_ORIGINS.append(env('FRONTEND_URL').rstrip('/'))
