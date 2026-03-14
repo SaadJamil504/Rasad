@@ -45,13 +45,13 @@ const Login = () => {
         
         <form onSubmit={handleSubmit} className="login-form-clean">
           <div className="form-group-clean">
-            <label>PHONE NUMBER <span style={{fontFamily: 'Noto Nastaliq Urdu, sans-serif', fontSize: '0.9rem'}}>فون نمبر</span></label>
+            <label>USERNAME <span style={{fontFamily: 'Noto Nastaliq Urdu, sans-serif', fontSize: '0.9rem'}}>یوزر نیم</span></label>
             <input 
               type="text" 
               value={username} 
               onChange={(e) => setUsername(e.target.value)} 
               required 
-              placeholder="0300-1234567"
+              placeholder="Enter your username"
             />
           </div>
           <div className="form-group-clean">
