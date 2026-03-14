@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://rasad-production.up.railway.app/api/',
+  baseURL: import.meta.env.VITE_API_URL || 'https://rasad-production.up.railway.app/api',
   timeout: 15000, // 15 seconds timeout for slow Railway instances
   headers: {
     'Content-Type': 'application/json',
@@ -80,23 +80,23 @@ api.interceptors.response.use(
         const response = await axios.post(`${import.meta.env.VITE_API_URL || 'https://rasad-production.up.railway.app/api/'}accounts/login/refresh/`, {
           refresh: refreshToken,
         }, { timeout: 10000 });
-        
+
         const newAccessToken = response.data.access;
         localStorage.setItem('access_token', newAccessToken);
         console.log('[API] Token refresh successful. Retrying original request.');
-        
+
         api.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
         originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
-        
+
         processQueue(null, newAccessToken);
         return api(originalRequest);
       } catch (refreshError) {
         console.error('[API] Token refresh failed:', refreshError);
         processQueue(refreshError, null);
-        
+
         // Handle "user_not_found" during refresh too
-        const isUserGone = refreshError.response?.data?.code === 'user_not_found' || 
-                           refreshError.response?.data?.detail?.includes('not found');
+        const isUserGone = refreshError.response?.data?.code === 'user_not_found' ||
+          refreshError.response?.data?.detail?.includes('not found');
 
         if (!window.location.pathname.includes('/login')) {
           localStorage.clear();
