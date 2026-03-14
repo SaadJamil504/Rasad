@@ -50,60 +50,69 @@ const Signup = () => {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <h2>Owner Registration</h2>
-        <p className="auth-subtitle">Create an account to manage your delivery network</p>
+    <div className="login-page-bg">
+      <div className="signup-white-card">
+        <div className="login-header-area">
+          <div className="login-icon">🥛</div>
+          <h1 className="login-brand-title">Rasad</h1>
+          <p className="login-brand-subtitle">Owner Registration</p>
+        </div>
         
-        {error && <div className="error-message">{error}</div>}
+        {error && <div className="error-message-clean">{error}</div>}
         
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Username</label>
-            <input 
-              name="username"
-              type="text" 
-              value={formData.username} 
-              onChange={handleChange} 
-              required 
-              placeholder="johndoe"
-            />
+        <form onSubmit={handleSubmit} className="login-form-clean">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form-group-clean">
+              <label>USERNAME</label>
+              <input 
+                name="username"
+                type="text" 
+                value={formData.username} 
+                onChange={handleChange} 
+                required 
+                placeholder="johndoe"
+              />
+            </div>
+            <div className="form-group-clean">
+              <label>FULL NAME</label>
+              <input 
+                name="full_name"
+                type="text" 
+                value={formData.full_name} 
+                onChange={handleChange} 
+                required 
+                placeholder="John Doe"
+              />
+            </div>
           </div>
-          <div className="form-group">
-            <label>Full Name</label>
-            <input 
-              name="full_name"
-              type="text" 
-              value={formData.full_name} 
-              onChange={handleChange} 
-              required 
-              placeholder="John Doe"
-            />
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form-group-clean">
+              <label>EMAIL</label>
+              <input 
+                name="email"
+                type="email" 
+                value={formData.email} 
+                onChange={handleChange} 
+                required 
+                placeholder="john@example.com"
+              />
+            </div>
+            <div className="form-group-clean">
+              <label>PHONE</label>
+              <input 
+                name="phone_number"
+                type="text" 
+                value={formData.phone_number} 
+                onChange={handleChange} 
+                required 
+                placeholder="+92..."
+              />
+            </div>
           </div>
-          <div className="form-group">
-            <label>Email</label>
-            <input 
-              name="email"
-              type="email" 
-              value={formData.email} 
-              onChange={handleChange} 
-              required 
-              placeholder="john@example.com"
-            />
-          </div>
-          <div className="form-group">
-            <label>Phone Number</label>
-            <input 
-              name="phone_number"
-              type="text" 
-              value={formData.phone_number} 
-              onChange={handleChange} 
-              required 
-              placeholder="+1234567890"
-            />
-          </div>
-          <div className="form-group">
-            <label>Dairy Name</label>
+
+          <div className="form-group-clean">
+            <label>DAIRY NAME</label>
             <input 
               name="dairy_name"
               type="text" 
@@ -113,20 +122,20 @@ const Signup = () => {
               placeholder="e.g. Ahmad Milk Dairy"
             />
           </div>
-          <div className="form-group">
-            <label>Address</label>
-            <textarea 
+
+          <div className="form-group-clean">
+            <label>ADDRESS</label>
+            <input 
               name="address"
+              type="text"
               value={formData.address} 
               onChange={handleChange} 
               placeholder="Your dairy path or office address"
-              rows="2"
-              className="glass-input"
-              style={{ padding: '0.8rem', width: '100%', borderRadius: '12px' }}
             />
           </div>
-          <div className="form-group">
-            <label>Password</label>
+
+          <div className="form-group-clean">
+            <label>PASSWORD</label>
             <input 
               name="password"
               type="password" 
@@ -136,14 +145,15 @@ const Signup = () => {
               placeholder="••••••••"
             />
           </div>
-          <button type="submit" disabled={loading}>
+
+          <button type="submit" className="login-submit-btn" disabled={loading}>
             {loading ? 'Creating Owner Account...' : 'Sign Up as Owner'}
           </button>
         </form>
         
-        <p className="auth-footer">
+        <div className="login-footer-clean">
           Already have an account? <Link to="/login">Log in</Link>
-        </p>
+        </div>
       </div>
     </div>
   );

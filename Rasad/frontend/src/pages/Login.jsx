@@ -38,14 +38,13 @@ const Login = () => {
           <div className="login-icon">🥛</div>
           <h1 className="login-brand-title">Rasad</h1>
           <p className="login-brand-subtitle">Milk Delivery Management</p>
-          <p className="login-brand-urdu">دودھ ڈیلیوری مینجمنٹ</p>
         </div>
         
         {error && <div className="error-message-clean">{error}</div>}
         
         <form onSubmit={handleSubmit} className="login-form-clean">
           <div className="form-group-clean">
-            <label>USERNAME <span style={{fontFamily: 'Noto Nastaliq Urdu, sans-serif', fontSize: '0.9rem'}}>یوزر نیم</span></label>
+            <label>USERNAME</label>
             <input 
               type="text" 
               value={username} 
@@ -55,7 +54,7 @@ const Login = () => {
             />
           </div>
           <div className="form-group-clean">
-            <label>PASSWORD <span style={{fontFamily: 'Noto Nastaliq Urdu, sans-serif', fontSize: '0.9rem'}}>پاس ورڈ</span></label>
+            <label>PASSWORD</label>
             <input 
               type="password" 
               value={password} 
@@ -65,7 +64,7 @@ const Login = () => {
             />
           </div>
           <button type="submit" className="login-submit-btn" disabled={loading}>
-            {loading ? 'Logging in...' : 'لاگ ان - Login'}
+            {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
         

@@ -285,3 +285,23 @@ button[type="submit"]:active {
   font-weight: 500;
   border: 1px solid #fecaca;
 }
+
+.signup-white-card {
+  background: white;
+  border-radius: 12px;
+  padding: 2.5rem 3rem;
+  width: 100%;
+  max-width: 550px; /* Slightly wider for signup forms */
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  animation: authFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  margin: 2rem;
+}
+
+.field-hint-clean {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: -0.75rem;
+  margin-bottom: 1rem;
+  font-style: italic;
+}

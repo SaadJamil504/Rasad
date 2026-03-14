@@ -92,157 +92,153 @@ const InvitationSignup = () => {
     }
   };
 
-  if (loading) return <div className="auth-container"><div className="glass-card">Loading...</div></div>;
+  if (loading) return <div className="login-page-bg"><div className="login-white-card">Loading...</div></div>;
   if (error && !invitation) return (
-    <div className="auth-container">
-      <div className="glass-card">
+    <div className="login-page-bg">
+      <div className="login-white-card">
         <h2 className="error-text">Link Error</h2>
         <p>{error}</p>
-        <button className="btn-primary" onClick={() => navigate('/login')}>Go to Login</button>
+        <button className="login-submit-btn" onClick={() => navigate('/login')}>Go to Login</button>
       </div>
     </div>
   );
 
   return (
-    <div className="auth-container">
-      <div className="glass-card fade-in">
-        <div className="auth-header">
-          <h1>Welcome to Rasad</h1>
-          <p>Complete your registration as a <strong>{invitation.role}</strong></p>
-          <p className="subtitle">Invited by: {invitation.owner_name}</p>
+    <div className="login-page-bg">
+      <div className="signup-white-card">
+        <div className="login-header-area">
+          <div className="login-icon">🥛</div>
+          <h1 className="login-brand-title">Rasad</h1>
+          <p className="login-brand-subtitle">Registration as {invitation.role}</p>
+          <p className="field-hint-clean">Invited by: {invitation.owner_name}</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
-            <label>Email Address</label>
+        <form onSubmit={handleSubmit} className="login-form-clean">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form-group-clean">
+              <label>FULL NAME</label>
+              <input
+                type="text"
+                name="full_name"
+                placeholder="Your Full Name"
+                required
+                value={formData.full_name}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="form-group-clean">
+              <label>USERNAME</label>
+              <input
+                type="text"
+                name="username"
+                placeholder="Choose a username"
+                required
+                value={formData.username}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+
+          <div className="form-group-clean">
+            <label>EMAIL</label>
             <input
               type="email"
               name="email"
               placeholder="e.g. user@gmail.com"
               required
-              className="glass-input"
               value={formData.email}
               onChange={handleChange}
             />
-            <p className="field-hint">Only Gmail addresses are supported.</p>
+          </div>
+          <p className="field-hint-clean">Only Gmail addresses are supported.</p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form-group-clean">
+              <label>PHONE</label>
+              <input
+                type="text"
+                name="phone_number"
+                placeholder="+92..."
+                required
+                value={formData.phone_number}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="form-group-clean">
+              {invitation.role === 'driver' ? (
+                <>
+                  <label>LICENSE</label>
+                  <input
+                    type="text"
+                    name="license_number"
+                    placeholder="License Number"
+                    required
+                    value={formData.license_number}
+                    onChange={handleChange}
+                  />
+                </>
+              ) : (
+                <>
+                  <label>MILK TYPE</label>
+                  <select 
+                    name="milk_type" 
+                    className="form-group-clean input" 
+                    value={formData.milk_type} 
+                    onChange={handleChange}
+                    required
+                    style={{ width: '100%', padding: '0.875rem', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white' }}
+                  >
+                    <option value="cow">Cow Milk</option>
+                    <option value="buffalo">Buffalo Milk</option>
+                    <option value="both">Both</option>
+                  </select>
+                </>
+              )}
+            </div>
           </div>
 
-          <div className="form-group">
-            <label>Full Name</label>
+          <div className="form-group-clean">
+            <label>ADDRESS</label>
             <input
-              type="text"
-              name="full_name"
-              placeholder="Your Full Name"
-              required
-              className="glass-input"
-              value={formData.full_name}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Username</label>
-            <input
-              type="text"
-              name="username"
-              placeholder="Choose a username"
-              required
-              className="glass-input"
-              value={formData.username}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Password</label>
-            <input
-              type="password"
-              name="password"
-              placeholder="Your Password"
-              required
-              className="glass-input"
-              value={formData.password}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Phone Number</label>
-            <input
-              type="text"
-              name="phone_number"
-              placeholder="e.g. +923001234567"
-              required
-              className="glass-input"
-              value={formData.phone_number}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Permanent Address</label>
-            <textarea
               name="address"
-              placeholder="House #, Street, Area for daily delivery"
+              placeholder="House #, Street, Area"
               required={invitation.role === 'customer'}
-              className="glass-input"
-              rows="3"
-              style={{ minHeight: '80px', resize: 'vertical', padding: '12px' }}
               value={formData.address}
               onChange={handleChange}
             />
           </div>
 
-          {invitation.role === 'customer' && (
-            <>
-              <div className="form-group">
-                <label>Milk Type</label>
-                <select 
-                  name="milk_type" 
-                  className="glass-input" 
-                  value={formData.milk_type} 
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="cow">Cow Milk</option>
-                  <option value="buffalo">Buffalo Milk</option>
-                  <option value="both">Both</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Daily Quantity (Liters)</label>
+          <div style={{ display: 'grid', gridTemplateColumns: invitation.role === 'customer' ? '1fr 1fr' : '1fr', gap: '1rem' }}>
+            <div className="form-group-clean">
+              <label>PASSWORD</label>
+              <input
+                type="password"
+                name="password"
+                placeholder="Your Password"
+                required
+                value={formData.password}
+                onChange={handleChange}
+              />
+            </div>
+            {invitation.role === 'customer' && (
+              <div className="form-group-clean">
+                <label>QTY (LITERS)</label>
                 <input
                   type="number"
                   step="0.5"
                   name="daily_quantity"
                   placeholder="e.g. 2.0"
                   required
-                  className="glass-input"
                   value={formData.daily_quantity}
                   onChange={handleChange}
                 />
               </div>
-            </>
-          )}
+            )}
+          </div>
 
-          {invitation.role === 'driver' && (
-            <div className="form-group">
-              <label>License Number</label>
-              <input
-                type="text"
-                name="license_number"
-                placeholder="Your Driving License Number"
-                required
-                className="glass-input"
-                value={formData.license_number}
-                onChange={handleChange}
-              />
-            </div>
-          )}
+          {error && <div className="error-message-clean">{error}</div>}
 
-          {error && <div className="error-message">{error}</div>}
-
-          <button type="submit" className="btn-primary" disabled={loading}>
+          <button type="submit" className="login-submit-btn" disabled={loading}>
             {loading ? 'Creating Account...' : 'Complete Registration'}
           </button>
         </form>
