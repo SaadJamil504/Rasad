@@ -1,0 +1,94 @@
+/* Delivery Tracking Styles */
+.delivery-section {
+  margin-top: 3rem;
+  padding: 2.5rem;
+  border-radius: 2.5rem;
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px solid var(--surface-border);
+}
+
+.delivery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.delivery-card {
+  padding: 1.5rem;
+  border-radius: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--surface-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: var(--transition);
+}
+
+.delivery-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: scale(1.02);
+}
+
+.customer-info h4 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.customer-info p {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin: 0.25rem 0 0;
+}
+
+.delivery-status-checkbox {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+.status-indicator {
+  padding: 1rem 2rem;
+  border-radius: 1rem;
+  font-weight: 700;
+  display: inline-block;
+  margin-top: 1rem;
+}
+
+.status-pending {
+  background: rgba(234, 179, 8, 0.1);
+  color: #eab308;
+  border: 1px solid rgba(234, 179, 8, 0.2);
+}
+
+.status-done {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.customer-stats-summary {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.summary-item {
+  text-align: center;
+}
+
+.summary-item .label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+}
+
+.summary-item .value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: white;
+}

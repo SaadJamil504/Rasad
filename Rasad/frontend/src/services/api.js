@@ -118,6 +118,7 @@ export const authAPI = {
   signup: (data) => api.post('accounts/signup/', data),
   invitationSignup: (data) => api.post('accounts/invitations/signup/', data),
   validateToken: (token) => api.get(`accounts/invitations/validate/${token}/`),
+  getProfile: () => api.get('accounts/profile/'),
 };
 
 export const invitationAPI = {
@@ -134,6 +135,17 @@ export const routeAPI = {
   createRoute: (data) => api.post('accounts/routes/', data),
   updateRoute: (id, data) => api.put(`accounts/routes/${id}/`, data),
   deleteRoute: (id) => api.delete(`accounts/routes/${id}/`),
+};
+
+export const deliveryAPI = {
+  getDailyDeliveries: () => api.get('accounts/deliveries/daily/'),
+  toggleDelivery: (id) => api.post(`accounts/deliveries/toggle/${id}/`),
+  getCustomerStatus: () => api.get('accounts/deliveries/status/'),
+  getHistory: () => api.get('accounts/deliveries/history/'),
+  updatePrices: (prices) => api.post('accounts/prices/update/', prices),
+  reportPayment: (data) => api.post('accounts/payments/report/', data),
+  getPayments: () => api.get('accounts/payments/list/'),
+  confirmPayment: (id, action = 'confirm') => api.post(`accounts/payments/confirm/${id}/`, { action }),
 };
 
 export default api;

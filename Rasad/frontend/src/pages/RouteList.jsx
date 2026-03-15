@@ -8,6 +8,7 @@ const RouteList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedRoute, setSelectedRoute] = useState(null);
 
   const fetchRoutes = async (skipLoading = false) => {
     try {
@@ -32,7 +33,10 @@ const RouteList = () => {
     <div className="page-container">
       <div className="page-header">
         <h1>Delivery Routes</h1>
-        <button className="primary-btn" onClick={() => setIsModalOpen(true)}>
+        <button className="primary-btn" onClick={() => {
+          setSelectedRoute(null);
+          setIsModalOpen(true);
+        }}>
           <span>+</span> Create Route
         </button>
       </div>
@@ -65,7 +69,15 @@ const RouteList = () => {
                   </td>
                   <td className="text-muted">{new Date(route.created_at).toLocaleDateString()}</td>
                   <td>
-                    <button className="text-btn">Details</button>
+                    <button 
+                      className="text-btn" 
+                      onClick={() => {
+                        setSelectedRoute(route);
+                        setIsModalOpen(true);
+                      }}
+                    >
+                      Details
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -81,8 +93,12 @@ const RouteList = () => {
 
       <RouteModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedRoute(null);
+        }}
         onRouteCreated={() => fetchRoutes(true)}
+        editRoute={selectedRoute}
       />
     </div>
   );

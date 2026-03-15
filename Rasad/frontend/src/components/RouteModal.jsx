@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { staffAPI, routeAPI } from '../services/api';
 import './RouteModal.css';
 
-const RouteModal = ({ isOpen, onClose, onRouteCreated }) => {
+const RouteModal = ({ isOpen, onClose, onRouteCreated, editRoute }) => {
   const [formData, setFormData] = useState({
     name: '',
     driver: '',
@@ -16,18 +16,32 @@ const RouteModal = ({ isOpen, onClose, onRouteCreated }) => {
 
   useEffect(() => {
     if (isOpen) {
+      if (editRoute) {
+        setFormData({
+          name: editRoute.name || '',
+          driver: editRoute.driver || '',
+          customer_ids: editRoute.assigned_customer_ids || []
+        });
+      } else {
+        setFormData({ name: '', driver: '', customer_ids: [] });
+      }
       fetchAssignmentData();
     }
-  }, [isOpen]);
+  }, [isOpen, editRoute]);
 
   const fetchAssignmentData = async () => {
     try {
       const [driversRes, customersRes] = await Promise.all([
         staffAPI.getStaff('driver'),
-        staffAPI.getStaff('customer', { no_route: 'true' })
+        staffAPI.getStaff('customer') 
       ]);
       setDrivers(driversRes.data);
-      setAvailableCustomers(customersRes.data);
+      
+      // Eligibility: Unassigned or already in this route
+      const eligible = customersRes.data.filter(c => 
+        !c.route || (editRoute && c.route === editRoute.id)
+      );
+      setAvailableCustomers(eligible);
     } catch (err) {
       console.error('Failed to fetch assignment data:', err);
     }
@@ -52,13 +66,19 @@ const RouteModal = ({ isOpen, onClose, onRouteCreated }) => {
     setLoading(true);
     setError('');
     try {
-      await routeAPI.createRoute(formData);
+      if (editRoute) {
+        await routeAPI.updateRoute(editRoute.id, formData);
+        alert('Route updated successfully!');
+      } else {
+        await routeAPI.createRoute(formData);
+        alert('Route created successfully!');
+      }
       onRouteCreated();
       onClose();
       setFormData({ name: '', driver: '', customer_ids: [] });
       setSearchTerm('');
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to create route.');
+      setError(err.response?.data?.error || `Failed to ${editRoute ? 'update' : 'create'} route.`);
     } finally {
       setLoading(false);
     }
@@ -71,8 +91,8 @@ const RouteModal = ({ isOpen, onClose, onRouteCreated }) => {
       <div className="modal-content route-modal glass fade-in">
         <div className="modal-header">
           <div className="header-title">
-            <span className="icon">🚚</span>
-            <h2>Create Delivery Route</h2>
+            <span className="icon">{editRoute ? '🛠️' : '🚚'}</span>
+            <h2>{editRoute ? 'Update Delivery Route' : 'Create Delivery Route'}</h2>
           </div>
           <button className="close-btn" onClick={onClose}>&times;</button>
         </div>
@@ -155,7 +175,7 @@ const RouteModal = ({ isOpen, onClose, onRouteCreated }) => {
           <div className="modal-footer">
             <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
             <button type="submit" className="btn-primary" disabled={loading}>
-              {loading ? 'Creating Route...' : 'Confirm & Create'}
+              {loading ? (editRoute ? 'Updating...' : 'Creating...') : (editRoute ? 'Confirm & Update' : 'Confirm & Create')}
             </button>
           </div>
         </form>

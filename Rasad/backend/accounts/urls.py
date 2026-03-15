@@ -2,7 +2,10 @@ from django.urls import path
 from .views import (
     LoginView, SignupView, PasswordResetRequestView, PasswordResetConfirmView,
     InvitationListCreateView, InvitationValidateView, InvitationSignupView, StaffListView,
-    RouteListCreateView, RouteDetailView
+    RouteListCreateView, RouteDetailView, DailyDeliveryView, DeliveryToggleView,
+    CustomerDeliveryStatusView, UpdateMilkPricesView, DeliveryHistoryView,
+    PaymentRequestView, PaymentListView, ConfirmPaymentView,
+    ProfileView
 )
 from rest_framework_simplejwt.views import TokenRefreshView
 
@@ -18,4 +21,13 @@ urlpatterns = [
     path('login/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('routes/', RouteListCreateView.as_view(), name='route_list_create'),
     path('routes/<int:pk>/', RouteDetailView.as_view(), name='route_detail'),
+    path('deliveries/daily/', DailyDeliveryView.as_view(), name='daily_deliveries'),
+    path('deliveries/toggle/<int:pk>/', DeliveryToggleView.as_view(), name='delivery_toggle'),
+    path('deliveries/status/', CustomerDeliveryStatusView.as_view(), name='customer_delivery_status'),
+    path('deliveries/history/', DeliveryHistoryView.as_view(), name='delivery_history'),
+    path('prices/update/', UpdateMilkPricesView.as_view(), name='update_prices'),
+    path('payments/report/', PaymentRequestView.as_view(), name='payment_report'),
+    path('payments/list/', PaymentListView.as_view(), name='payment_list'),
+    path('payments/confirm/<int:pk>/', ConfirmPaymentView.as_view(), name='payment_confirm'),
+    path('profile/', ProfileView.as_view(), name='profile'),
 ]

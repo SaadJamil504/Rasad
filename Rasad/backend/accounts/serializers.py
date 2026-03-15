@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import User, Invitation, Route
+from .models import User, Invitation, Route, Delivery, Payment
 import uuid
 from django.utils import timezone
 from datetime import timedelta
@@ -24,7 +24,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'role', 'phone_number', 'first_name', 'license_number', 'milk_type', 'daily_quantity', 'address', 'dairy_name', 'owner_dairy_name', 'route')
+        fields = ('id', 'username', 'email', 'role', 'phone_number', 'first_name', 'license_number', 'milk_type', 'daily_quantity', 'address', 'dairy_name', 'owner_dairy_name', 'route', 'buffalo_price', 'cow_price', 'outstanding_balance', 'total_paid')
 
     def get_owner_dairy_name(self, obj):
         if obj.role == 'owner':
@@ -190,16 +190,20 @@ class RouteSerializer(serializers.ModelSerializer):
     )
     driver_name = serializers.SerializerMethodField()
     customer_count = serializers.SerializerMethodField()
+    assigned_customer_ids = serializers.SerializerMethodField()
 
     class Meta:
         model = Route
-        fields = ('id', 'name', 'driver', 'driver_name', 'customer_ids', 'customer_count', 'created_at')
+        fields = ('id', 'name', 'driver', 'driver_name', 'customer_ids', 'assigned_customer_ids', 'customer_count', 'created_at')
 
     def get_driver_name(self, obj):
         return obj.driver.first_name if obj.driver else "No Driver"
 
     def get_customer_count(self, obj):
         return obj.customers.count()
+
+    def get_assigned_customer_ids(self, obj):
+        return list(obj.customers.values_list('id', flat=True))
 
     def create(self, validated_data):
         customer_ids = validated_data.pop('customer_ids', [])
@@ -218,3 +222,24 @@ class RouteSerializer(serializers.ModelSerializer):
             # Assign new ones
             User.objects.filter(id__in=customer_ids, role='customer', parent_owner=route.owner).update(route=route)
         return route
+
+class DeliverySerializer(serializers.ModelSerializer):
+    customer_name = serializers.CharField(source='customer.first_name', read_only=True)
+    customer_username = serializers.CharField(source='customer.username', read_only=True)
+    customer_address = serializers.CharField(source='customer.address', read_only=True)
+    customer_milk_type = serializers.CharField(source='customer.milk_type', read_only=True)
+    customer_quantity = serializers.CharField(source='customer.daily_quantity', read_only=True)
+
+    class Meta:
+        model = Delivery
+        fields = ('id', 'customer', 'customer_name', 'customer_username', 'customer_address', 'customer_milk_type', 'customer_quantity', 'route', 'date', 'is_delivered', 'delivered_at', 'quantity', 'price_at_delivery', 'total_amount')
+        read_only_fields = ('delivered_at', 'total_amount')
+
+class PaymentSerializer(serializers.ModelSerializer):
+    customer_name = serializers.CharField(source='customer.first_name', read_only=True)
+    customer_username = serializers.CharField(source='customer.username', read_only=True)
+
+    class Meta:
+        model = Payment
+        fields = ('id', 'customer', 'customer_name', 'customer_username', 'amount', 'status', 'created_at', 'confirmed_at')
+        read_only_fields = ('customer', 'status', 'created_at', 'confirmed_at')

@@ -9,9 +9,10 @@ from django.contrib.auth.tokens import default_token_generator
 from .serializers import (
     LoginSerializer, UserSerializer, SignupSerializer, 
     PasswordResetRequestSerializer, PasswordResetConfirmSerializer,
-    InvitationSerializer, InvitationSignupSerializer, RouteSerializer
+    InvitationSerializer, InvitationSignupSerializer, RouteSerializer,
+    DeliverySerializer, PaymentSerializer
 )
-from .models import User, Invitation, Route
+from .models import User, Invitation, Route, Delivery, Payment
 from django.http import Http404
 from django.core.mail import send_mail
 from django.conf import settings
@@ -258,3 +259,224 @@ class RouteDetailView(APIView):
         route = self.get_object(pk, request.user)
         route.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+class DailyDeliveryView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    @extend_schema(
+        responses={200: DeliverySerializer(many=True)},
+        description="Get today's deliveries for the driver's route. Creates them if they don't exist."
+    )
+    def get(self, request):
+        if request.user.role != 'driver':
+            return Response({'error': 'Unauthorized. Only drivers can access this.'}, status=status.HTTP_403_FORBIDDEN)
+            
+        try:
+            route = Route.objects.get(driver=request.user)
+        except Route.DoesNotExist:
+            return Response({'error': 'No route assigned to this driver.'}, status=status.HTTP_404_NOT_FOUND)
+            
+        today = timezone.now().date()
+        customers = User.objects.filter(route=route, role='customer')
+        
+        # Ensure delivery entries exist for today
+        for customer in customers:
+            delivery, created = Delivery.objects.get_or_create(
+                customer=customer,
+                date=today,
+                defaults={
+                    'route': route,
+                    'quantity': customer.daily_quantity or 0,
+                    'price_at_delivery': 0  # To be set below
+                }
+            )
+            
+            if created or not delivery.is_delivered:
+                # Capture current price from owner
+                owner = route.owner
+                price = 0
+                if customer.milk_type == 'cow':
+                    price = owner.cow_price
+                elif customer.milk_type == 'buffalo':
+                    price = owner.buffalo_price
+                
+                delivery.price_at_delivery = price
+                delivery.quantity = customer.daily_quantity or 0
+                delivery.total_amount = delivery.quantity * price
+                delivery.save()
+            
+        deliveries = Delivery.objects.filter(route=route, date=today)
+        serializer = DeliverySerializer(deliveries, many=True)
+        return Response(serializer.data)
+
+class DeliveryToggleView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    @extend_schema(
+        responses={200: DeliverySerializer},
+        description="Toggle the delivery status for a specific customer today."
+    )
+    def post(self, request, pk):
+        if request.user.role != 'driver':
+            return Response({'error': 'Unauthorized.'}, status=status.HTTP_403_FORBIDDEN)
+            
+        try:
+            delivery = Delivery.objects.get(pk=pk, route__driver=request.user)
+            
+            # Logic for updating customer balance
+            customer = delivery.customer
+            if not delivery.is_delivered:
+                # Marking as delivered: increase balance
+                customer.outstanding_balance += delivery.total_amount
+            else:
+                # Marking as NOT delivered: decrease balance
+                customer.outstanding_balance -= delivery.total_amount
+            customer.save()
+
+            delivery.is_delivered = not delivery.is_delivered
+            delivery.delivered_at = timezone.now() if delivery.is_delivered else None
+            delivery.save()
+            return Response(DeliverySerializer(delivery).data)
+        except Delivery.DoesNotExist:
+            return Response({'error': 'Delivery record not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+class CustomerDeliveryStatusView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    @extend_schema(
+        responses={200: DeliverySerializer},
+        description="Get today's delivery status for the current customer."
+    )
+    def get(self, request):
+        if request.user.role != 'customer':
+            return Response({'error': 'Unauthorized.'}, status=status.HTTP_403_FORBIDDEN)
+            
+        today = timezone.now().date()
+        delivery = Delivery.objects.filter(customer=request.user, date=today).first()
+        
+        if not delivery:
+            return Response({'message': 'No delivery scheduled yet for today.'}, status=status.HTTP_200_OK)
+            
+        return Response(DeliverySerializer(delivery).data)
+
+class UpdateMilkPricesView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    @extend_schema(
+        request=UserSerializer,
+        responses={200: UserSerializer},
+        description="Update milk prices for the owner."
+    )
+    def post(self, request):
+        if request.user.role != 'owner':
+            return Response({'error': 'Only owners can set prices.'}, status=status.HTTP_403_FORBIDDEN)
+        
+        user = request.user
+        user.cow_price = request.data.get('cow_price', user.cow_price)
+        user.buffalo_price = request.data.get('buffalo_price', user.buffalo_price)
+        user.save()
+        return Response(UserSerializer(user).data)
+
+class DeliveryHistoryView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    @extend_schema(
+        responses={200: DeliverySerializer(many=True)},
+        description="Get full delivery history for the user."
+    )
+    def get(self, request):
+        if request.user.role == 'customer':
+            deliveries = Delivery.objects.filter(customer=request.user, is_delivered=True).order_by('-date')
+        elif request.user.role == 'driver':
+            try:
+                route = Route.objects.get(driver=request.user)
+                deliveries = Delivery.objects.filter(route=route, is_delivered=True).order_by('-date')
+            except Route.DoesNotExist:
+                return Response({'error': 'No route assigned.'}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response({'error': 'Unauthorized.'}, status=status.HTTP_403_FORBIDDEN)
+            
+        serializer = DeliverySerializer(deliveries, many=True)
+        return Response(serializer.data)
+
+class PaymentRequestView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    @extend_schema(
+        request=PaymentSerializer,
+        responses={201: PaymentSerializer},
+        description="Customer reports a payment."
+    )
+    def post(self, request):
+        if request.user.role != 'customer':
+            return Response({'error': 'Only customers can report payments.'}, status=status.HTTP_403_FORBIDDEN)
+        
+        serializer = PaymentSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(customer=request.user, status='pending')
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class PaymentListView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    @extend_schema(
+        responses={200: PaymentSerializer(many=True)},
+        description="List payments. Owners see pending payments from their customers. Customers see their own history."
+    )
+    def get(self, request):
+        if request.user.role == 'customer':
+            payments = Payment.objects.filter(customer=request.user).order_by('-created_at')
+        elif request.user.role == 'owner':
+            # Payments from customers linked to this owner
+            payments = Payment.objects.filter(customer__parent_owner=request.user, status='pending').order_by('-created_at')
+        else:
+            return Response({'error': 'Unauthorized.'}, status=status.HTTP_403_FORBIDDEN)
+            
+        serializer = PaymentSerializer(payments, many=True)
+        return Response(serializer.data)
+
+class ConfirmPaymentView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    @extend_schema(
+        responses={200: PaymentSerializer},
+        description="Owner confirms or rejects a payment."
+    )
+    def post(self, request, pk):
+        if request.user.role != 'owner':
+            return Response({'error': 'Only owners can confirm payments.'}, status=status.HTTP_403_FORBIDDEN)
+        
+        try:
+            payment = Payment.objects.get(pk=pk, customer__parent_owner=request.user)
+            action = request.data.get('action', 'confirm') # confirm or reject
+
+            if payment.status != 'pending':
+                return Response({'error': 'Payment is already processed.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            if action == 'confirm':
+                payment.status = 'confirmed'
+                payment.confirmed_at = timezone.now()
+                
+                # Update customer balance
+                customer = payment.customer
+                customer.outstanding_balance -= payment.amount
+                customer.total_paid += payment.amount
+                customer.save()
+            else:
+                payment.status = 'rejected'
+            
+            payment.save()
+            return Response(PaymentSerializer(payment).data)
+        except Payment.DoesNotExist:
+            return Response({'error': 'Payment record not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+class ProfileView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    @extend_schema(
+        responses={200: UserSerializer},
+        description="Get current user profile data."
+    )
+    def get(self, request):
+        return Response(UserSerializer(request.user).data)
