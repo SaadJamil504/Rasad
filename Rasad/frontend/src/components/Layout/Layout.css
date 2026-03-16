@@ -423,8 +423,11 @@
 }
 
 .owner-hamburger {
-  color: white !important;
+  display: block !important;
+  color: #1e293b !important;
   margin-top: 5px;
+  font-size: 1.8rem;
+  cursor: pointer;
 }
 
 .logout-banner-btn {
