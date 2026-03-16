@@ -32,7 +32,6 @@ const RouteList = () => {
   return (
     <div className="page-container">
       <div className="page-header" style={{ marginBottom: '1.5rem' }}>
-        <h1>Delivery Routes</h1>
         <button className="premium-btn-green" onClick={() => {
           setSelectedRoute(null);
           setIsModalOpen(true);
@@ -40,7 +39,7 @@ const RouteList = () => {
           <span>+</span> Add Route
         </button>
       </div>
-      
+
       {loading ? (
         <div className="loading">Loading routes...</div>
       ) : error ? (
@@ -67,7 +66,7 @@ const RouteList = () => {
                   <span className={index % 3 === 2 ? 'pending-start-label' : 'active-today-label'}>
                     {index % 3 === 2 ? 'Pending Start' : 'Active Today'}
                   </span>
-                  <button 
+                  <button
                     className="edit-action-btn"
                     onClick={() => {
                       setSelectedRoute(route);
@@ -78,7 +77,7 @@ const RouteList = () => {
                   </button>
                 </div>
               </div>
-              
+
               <div className="route-stats-badges">
                 {route.customer_details?.slice(0, 5).map(cust => (
                   <span key={cust.id} className="customer-small-pill">

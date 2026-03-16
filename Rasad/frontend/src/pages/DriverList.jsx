@@ -29,7 +29,6 @@ const DriverList = () => {
   return (
     <div className="page-container">
       <div className="page-header">
-        <h1>Drivers Management</h1>
         <button className="primary-btn" onClick={() => setIsModalOpen(true)}>
           <span>+</span> Add New Driver
         </button>

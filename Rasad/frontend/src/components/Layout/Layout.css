@@ -423,7 +423,6 @@
 }
 
 .owner-hamburger {
-  display: block !important;
   color: #1e293b !important;
   margin-top: 5px;
   font-size: 1.8rem;
@@ -466,7 +465,7 @@
   }
 
   .hamburger-btn {
-    display: block;
+    display: flex;
   }
 
   .desktop-only {
@@ -475,6 +474,10 @@
 
   .owner-header-banner {
     padding: 1.5rem !important;
+  }
+
+  .owner-header-compact {
+    padding: 0.75rem 1rem;
   }
 
   .top-bar {

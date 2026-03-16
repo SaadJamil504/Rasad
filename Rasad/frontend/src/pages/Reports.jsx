@@ -31,13 +31,11 @@ const Reports = () => {
   const maxDataRev = Math.max(...reportData.monthly_revenue.map(d => d.revenue), 0);
   const maxRev = Math.max(Math.ceil(maxDataRev / 10000) * 10000, 40000); // ensure at least 40k to have 4 steps
   const stepsCount = maxRev / 10000;
-  const yAxisSteps = Array.from({length: stepsCount + 1}, (_, i) => i * 10000).reverse();
+  const yAxisSteps = Array.from({ length: stepsCount + 1 }, (_, i) => i * 10000).reverse();
 
   return (
     <div className="page-container fade-in">
-      <div className="page-header" style={{ marginBottom: '2rem' }}>
-        <h1>Analysis & Reports</h1>
-      </div>
+
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
         {/* Total Milk This Month */}
@@ -84,14 +82,14 @@ const Reports = () => {
 
       <div className="glass-card" style={{ padding: '2.5rem' }}>
         <h3 style={{ margin: '0 0 2rem 0', color: '#1e293b' }}>Monthly Revenue Overview</h3>
-        
+
         {/* Simple CSS Bar Chart */}
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: '2rem', height: '300px', paddingBottom: '2rem', borderBottom: '2px solid #e2e8f0', position: 'relative' }}>
-          
+
           {/* Y-Axis Labels */}
           <div style={{ position: 'absolute', left: '-10px', top: '0', bottom: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', color: '#94a3b8', fontSize: '0.8rem', fontWeight: 600, alignItems: 'flex-end', transform: 'translateX(-100%)' }}>
             {yAxisSteps.map((step, i) => (
-              <span key={i}>{step === 0 ? '0' : `Rs ${(step/1000).toFixed(0)}k`}</span>
+              <span key={i}>{step === 0 ? '0' : `Rs ${(step / 1000).toFixed(0)}k`}</span>
             ))}
           </div>
 
@@ -107,12 +105,12 @@ const Reports = () => {
             const heightPct = (data.revenue / maxRev) * 100;
             return (
               <div key={index} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end', zIndex: 1, group: 'bar' }}>
-                <div 
+                <div
                   className="chart-bar"
-                  style={{ 
-                    width: '60%', 
+                  style={{
+                    width: '60%',
                     maxWidth: '80px',
-                    height: `${heightPct}%`, 
+                    height: `${heightPct}%`,
                     background: 'linear-gradient(to top, #10b981, #34d399)',
                     borderRadius: '8px 8px 0 0',
                     transition: 'all 0.5s ease',
@@ -122,7 +120,7 @@ const Reports = () => {
                   title={`Rs ${data.revenue.toLocaleString()}`}
                 >
                   <div style={{ position: 'absolute', top: '-25px', width: '100%', textAlign: 'center', fontSize: '0.8rem', fontWeight: 700, color: '#1e293b' }}>
-                    Rs {data.revenue >= 1000 ? (data.revenue/1000).toFixed(1) + 'k' : data.revenue}
+                    Rs {data.revenue >= 1000 ? (data.revenue / 1000).toFixed(1) + 'k' : data.revenue}
                   </div>
                 </div>
                 <div style={{ position: 'absolute', bottom: '-2rem', fontSize: '0.9rem', fontWeight: 600, color: '#64748b', whiteSpace: 'nowrap' }}>

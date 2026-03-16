@@ -48,9 +48,7 @@ const MonthlyBills = () => {
 
   return (
     <div className="page-container fade-in">
-      <div className="page-header">
-        <h1>Monthly Bills</h1>
-      </div>
+      
 
       <div className="premium-toolbar" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: '200px' }}>

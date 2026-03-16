@@ -83,12 +83,12 @@ const CustomerList = () => {
       (customer.phone_number || '').includes(searchTerm) ||
       (customer.address || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
-    
+
     const routeMatch = routeFilter === 'All Routes' || customer.route_name === routeFilter;
     const statusMatch = statusFilter === 'All Status' || (
       statusFilter === 'Overdue' ? parseFloat(customer.outstanding_balance) > 0 :
-      statusFilter === 'Active' ? parseFloat(customer.outstanding_balance) <= 0 :
-      true
+        statusFilter === 'Active' ? parseFloat(customer.outstanding_balance) <= 0 :
+          true
     );
 
     return searchMatch && routeMatch && statusMatch;
@@ -96,24 +96,22 @@ const CustomerList = () => {
 
   return (
     <div className="page-container">
-      <div className="page-header">
-        <h1>Customers Management</h1>
-      </div>
+
 
       <div className="premium-toolbar">
         <div className="toolbar-left">
           <div className="search-container">
             <span className="search-icon">🔍</span>
-            <input 
-              type="text" 
-              placeholder="Search by name, area, number..." 
+            <input
+              type="text"
+              placeholder="Search by name, area, number..."
               className="search-input"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <div className="filter-dropdowns">
-            <select 
+            <select
               className="premium-select"
               value={routeFilter}
               onChange={(e) => setRouteFilter(e.target.value)}
@@ -123,7 +121,7 @@ const CustomerList = () => {
                 <option key={r}>{r}</option>
               ))}
             </select>
-            <select 
+            <select
               className="premium-select"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -139,7 +137,7 @@ const CustomerList = () => {
           <span>+</span> Add Customer
         </button>
       </div>
-      
+
       {loading ? (
         <div className="loading">Loading customers...</div>
       ) : error ? (
@@ -168,7 +166,7 @@ const CustomerList = () => {
                     <div className="customer-cell">
                       <span className="customer-name-main">{customer.first_name || customer.username}</span>
                       <span className="customer-sub-info">
-                        {customer.phone_number || 'No Number'} 
+                        {customer.phone_number || 'No Number'}
                       </span>
                     </div>
                   </td>
@@ -196,7 +194,7 @@ const CustomerList = () => {
           </table>
         </div>
       )}
-      
+
       <InvitationModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -213,30 +211,30 @@ const CustomerList = () => {
               <button className="btn-secondary" style={{ padding: '0.4rem 0.8rem' }} onClick={() => setSelectedCustomer(null)}>Close</button>
             </div>
 
-            <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', marginBottom: '2rem' }}>
-              <div style={{ flex: 1, minWidth: '250px', background: '#f8fafc', padding: '1.5rem', borderRadius: '1rem', border: '1px solid #e2e8f0' }}>
-                <h3 style={{ margin: '0 0 1rem 0', color: '#1e293b' }}>{selectedCustomer.first_name || selectedCustomer.username}</h3>
-                <p style={{ margin: '0.5rem 0', color: '#64748b' }}><strong>Phone:</strong> {selectedCustomer.phone_number || 'N/A'}</p>
-                <p style={{ margin: '0.5rem 0', color: '#64748b' }}><strong>Address:</strong> {selectedCustomer.address || 'N/A'}</p>
-                <p style={{ margin: '0.5rem 0', color: '#64748b' }}><strong>Route:</strong> {selectedCustomer.route_name || 'Unassigned'}</p>
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2rem', flexDirection: window.innerWidth < 768 ? 'column' : 'row' }}>
+              <div style={{ flex: 1, minWidth: '0', background: '#f8fafc', padding: '1.25rem', borderRadius: '1rem', border: '1px solid #e2e8f0' }}>
+                <h3 style={{ margin: '0 0 0.75rem 0', color: '#1e293b', fontSize: '1.1rem' }}>{selectedCustomer.first_name || selectedCustomer.username}</h3>
+                <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>Phone:</strong> {selectedCustomer.phone_number || 'N/A'}</p>
+                <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>Address:</strong> {selectedCustomer.address || 'N/A'}</p>
+                <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>Route:</strong> {selectedCustomer.route_name || 'Unassigned'}</p>
               </div>
-              <div style={{ flex: 1, minWidth: '250px', background: '#f8fafc', padding: '1.5rem', borderRadius: '1rem', border: '1px solid #e2e8f0' }}>
-                <h3 style={{ margin: '0 0 1rem 0', color: '#1e293b' }}>Account Specs</h3>
-                <p style={{ margin: '0.5rem 0', color: '#64748b' }}><strong>Daily Qty:</strong> {selectedCustomer.daily_quantity || '0'}L ({selectedCustomer.milk_type})</p>
-                <p style={{ margin: '0.5rem 0', color: '#64748b' }}><strong>Milk Rate:</strong> Rs {selectedCustomer.milk_type === 'cow' ? selectedCustomer.cow_price : selectedCustomer.buffalo_price}/L</p>
-                <p style={{ margin: '0.5rem 0', color: '#64748b' }}><strong>Balance Due:</strong> {formatBalance(selectedCustomer.outstanding_balance)}</p>
+              <div style={{ flex: 1, minWidth: '0', background: '#f8fafc', padding: '1.25rem', borderRadius: '1rem', border: '1px solid #e2e8f0' }}>
+                <h3 style={{ margin: '0 0 0.75rem 0', color: '#1e293b', fontSize: '1.1rem' }}>Account Specs</h3>
+                <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>Daily Qty:</strong> {selectedCustomer.daily_quantity || '0'}L ({selectedCustomer.milk_type})</p>
+                <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>Milk Rate:</strong> Rs {selectedCustomer.milk_type === 'cow' ? selectedCustomer.cow_price : selectedCustomer.buffalo_price}/L</p>
+                <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>Balance Due:</strong> {formatBalance(selectedCustomer.outstanding_balance)}</p>
               </div>
             </div>
 
             {loadingDetails ? (
               <p>Loading details...</p>
             ) : (
-              <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', flexDirection: window.innerWidth < 768 ? 'column' : 'row' }}>
                 {/* Monthly Bill Section */}
-                <div style={{ flex: 1, minWidth: '300px' }}>
+                <div style={{ flex: 1, minWidth: '0' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <h3 style={{ margin: 0 }}>Monthly Bill</h3>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Monthly Bill</h3>
+                    <div style={{ display: 'flex', gap: '0.4rem' }}>
                       <select className="form-input" style={{ padding: '0.3rem', fontSize: '0.8rem' }} value={viewMonth} onChange={(e) => setViewMonth(e.target.value)}>
                         {Array.from({ length: 12 }, (_, i) => (
                           <option key={i + 1} value={i + 1}>
@@ -249,7 +247,7 @@ const CustomerList = () => {
                       </select>
                     </div>
                   </div>
-                  
+
                   <div style={{ background: '#f8fafc', borderRadius: '1rem', border: '1px solid #e2e8f0', padding: '1rem', maxHeight: '300px', overflowY: 'auto' }}>
                     {customerHistory.length > 0 ? (
                       <>
@@ -273,8 +271,8 @@ const CustomerList = () => {
                 </div>
 
                 {/* Payment History Section */}
-                <div style={{ flex: 1, minWidth: '300px' }}>
-                  <h3 style={{ margin: '0 0 1rem 0' }}>Payment History</h3>
+                <div style={{ flex: 1, minWidth: '0' }}>
+                  <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem' }}>Payment History</h3>
                   <div style={{ background: '#f8fafc', borderRadius: '1rem', border: '1px solid #e2e8f0', padding: '1rem', maxHeight: '300px', overflowY: 'auto' }}>
                     {customerPayments.length > 0 ? (
                       customerPayments.map(payment => (

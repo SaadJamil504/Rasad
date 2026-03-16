@@ -51,7 +51,7 @@ const MainLayout = () => {
       {showSidebar && isSidebarOpen && (
         <div className="sidebar-overlay" onClick={closeSidebar}></div>
       )}
-      
+
       {showSidebar && (
         <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
           <div className="sidebar-header">
@@ -101,7 +101,7 @@ const MainLayout = () => {
           <header className="owner-header-compact">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <button className="hamburger-btn owner-hamburger" onClick={toggleSidebar} style={{ color: '#1e293b', fontSize: '2.2rem', fontWeight: 'bold', minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <button className="hamburger-btn owner-hamburger" onClick={toggleSidebar} style={{ color: '#1e293b', fontSize: '2.2rem', fontWeight: 'bold', minWidth: '44px', minHeight: '44px', alignItems: 'center', justifyContent: 'center' }}>
                   ☰
                 </button>
                 <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#1e293b' }}>
@@ -144,9 +144,54 @@ const MainLayout = () => {
                   style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#f8fafc', boxSizing: 'border-box', color: '#1e293b' }}
                 />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '2rem' }}>
-                <button type="button" onClick={() => setShowPriceModal(false)} style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontWeight: '800', cursor: 'pointer', textAlign: 'center', height: '52px', boxSizing: 'border-box', fontSize: '1rem', transition: 'all 0.2s' }}>Cancel</button>
-                <button type="submit" disabled={updatingPrices} style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '12px', border: '1px solid #27ae60', background: '#27ae60', color: 'white', fontWeight: '800', cursor: 'pointer', textAlign: 'center', height: '52px', boxSizing: 'border-box', fontSize: '1rem', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(39, 174, 96, 0.2)' }}>
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '2.5rem', width: '100%', alignItems: 'center' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowPriceModal(false)}
+                  style={{
+                    flex: '1 1 0',
+                    height: '52px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '12px',
+                    border: '1px solid #e2e8f0',
+                    background: 'white',
+                    color: '#64748b',
+                    fontWeight: '800',
+                    cursor: 'pointer',
+                    fontSize: '1rem',
+                    margin: 0,
+                    padding: 0,
+                    width: '0',
+                    boxSizing: 'border-box'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={updatingPrices}
+                  style={{
+                    flex: '1 1 0',
+                    height: '52px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: '#27ae60',
+                    color: 'white',
+                    fontWeight: '800',
+                    cursor: 'pointer',
+                    fontSize: '1rem',
+                    margin: 0,
+                    padding: 0,
+                    width: '0',
+                    boxSizing: 'border-box',
+                    boxShadow: '0 4px 12px rgba(39, 174, 96, 0.2)'
+                  }}
+                >
                   {updatingPrices ? 'Saving...' : 'Save Prices'}
                 </button>
               </div>
