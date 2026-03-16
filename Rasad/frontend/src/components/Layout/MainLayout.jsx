@@ -41,34 +41,42 @@ const MainLayout = () => {
   };
 
   const showSidebar = user.role === 'owner';
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
+  const closeSidebar = () => setSidebarOpen(false);
 
   return (
     <div className={`app-layout ${!showSidebar ? 'no-sidebar' : ''} ${user.role === 'owner' ? 'role-owner' : ''}`}>
+      {showSidebar && isSidebarOpen && (
+        <div className="sidebar-overlay" onClick={closeSidebar}></div>
+      )}
+      
       {showSidebar && (
-        <aside className="sidebar">
+        <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
           <div className="sidebar-header">
             <div className="logo-icon">R</div>
             <h2>Rasad</h2>
           </div>
           <nav className="sidebar-nav">
-            <Link to="/" className={`nav-item ${window.location.pathname === '/' ? 'active' : ''}`}>
+            <Link to="/" className={`nav-item ${window.location.pathname === '/' ? 'active' : ''}`} onClick={closeSidebar}>
               <span className="icon">📊</span> Dashboard
             </Link>
-            <Link to="/routes" className={`nav-item ${window.location.pathname === '/routes' ? 'active' : ''}`}>
+            <Link to="/routes" className={`nav-item ${window.location.pathname === '/routes' ? 'active' : ''}`} onClick={closeSidebar}>
               <span className="icon">🛣️</span> Routes
             </Link>
-            <Link to="/drivers" className={`nav-item ${window.location.pathname === '/drivers' ? 'active' : ''}`}>
+            <Link to="/drivers" className={`nav-item ${window.location.pathname === '/drivers' ? 'active' : ''}`} onClick={closeSidebar}>
               <span className="icon">🚛</span> Drivers
             </Link>
-            <Link to="/customers" className={`nav-item ${window.location.pathname === '/customers' ? 'active' : ''}`}>
+            <Link to="/customers" className={`nav-item ${window.location.pathname === '/customers' ? 'active' : ''}`} onClick={closeSidebar}>
               <span className="icon">👥</span> Customers
             </Link>
             {user.role === 'owner' && (
               <>
-                <Link to="/bills" className={`nav-item ${window.location.pathname === '/bills' ? 'active' : ''}`}>
+                <Link to="/bills" className={`nav-item ${window.location.pathname === '/bills' ? 'active' : ''}`} onClick={closeSidebar}>
                   <span className="icon">📄</span> Monthly Bills
                 </Link>
-                <Link to="/reports" className={`nav-item ${window.location.pathname === '/reports' ? 'active' : ''}`}>
+                <Link to="/reports" className={`nav-item ${window.location.pathname === '/reports' ? 'active' : ''}`} onClick={closeSidebar}>
                   <span className="icon">📊</span> Reports
                 </Link>
               </>
@@ -88,12 +96,19 @@ const MainLayout = () => {
       <main className="main-content">
         {showSidebar && (
           <header className="top-bar">
-            <div className="breadcrumb">Home / Dashboard</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <button className="hamburger-btn" onClick={toggleSidebar}>
+                ☰
+              </button>
+              <div className="breadcrumb desktop-only">Home / Dashboard</div>
+            </div>
+            
             <div className="actions" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               {user.role === 'owner' && (
                 <button 
                   onClick={() => setShowPriceModal(true)} 
                   style={{ padding: '0.6rem 1.2rem', borderRadius: '8px', border: 'none', background: '#27ae60', color: 'white', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 2px 5px rgba(39, 174, 96, 0.3)' }}
+                  className="adjust-price-btn"
                 >
                   Adjust Price
                 </button>
@@ -110,7 +125,7 @@ const MainLayout = () => {
       </main>
 
       {showPriceModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+        <div className="modal-overlay-layout" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
           <div style={{ background: 'white', padding: '2.5rem', borderRadius: '1.5rem', width: '90%', maxWidth: '400px', boxShadow: '0 20px 50px rgba(0,0,0,0.3)' }}>
             <h3 style={{ marginTop: 0, marginBottom: '1.5rem', color: '#1e293b' }}>Adjust Daily Milk Prices</h3>
             <form onSubmit={handleUpdatePrices}>
