@@ -11,7 +11,6 @@ const InvitationSignup = () => {
   const [error, setError] = useState('');
   
   const [formData, setFormData] = useState({
-    username: '',
     full_name: '',
     email: '',
     password: '',
@@ -55,8 +54,13 @@ const InvitationSignup = () => {
       setLoading(false);
       return;
     }
-    if (!/^\+?[\d\s-]{10,}$/.test(formData.phone_number)) {
-      setError('Please enter a valid phone number (min 10 digits).');
+    if (!/^03\d{9}$/.test(formData.phone_number)) {
+      setError('Phone number must be exactly 11 digits and start with 03 (e.g. 03001234567).');
+      setLoading(false);
+      return;
+    }
+    if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(formData.email.toLowerCase())) {
+      setError('Only Gmail addresses are accepted.');
       setLoading(false);
       return;
     }
@@ -114,29 +118,16 @@ const InvitationSignup = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="login-form-clean">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div className="form-group-clean">
-              <label>FULL NAME</label>
-              <input
-                type="text"
-                name="full_name"
-                placeholder="Your Full Name"
-                required
-                value={formData.full_name}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="form-group-clean">
-              <label>USERNAME</label>
-              <input
-                type="text"
-                name="username"
-                placeholder="Choose a username"
-                required
-                value={formData.username}
-                onChange={handleChange}
-              />
-            </div>
+          <div className="form-group-clean">
+            <label>FULL NAME</label>
+            <input
+              type="text"
+              name="full_name"
+              placeholder="Your Full Name"
+              required
+              value={formData.full_name}
+              onChange={handleChange}
+            />
           </div>
 
           <div className="form-group-clean">

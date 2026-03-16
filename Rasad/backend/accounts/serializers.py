@@ -10,13 +10,22 @@ from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.tokens import default_token_generator
 
 class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField()
+    phone_number = serializers.CharField()
     password = serializers.CharField(write_only=True)
 
     def validate(self, data):
-        user = authenticate(**data)
-        if user and user.is_active:
-            return user
+        phone_number = data.get('phone_number')
+        password = data.get('password')
+        
+        # Try to find user by phone number First
+        user_obj = User.objects.filter(phone_number=phone_number).first()
+        
+        if user_obj:
+            # Authenticate using the username corresponding to this phone number
+            user = authenticate(username=user_obj.username, password=password)
+            if user and user.is_active:
+                return user
+                
         raise serializers.ValidationError("Incorrect Credentials")
 
 class UserSerializer(serializers.ModelSerializer):
@@ -61,7 +70,7 @@ class SignupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('username', 'password', 'full_name', 'phone_number', 'email', 'role', 'address', 'dairy_name', 'cow_price', 'buffalo_price')
+        fields = ('password', 'full_name', 'phone_number', 'email', 'role', 'address', 'dairy_name', 'cow_price', 'buffalo_price')
         extra_kwargs = {
             'phone_number': {'required': True},
             'email': {'required': True},
@@ -85,6 +94,9 @@ class SignupSerializer(serializers.ModelSerializer):
         return value
 
     def validate_phone_number(self, value):
+        import re
+        if not re.match(r'^03\d{9}$', value):
+            raise serializers.ValidationError("Phone number must be exactly 11 digits and start with '03'")
         if User.objects.filter(phone_number=value).exists():
             raise serializers.ValidationError("This phone number is already in use.")
         return value
@@ -92,11 +104,14 @@ class SignupSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         full_name = validated_data.pop('full_name')
         password = validated_data.pop('password')
+        phone_number = validated_data.get('phone_number')
         cow_price = validated_data.get('cow_price', 0)
         buffalo_price = validated_data.get('buffalo_price', 0)
         
         # Map full_name to first_name for AbstractUser usage
+        # Set the username implicitly as the phone_number
         user = User.objects.create_user(
+            username=phone_number,
             first_name=full_name,
             password=password,
             **validated_data
@@ -153,12 +168,14 @@ class InvitationSignupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('token', 'username', 'email', 'password', 'full_name', 'phone_number', 'license_number', 'milk_type', 'daily_quantity', 'address')
+        fields = ('token', 'email', 'password', 'full_name', 'phone_number', 'license_number', 'milk_type', 'daily_quantity', 'address')
         extra_kwargs = {
             'license_number': {'required': False},
             'milk_type': {'required': False},
             'daily_quantity': {'required': False},
             'address': {'required': False},
+            'phone_number': {'required': True},
+            'email': {'required': True},
         }
 
     def validate_token(self, value):
@@ -188,6 +205,9 @@ class InvitationSignupSerializer(serializers.ModelSerializer):
         return value
 
     def validate_phone_number(self, value):
+        import re
+        if not re.match(r'^03\d{9}$', value):
+            raise serializers.ValidationError("Phone number must be exactly 11 digits and start with '03'")
         if User.objects.filter(phone_number=value).exists():
             raise serializers.ValidationError("This phone number is already in use.")
         return value
@@ -196,10 +216,12 @@ class InvitationSignupSerializer(serializers.ModelSerializer):
         token = validated_data.pop('token')
         password = validated_data.pop('password')
         full_name = validated_data.pop('full_name')
+        phone_number = validated_data.get('phone_number')
         
         invitation = Invitation.objects.get(token=token)
         
         user = User.objects.create_user(
+            username=phone_number,
             first_name=full_name,
             password=password,
             role=invitation.role,

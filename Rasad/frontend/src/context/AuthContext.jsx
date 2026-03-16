@@ -29,8 +29,8 @@ export const AuthProvider = ({ children }) => {
     initAuth();
   }, []);
 
-  const login = async (username, password) => {
-    const response = await api.post('accounts/login/', { username, password });
+  const login = async (phone_number, password) => {
+    const response = await api.post('accounts/login/', { phone_number, password });
     const { access, refresh, user: userData } = response.data;
     localStorage.setItem('access_token', access);
     localStorage.setItem('refresh_token', refresh);

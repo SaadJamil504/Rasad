@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import './Auth.css';
 
 const Login = () => {
-  const [username, setUsername] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -22,7 +22,7 @@ const Login = () => {
     setLoading(true);
     setError(null);
     try {
-      await login(username, password);
+      await login(phoneNumber, password);
       navigate('/');
     } catch (err) {
       setError(err.response?.data?.detail || 'Invalid credentials or server error.');
@@ -44,13 +44,13 @@ const Login = () => {
         
         <form onSubmit={handleSubmit} className="login-form-clean">
           <div className="form-group-clean">
-            <label>USERNAME</label>
+            <label>PHONE NUMBER</label>
             <input 
               type="text" 
-              value={username} 
-              onChange={(e) => setUsername(e.target.value)} 
+              value={phoneNumber} 
+              onChange={(e) => setPhoneNumber(e.target.value)} 
               required 
-              placeholder="Enter your username"
+              placeholder="e.g. 03001234567"
             />
           </div>
           <div className="form-group-clean">

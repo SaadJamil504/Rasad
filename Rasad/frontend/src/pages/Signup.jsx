@@ -5,7 +5,6 @@ import './Auth.css';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
-    username: '',
     full_name: '',
     email: '',
     phone_number: '',
@@ -32,6 +31,16 @@ const Signup = () => {
     // Basic validation
     if (formData.password.length < 6) {
       setError('Password must be at least 6 characters.');
+      setLoading(false);
+      return;
+    }
+    if (!/^03\d{9}$/.test(formData.phone_number)) {
+      setError('Phone number must be exactly 11 digits and start with 03 (e.g. 03001234567).');
+      setLoading(false);
+      return;
+    }
+    if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(formData.email.toLowerCase())) {
+      setError('Only Gmail addresses are accepted.');
       setLoading(false);
       return;
     }
@@ -88,29 +97,16 @@ const Signup = () => {
         {error && <div className="error-message-clean">{error}</div>}
         
         <form onSubmit={handleSubmit} className="login-form-clean">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div className="form-group-clean">
-              <label>USERNAME</label>
-              <input 
-                name="username"
-                type="text" 
-                value={formData.username} 
-                onChange={handleChange} 
-                required 
-                placeholder="johndoe"
-              />
-            </div>
-            <div className="form-group-clean">
-              <label>FULL NAME</label>
-              <input 
-                name="full_name"
-                type="text" 
-                value={formData.full_name} 
-                onChange={handleChange} 
-                required 
-                placeholder="John Doe"
-              />
-            </div>
+          <div className="form-group-clean">
+            <label>FULL NAME</label>
+            <input 
+              name="full_name"
+              type="text" 
+              value={formData.full_name} 
+              onChange={handleChange} 
+              required 
+              placeholder="John Doe"
+            />
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
