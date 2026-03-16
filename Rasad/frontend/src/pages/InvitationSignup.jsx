@@ -149,7 +149,8 @@ const InvitationSignup = () => {
               <input
                 type="text"
                 name="phone_number"
-                placeholder="+92..."
+                placeholder="03001234567"
+                maxLength="11"
                 required
                 value={formData.phone_number}
                 onChange={handleChange}

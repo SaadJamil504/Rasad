@@ -128,8 +128,9 @@ const Signup = () => {
                 type="text" 
                 value={formData.phone_number} 
                 onChange={handleChange} 
+                maxLength="11"
                 required 
-                placeholder="+92..."
+                placeholder="03001234567"
               />
             </div>
           </div>
