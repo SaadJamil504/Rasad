@@ -288,6 +288,32 @@
   background: #f8fafc;
 }
 
+.owner-header-compact {
+  background: white;
+  color: #1e293b;
+  padding: 1rem 3rem;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.logout-banner-btn-compact {
+  background: #f1f5f9;
+  color: #ef4444;
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem 1.25rem;
+  border-radius: 2rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.logout-banner-btn-compact:hover {
+  background: #fee2e2;
+  border-color: #fecaca;
+  transform: translateY(-1px);
+}
+
 .owner-header-banner {
   background: #27ae60;
   color: white;

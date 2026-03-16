@@ -98,23 +98,17 @@ const MainLayout = () => {
       )}
       <main className="main-content">
         {showSidebar && (
-          <header className="owner-header-banner">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1.5rem' }}>
-                <button className="hamburger-btn owner-hamburger" onClick={toggleSidebar}>
+          <header className="owner-header-compact">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <button className="hamburger-btn owner-hamburger" onClick={toggleSidebar} style={{ color: '#1e293b' }}>
                   ☰
                 </button>
-                <div>
-                  <div style={{ fontFamily: '"Amiri", serif', fontSize: '1.2rem', marginBottom: '0.2rem', opacity: 0.9 }}>السلام علیکم</div>
-                  <h2 style={{ fontSize: '2.2rem', fontWeight: 800, margin: 0, letterSpacing: '-0.5px' }}>
-                    {user.first_name || user.username || 'Owner'}
-                  </h2>
-                  <div style={{ fontSize: '1rem', opacity: 0.9, marginTop: '0.2rem' }}>
-                    Administrator Dashboard
-                  </div>
-                </div>
+                <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#1e293b' }}>
+                  Dashboard
+                </span>
               </div>
-              <button onClick={handleLogout} className="logout-banner-btn" style={{ marginTop: '0.5rem' }}>
+              <button onClick={handleLogout} className="logout-banner-btn-compact">
                 Logout
               </button>
             </div>
@@ -151,8 +145,8 @@ const MainLayout = () => {
                 />
               </div>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
-                <button type="button" onClick={() => setShowPriceModal(false)} style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontWeight: 'bold', cursor: 'pointer', textAlign: 'center' }}>Cancel</button>
-                <button type="submit" disabled={updatingPrices} style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: 'none', background: '#27ae60', color: 'white', fontWeight: 'bold', cursor: 'pointer', textAlign: 'center' }}>
+                <button type="button" onClick={() => setShowPriceModal(false)} style={{ flex: 1, padding: '0.8rem 1rem', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontWeight: 'bold', cursor: 'pointer', textAlign: 'center', height: '48px', boxSizing: 'border-box' }}>Cancel</button>
+                <button type="submit" disabled={updatingPrices} style={{ flex: 1, padding: '0.8rem 1rem', borderRadius: '8px', border: '1px solid #27ae60', background: '#27ae60', color: 'white', fontWeight: 'bold', cursor: 'pointer', textAlign: 'center', height: '48px', boxSizing: 'border-box' }}>
                   {updatingPrices ? 'Saving...' : 'Save Prices'}
                 </button>
               </div>
