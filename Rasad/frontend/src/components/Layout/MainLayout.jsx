@@ -79,6 +79,9 @@ const MainLayout = () => {
                 <Link to="/reports" className={`nav-item ${window.location.pathname === '/reports' ? 'active' : ''}`} onClick={closeSidebar}>
                   <span className="icon">📊</span> Reports
                 </Link>
+                <div className="nav-item" style={{ cursor: 'pointer' }} onClick={() => { setShowPriceModal(true); closeSidebar(); }}>
+                  <span className="icon">⚙️</span> Adjust Price
+                </div>
               </>
             )}
           </nav>
@@ -95,25 +98,23 @@ const MainLayout = () => {
       )}
       <main className="main-content">
         {showSidebar && (
-          <header className="top-bar">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <button className="hamburger-btn" onClick={toggleSidebar}>
-                ☰
-              </button>
-              <div className="breadcrumb desktop-only">Home / Dashboard</div>
-            </div>
-            
-            <div className="actions" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              {user.role === 'owner' && (
-                <button 
-                  onClick={() => setShowPriceModal(true)} 
-                  style={{ padding: '0.6rem 1.2rem', borderRadius: '8px', border: 'none', background: '#27ae60', color: 'white', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 2px 5px rgba(39, 174, 96, 0.3)' }}
-                  className="adjust-price-btn"
-                >
-                  Adjust Price
+          <header className="owner-header-banner">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1.5rem' }}>
+                <button className="hamburger-btn owner-hamburger" onClick={toggleSidebar}>
+                  ☰
                 </button>
-              )}
-              <button onClick={handleLogout} className="logout-top-btn">
+                <div>
+                  <div style={{ fontFamily: '"Amiri", serif', fontSize: '1.2rem', marginBottom: '0.2rem', opacity: 0.9 }}>السلام علیکم</div>
+                  <h2 style={{ fontSize: '2.2rem', fontWeight: 800, margin: 0, letterSpacing: '-0.5px' }}>
+                    {user.first_name || user.username || 'Owner'}
+                  </h2>
+                  <div style={{ fontSize: '1rem', opacity: 0.9, marginTop: '0.2rem' }}>
+                    Administrator Dashboard
+                  </div>
+                </div>
+              </div>
+              <button onClick={handleLogout} className="logout-banner-btn" style={{ marginTop: '0.5rem' }}>
                 Logout
               </button>
             </div>
@@ -149,9 +150,9 @@ const MainLayout = () => {
                   style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#f8fafc', boxSizing: 'border-box', color: '#1e293b' }}
                 />
               </div>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <button type="button" onClick={() => setShowPriceModal(false)} style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'transparent', color: '#64748b', fontWeight: 'bold', cursor: 'pointer' }}>Cancel</button>
-                <button type="submit" disabled={updatingPrices} style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: 'none', background: '#27ae60', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}>
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
+                <button type="button" onClick={() => setShowPriceModal(false)} style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', color: '#64748b', fontWeight: 'bold', cursor: 'pointer', textAlign: 'center' }}>Cancel</button>
+                <button type="submit" disabled={updatingPrices} style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: 'none', background: '#27ae60', color: 'white', fontWeight: 'bold', cursor: 'pointer', textAlign: 'center' }}>
                   {updatingPrices ? 'Saving...' : 'Save Prices'}
                 </button>
               </div>

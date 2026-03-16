@@ -284,18 +284,15 @@
   color: white;
 }
 
-.app-layout.role-owner .sidebar-footer {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
 .app-layout.role-owner .main-content {
   background: #f8fafc;
 }
 
-.app-layout.role-owner .top-bar {
-  background: white;
-  border-bottom: 1px solid #e2e8f0;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+.owner-header-banner {
+  background: #27ae60;
+  color: white;
+  padding: 2.5rem 3rem;
+  text-align: left;
 }
 
 .app-layout.role-owner .breadcrumb {
@@ -387,6 +384,40 @@
   transform: translateY(-1px);
 }
 
+.app-layout.role-owner .logout-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.app-layout.role-owner .logout-btn:hover {
+  background: #ff4d4d;
+  color: white;
+  border-color: #ff4d4d;
+}
+
+.owner-hamburger {
+  color: white !important;
+  margin-top: 5px;
+}
+
+.logout-banner-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 0.5rem 1.25rem;
+  border-radius: 2rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.logout-banner-btn:hover {
+  background: #ff4d4d;
+  border-color: #ff4d4d;
+}
+
 /* --- Mobile Responsiveness --- */
 @media (max-width: 768px) {
   .app-layout .sidebar {
@@ -413,22 +444,44 @@
     display: none !important;
   }
 
+  .owner-header-banner {
+    padding: 1.5rem !important;
+  }
+
   .top-bar {
     padding: 0 1.5rem;
-    height: 70px;
+    height: auto;
+    min-height: 70px;
+    flex-wrap: wrap;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .top-bar > div:first-child {
+    width: 100%;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
   }
 
   .top-bar .actions {
+    width: 100%;
+    flex-direction: column;
     gap: 0.5rem !important;
   }
 
   .logout-top-btn {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.85rem;
+    width: 100%;
+    justify-content: center;
+    padding: 0.8rem;
+    font-size: 1rem;
+    line-height: 1.2;
   }
 
   .adjust-price-btn {
-    padding: 0.4rem 0.8rem !important;
-    font-size: 0.85rem;
+    width: 100%;
+    justify-content: center;
+    padding: 0.8rem !important;
+    font-size: 1rem;
+    line-height: 1.2;
   }
 }

@@ -721,7 +721,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="dashboard fade-in">
+    <div className="dashboard fade-in owner-dashboard-wrapper">
       <div className="owner-stats-row stats-grid-owner">
         <div className="stat-card owner-card green-top" onClick={() => window.location.href = '/customers'}>
           <div className="card-icon">🚴</div>
@@ -769,82 +769,93 @@ const Dashboard = () => {
             <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               ⚠️ Overdue Alerts <span style={{ fontFamily: '"Noto Nastaliq Urdu", serif', fontSize: '1.2rem', color: '#64748b' }}>واجب الادا</span>
             </h3>
-            <button className="btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', borderRadius: '1rem', background: '#f8fafc' }} onClick={() => window.location.href = '/customers'}>View All</button>
+            <button className="btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', borderRadius: '1rem', background: '#f8fafc', fontWeight: 700 }} onClick={() => window.location.href = '/customers'}>View All</button>
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {Array.isArray(alerts?.overdue) && alerts.overdue.length > 0 ? alerts.overdue.map((customer, index) => {
-              const bgColors = ['rgba(254, 226, 226, 0.5)', 'rgba(254, 243, 199, 0.5)', 'rgba(254, 243, 199, 0.5)'];
-              const borderColors = ['#ef4444', '#f59e0b', '#f59e0b'];
-              const dotColors = ['linear-gradient(135deg, #f87171, #dc2626)', 'linear-gradient(135deg, #fbbf24, #d97706)', 'linear-gradient(135deg, #fbbf24, #d97706)'];
-              
-              const styleIdx = index < 3 ? index : 2;
-              
-              return (
-                <div key={customer.id} style={{ 
-                  background: bgColors[styleIdx], 
-                  borderLeft: `4px solid ${borderColors[styleIdx]}`,
-                  padding: '1.25rem',
-                  borderRadius: '1rem',
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '1rem'
-                }}>
-                  <div style={{ 
-                    width: '16px', height: '16px', borderRadius: '50%', background: dotColors[styleIdx], 
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)', flexShrink: 0, marginTop: '0.2rem'
-                  }}></div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 800, color: '#1e293b', marginBottom: '0.25rem' }}>
-                      {customer.name} — <span style={{ fontWeight: 600, color: '#475569' }}>Rs {customer.amount} overdue</span>
-                    </div>
-                    <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
-                      {customer.address}, {customer.route}
+            {Array.isArray(alerts?.overdue) && alerts.overdue.length > 0 ? (
+              alerts.overdue.map((customer, index) => {
+                const bgColors = ['rgba(254, 226, 226, 0.5)', 'rgba(254, 243, 199, 0.5)', 'rgba(254, 243, 199, 0.5)'];
+                const borderColors = ['#ef4444', '#f59e0b', '#f59e0b'];
+                const dotColors = ['linear-gradient(135deg, #f87171, #dc2626)', 'linear-gradient(135deg, #fbbf24, #d97706)', 'linear-gradient(135deg, #fbbf24, #d97706)'];
+                
+                const styleIdx = index < 3 ? index : 2;
+                
+                return (
+                  <div key={customer.id} style={{ 
+                    background: bgColors[styleIdx], 
+                    borderLeft: `4px solid ${borderColors[styleIdx]}`,
+                    padding: '1.25rem',
+                    borderRadius: '1rem',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '1rem'
+                  }}>
+                    <div style={{ 
+                      width: '16px', height: '16px', borderRadius: '50%', background: dotColors[styleIdx], 
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)', flexShrink: 0, marginTop: '0.2rem'
+                    }}></div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ color: '#1e293b', marginBottom: '0.25rem', fontSize: '0.95rem' }}>
+                        <span style={{ fontWeight: 800 }}>{customer.name}</span> — Rs {customer.amount} overdue
+                      </div>
+                      <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
+                        {customer.address}, {customer.route}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            }) : (
-              <p style={{ color: '#94a3b8', textAlign: 'center', padding: '1rem 0' }}>No overdue customers at the moment.</p>
+                );
+              })
+            ) : (
+              <div style={{ padding: '2rem', textAlign: 'center', background: '#f8fafc', borderRadius: '1rem', border: '1px dashed #cbd5e1' }}>
+                <span style={{ fontSize: '2rem', marginBottom: '0.5rem', display: 'block' }}>🎉</span>
+                <div style={{ fontWeight: 700, color: '#334155', marginBottom: '0.25rem' }}>All Caught Up!</div>
+                <div style={{ fontSize: '0.85rem', color: '#64748b' }}>No overdue customers at the moment.</div>
+              </div>
             )}
           </div>
         </div>
 
         {/* Today's Paused Deliveries Section */}
-        <div className="glass-card" style={{ padding: '2rem' }}>
-          <h3 style={{ margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <div className="glass-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column' }}>
+          <h3 style={{ margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#0f172a' }}>
             📦 Today's Paused Deliveries
           </h3>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {Array.isArray(alerts?.paused) && alerts.paused.length > 0 ? alerts.paused.map(delivery => (
-              <div key={delivery.id} style={{ 
-                background: '#f0fdf4',
-                borderLeft: '4px solid #16a34a',
-                padding: '1.25rem',
-                borderRadius: '1rem',
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: '1rem'
-              }}>
-                <div style={{ 
-                  background: '#3b82f6', width: '24px', height: '24px', borderRadius: '4px', 
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '0.1rem'
-                }}>
-                  <span style={{ color: 'white', fontSize: '0.7rem', fontWeight: 800 }}>II</span>
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 800, color: '#1e293b', marginBottom: '0.25rem' }}>
-                    {delivery.customer_name} — <span style={{ fontWeight: 600, color: '#475569' }}>{delivery.route}</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
+            {Array.isArray(alerts?.paused) && alerts.paused.length > 0 ? (
+              alerts.paused.map(delivery => (
+                <div key={delivery.id} style={{ background: '#edfdf0', borderLeft: '4px solid #16a34a', padding: '1.25rem', borderRadius: '1rem', display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+                  <div style={{ background: '#3b82f6', width: '24px', height: '24px', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '0.1rem' }}>
+                    <span style={{ color: 'white', fontSize: '0.7rem', fontWeight: 800 }}>II</span>
                   </div>
-                  <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
-                    "{delivery.reason}"
+                  <div style={{ flex: 1 }}>
+                    <div style={{ color: '#1e293b', marginBottom: '0.25rem', fontSize: '0.95rem' }}>
+                      <span style={{ fontWeight: 800 }}>{delivery.customer_name}</span> — <span>{delivery.route}</span>
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
+                      "{delivery.reason}"
+                    </div>
                   </div>
                 </div>
+              ))
+            ) : (
+              <div style={{ padding: '2rem', textAlign: 'center', background: '#f8fafc', borderRadius: '1rem', border: '1px dashed #cbd5e1' }}>
+                <span style={{ fontSize: '2rem', marginBottom: '0.5rem', display: 'block' }}>✅</span>
+                <div style={{ fontWeight: 700, color: '#334155', marginBottom: '0.25rem' }}>No Paused Routes</div>
+                <div style={{ fontSize: '0.85rem', color: '#64748b' }}>Running smoothly. No paused deliveries for today.</div>
               </div>
-            )) : (
-              <p style={{ color: '#94a3b8', textAlign: 'center', padding: '1rem 0' }}>No paused deliveries for today.</p>
             )}
+          </div>
+          
+          <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid #e2e8f0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+              <span style={{ fontSize: '0.9rem', color: '#64748b' }}>Today's quantity changes</span>
+              <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#16a34a' }}>0 requests</span>
+            </div>
+            <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
+              No quantity modifications scheduled for today.
+            </div>
           </div>
         </div>
       </div>
@@ -870,40 +881,6 @@ const Dashboard = () => {
         </div>
       )}
 
-
-
-      <div className="recent-activity glass-card" style={{ padding: '2.5rem', marginBottom: '2rem' }}>
-        <h3>Activity Logs (Requests)</h3>
-        <div className="history-list" style={{ marginTop: '1.5rem' }}>
-          {adjustments.length > 0 ? (
-            adjustments.slice(0, 10).map(adj => (
-              <div key={adj.id} className="history-item glass-card" style={{ padding: '1.2rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <div style={{ fontWeight: 800 }}>{adj.customer_name || adj.customer_username}</div>
-                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                    {adj.adjustment_type === 'pause' ? 'Pause Request' :
-                      adj.adjustment_type === 'quantity' ? `Qty Change: ${adj.new_quantity}L` :
-                        'Complaint'} - {adj.date}
-                  </div>
-                </div>
-                <div style={{
-                  padding: '0.3rem 0.8rem',
-                  borderRadius: '20px',
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                  background: adj.status === 'accepted' ? 'rgba(77, 255, 140, 0.1)' : adj.status === 'rejected' ? 'rgba(255, 77, 77, 0.1)' : 'rgba(255, 255, 255, 0.05)',
-                  color: adj.status === 'accepted' ? '#2ecc71' : adj.status === 'rejected' ? '#ff4d4d' : 'var(--text-muted)'
-                }}>
-                  {adj.status}
-                </div>
-              </div>
-            ))
-          ) : (
-            <p style={{ color: 'var(--text-muted)' }}>No recent activity requests.</p>
-          )}
-        </div>
-      </div>
 
 
       {/* Modals for Quick Actions */}

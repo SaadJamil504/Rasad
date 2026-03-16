@@ -445,7 +445,7 @@
 }
 
 .driver-header-banner {
-  background: linear-gradient(135deg, #1b5e20, #2e7d32);
+  background: #27ae60;
   padding: 3rem 2rem 4rem;
   border-bottom-left-radius: 2.5rem;
   border-bottom-right-radius: 2.5rem;
@@ -670,9 +670,13 @@
 }
 
 /* Owner Redesigned Stats Cards */
+.owner-dashboard-wrapper {
+  padding: 2rem;
+}
+
 .stats-grid-owner {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
@@ -798,4 +802,55 @@
 .logout-pill-white:hover {
   background: #ff4d4d;
   border-color: #ff4d4d;
+}
+
+/* Owner Dashboard Mobile Optimization */
+@media (max-width: 1024px) {
+  .stats-grid-owner {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .owner-dashboard-wrapper {
+    padding: 1.5rem;
+  }
+
+  .owner-card {
+    padding: 1.25rem !important;
+  }
+  
+  .owner-card .stat-value {
+    font-size: 1.7rem !important;
+  }
+
+  .card-icon {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .owner-dashboard-wrapper {
+    padding: 1rem;
+  }
+
+  .stats-grid-owner {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .owner-card {
+    padding: 1rem !important;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .owner-card .stat-value {
+    font-size: 1.4rem !important;
+  }
+  
+  .owner-card .stat-label {
+    font-size: 0.75rem !important;
+  }
 }
