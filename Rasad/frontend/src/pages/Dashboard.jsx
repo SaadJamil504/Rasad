@@ -594,7 +594,7 @@ const Dashboard = () => {
                 }}>Logout</button>
               </div>
             </div>
-            <h2>{user.first_name || user.username} — {user.assigned_route_name || 'Route A'}</h2>
+            <h2>{user.first_name || user.username}</h2>
           </div>
 
           <div className="driver-stats-row">
