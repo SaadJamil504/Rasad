@@ -138,29 +138,26 @@
   overflow: hidden;
 }
 
-.member-name {
-  font-weight: 700;
-  color: white;
-  font-size: 1rem;
+.member-card.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: rgba(255, 255, 255, 0.02);
+  border-style: dashed;
 }
 
-.member-detail {
-  font-size: 0.75rem;
-  color: #94a3b8;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.member-card.disabled:hover {
+  transform: none;
 }
 
 .modal-footer {
   display: flex;
-  flex-direction: row; /* Horizontal buttons to save space */
+  flex-direction: row;
   gap: 0.5rem;
   margin-top: 0.5rem;
 }
 
 .modal-footer button {
-  flex: 1;
+  flex: 1 !important; /* Force equal sizing */
   padding: 0.7rem !important;
   font-size: 0.9rem !important;
 }
@@ -184,7 +181,6 @@
 /* Inherit base modal styles */
 @import './InvitationModal.css';
 
-/* Desktop Overrides */
 @media (min-width: 600px) {
   .route-modal {
     padding: 2.5rem !important;
@@ -196,25 +192,19 @@
 
   .section-header {
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: flex-start; /* Align search to left/middle */
     align-items: center;
+    gap: 1.5rem;
   }
 
   .search-box {
-    max-width: 250px;
+    max-width: 300px;
+    flex: 1;
   }
 
   .selection-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     max-height: 350px;
-  }
-
-  .modal-footer {
-    flex-direction: row;
-  }
-
-  .modal-footer button {
-    /* Keep flex: 1 from base to ensure equal size */
   }
 }

@@ -36,12 +36,7 @@ const RouteModal = ({ isOpen, onClose, onRouteCreated, editRoute }) => {
         staffAPI.getStaff('customer') 
       ]);
       setDrivers(driversRes.data);
-      
-      // Eligibility: Unassigned or already in this route
-      const eligible = customersRes.data.filter(c => 
-        !c.route || (editRoute && c.route === editRoute.id)
-      );
-      setAvailableCustomers(eligible);
+      setAvailableCustomers(customersRes.data); // Show all customers
     } catch (err) {
       console.error('Failed to fetch assignment data:', err);
     }
@@ -151,24 +146,33 @@ const RouteModal = ({ isOpen, onClose, onRouteCreated, editRoute }) => {
                   </p>
                 </div>
               ) : (
-                filteredCustomers.map(customer => (
-                  <div 
-                    key={customer.id} 
-                    className={`member-card ${formData.customer_ids.includes(customer.id) ? 'selected' : ''}`}
-                    onClick={() => handleCustomerToggle(customer.id)}
-                  >
-                    <div className="card-check">
-                      <div className="check-circle"></div>
+                availableCustomers.filter(customer => 
+                  (customer.first_name || customer.username).toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  customer.address?.toLowerCase().includes(searchTerm.toLowerCase())
+                ).map(customer => {
+                  const isAssignedElsewhere = customer.route && (!editRoute || customer.route !== editRoute.id);
+                  const isSelected = formData.customer_ids.includes(customer.id);
+                  
+                  return (
+                    <div 
+                      key={customer.id} 
+                      className={`member-card ${isSelected ? 'selected' : ''} ${isAssignedElsewhere ? 'disabled' : ''}`}
+                      onClick={() => !isAssignedElsewhere && handleCustomerToggle(customer.id)}
+                    >
+                      <div className="card-check">
+                        <div className="check-circle"></div>
+                      </div>
+                      <div className="member-info">
+                        <span className="member-name">
+                          {customer.first_name || customer.username}
+                          {isSelected && <span style={{ color: '#22c55e', fontSize: '0.8rem', marginLeft: '0.5rem' }}>(Selected)</span>}
+                          {isAssignedElsewhere && <span style={{ color: '#ef4444', fontSize: '0.7rem', marginLeft: '0.5rem' }}>(In Route #{customer.route})</span>}
+                        </span>
+                        <span className="member-detail">{customer.address?.substring(0, 40)}...</span>
+                      </div>
                     </div>
-                    <div className="member-info">
-                      <span className="member-name">
-                        {customer.first_name || customer.username}
-                        {formData.customer_ids.includes(customer.id) && <span style={{ color: '#22c55e', fontSize: '0.8rem', marginLeft: '0.5rem' }}>(Added)</span>}
-                      </span>
-                      <span className="member-detail">{customer.address?.substring(0, 40)}...</span>
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
