@@ -470,15 +470,15 @@ const Dashboard = () => {
 
           <div className="customer-stats-row">
             <div className="stat-box">
-              <span className="stat-val red">Rs {currentUser?.outstanding_balance || 0}</span>
+              <span className="stat-val red">Rs {Math.floor(currentUser?.outstanding_balance || 0)}</span>
               <span className="stat-lbl">Amount Due</span>
             </div>
             <div className="stat-box">
-              <span className="stat-val green">{user.daily_quantity || 0}L</span>
+              <span className="stat-val green">{Number(user.daily_quantity || 0).toFixed(1)}L</span>
               <span className="stat-lbl">Daily Qty</span>
             </div>
             <div className="stat-box">
-              <span className="stat-val">{monthlyQty}L</span>
+              <span className="stat-val">{Number(monthlyQty).toFixed(1)}L</span>
               <span className="stat-lbl">This Month</span>
             </div>
           </div>
