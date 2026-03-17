@@ -308,8 +308,9 @@ button[type="submit"]:active {
 
 @media (max-width: 600px) {
   .login-page-bg {
-    padding: 1rem;
-    align-items: flex-start;
+    padding: 2rem 1rem;
+    align-items: center;
+    justify-content: center;
     overflow-y: auto;
   }
 

@@ -131,11 +131,11 @@ const RouteModal = ({ isOpen, onClose, onRouteCreated, editRoute }) => {
 
           <div className="form-section">
             <div className="section-header">
-              <label>Select Customers ({formData.customer_ids.length} selected)</label>
+              <label style={{ margin: 0 }}>Assign Customers <span style={{ color: '#22c55e', marginLeft: '0.5rem' }}>({formData.customer_ids.length})</span></label>
               <div className="search-box">
                 <input 
                   type="text" 
-                  placeholder="Search customers..." 
+                  placeholder="Search by name or address..." 
                   className="search-input"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
