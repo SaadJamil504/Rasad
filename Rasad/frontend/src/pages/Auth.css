@@ -306,19 +306,14 @@ button[type="submit"]:active {
   font-style: italic;
 }
 
-/* Response Grid Utility */
+/* Vertical Form Layout */
 .auth-grid-responsive {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
 @media (max-width: 600px) {
-  .auth-grid-responsive {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
-  
   .login-page-bg {
     padding: 1rem;
     align-items: flex-start;
