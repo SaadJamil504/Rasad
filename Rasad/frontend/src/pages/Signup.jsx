@@ -109,7 +109,7 @@ const Signup = () => {
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="auth-grid-responsive">
             <div className="form-group-clean">
               <label>EMAIL</label>
               <input 
@@ -135,7 +135,7 @@ const Signup = () => {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="auth-grid-responsive">
             <div className="form-group-clean">
               <label>COW MILK PRICE (Rs)</label>
               <input 
