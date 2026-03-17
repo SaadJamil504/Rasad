@@ -669,6 +669,13 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.item-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
 /* Owner Redesigned Stats Cards */
 .owner-dashboard-wrapper {
   padding: 2rem;
@@ -852,5 +859,50 @@
   
   .owner-card .stat-label {
     font-size: 0.75rem !important;
+  }
+}
+
+/* Driver Dashboard Mobile Optimization */
+@media (max-width: 480px) {
+  .driver-header-banner {
+    padding: 2rem 1.5rem 3.5rem;
+  }
+
+  .driver-stats-row {
+    padding: 1.5rem 1rem;
+    gap: 1rem;
+  }
+
+  .today-list {
+    padding: 0 1rem 2rem;
+  }
+
+  .today-list-item {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+
+  .icon-circle {
+    width: 3rem;
+    height: 3rem;
+    font-size: 1.25rem;
+  }
+
+  .item-info {
+    min-width: 140px;
+  }
+
+  .item-actions {
+    width: 100%;
+    margin-top: 0.5rem;
+    justify-content: flex-end;
+  }
+
+  .btn-deliver, .btn-skip {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    flex: 1;
+    text-align: center;
   }
 }

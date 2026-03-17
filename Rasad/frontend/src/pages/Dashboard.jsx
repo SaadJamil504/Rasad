@@ -691,17 +691,17 @@ const Dashboard = () => {
                         {statusClass === 'paused' && <span className="status-label gray">Paused</span>}
 
                         {statusClass === 'changed' && (
-                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <>
                             <button className="btn-deliver" onClick={() => handleActionAdjustment(delivery.pendingAdj.id, 'accept')}>Accept</button>
                             <button className="btn-skip" onClick={() => handleActionAdjustment(delivery.pendingAdj.id, 'reject')}>Reject</button>
-                          </div>
+                          </>
                         )}
 
                         {statusClass === 'pending' && (
-                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <>
                             <button className="btn-deliver" onClick={() => handleToggleDelivery(delivery.id)}>Deliver</button>
                             <button className="btn-skip" onClick={() => handleActionAdjustment(delivery.id, 'pause')}>Skip</button>
-                          </div>
+                          </>
                         )}
                       </div>
                     </div>
