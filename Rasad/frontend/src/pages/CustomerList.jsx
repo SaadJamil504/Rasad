@@ -148,7 +148,7 @@ const CustomerList = () => {
             <thead>
               <tr>
                 <th>NO.</th>
-                <th>CUSTOMER / گاہک</th>
+                <th>CUSTOMER</th>
                 <th>AREA</th>
                 <th>ROUTE</th>
                 <th>DAILY QTY</th>
@@ -161,8 +161,8 @@ const CustomerList = () => {
             <tbody>
               {filteredCustomers.map(customer => (
                 <tr key={customer.id}>
-                  <td><span className="id-hash">#{customer.id}</span></td>
-                  <td>
+                  <td data-label="NO."><span className="id-hash">#{customer.id}</span></td>
+                  <td data-label="CUSTOMER">
                     <div className="customer-cell">
                       <span className="customer-name-main">{customer.first_name || customer.username}</span>
                       <span className="customer-sub-info">
@@ -170,17 +170,17 @@ const CustomerList = () => {
                       </span>
                     </div>
                   </td>
-                  <td><span className="area-text">{customer.address || 'General'}</span></td>
-                  <td>
+                  <td data-label="AREA"><span className="area-text">{customer.address || 'General'}</span></td>
+                  <td data-label="ROUTE">
                     <span className={`route-badge ${customer.route_name === 'Route B' ? 'route-b' : customer.route_name === 'Route C' ? 'route-c' : 'route-a'}`}>
                       {customer.route_name || 'Unassigned'}
                     </span>
                   </td>
-                  <td><strong>{customer.daily_quantity || '0'}L</strong></td>
-                  <td>Rs {customer.milk_type === 'cow' ? customer.cow_price : (customer.milk_type === 'buffalo' ? customer.buffalo_price : Math.max(customer.cow_price || 0, customer.buffalo_price || 0))}/L</td>
-                  <td>{formatBalance(customer.outstanding_balance)}</td>
-                  <td>{getStatusBadge(customer.outstanding_balance)}</td>
-                  <td>
+                  <td data-label="DAILY QTY"><strong>{customer.daily_quantity || '0'}L</strong></td>
+                  <td data-label="RATE">Rs {customer.milk_type === 'cow' ? customer.cow_price : (customer.milk_type === 'buffalo' ? customer.buffalo_price : Math.max(customer.cow_price || 0, customer.buffalo_price || 0))}/L</td>
+                  <td data-label="BALANCE">{formatBalance(customer.outstanding_balance)}</td>
+                  <td data-label="STATUS">{getStatusBadge(customer.outstanding_balance)}</td>
+                  <td className="action-cell">
                     <button className="view-btn" onClick={() => handleViewCustomer(customer)}>View</button>
                   </td>
                 </tr>
@@ -211,7 +211,7 @@ const CustomerList = () => {
               <button className="btn-secondary" style={{ padding: '0.4rem 0.8rem' }} onClick={() => setSelectedCustomer(null)}>Close</button>
             </div>
 
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2rem', flexDirection: window.innerWidth < 768 ? 'column' : 'row' }}>
+            <div className="customer-profile-grid">
               <div style={{ flex: 1, minWidth: '0', background: '#f8fafc', padding: '1.25rem', borderRadius: '1rem', border: '1px solid #e2e8f0' }}>
                 <h3 style={{ margin: '0 0 0.75rem 0', color: '#1e293b', fontSize: '1.1rem' }}>{selectedCustomer.first_name || selectedCustomer.username}</h3>
                 <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>Phone:</strong> {selectedCustomer.phone_number || 'N/A'}</p>
@@ -229,7 +229,7 @@ const CustomerList = () => {
             {loadingDetails ? (
               <p>Loading details...</p>
             ) : (
-              <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', flexDirection: window.innerWidth < 768 ? 'column' : 'row' }}>
+              <div className="customer-details-grid">
                 {/* Monthly Bill Section */}
                 <div style={{ flex: 1, minWidth: '0' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>

@@ -457,7 +457,7 @@ const Dashboard = () => {
           <div className="customer-header-banner">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <div className="greeting">السلام علیکم</div>
+                <div className="greeting">Welcome Back,</div>
                 <h2>{user.first_name || user.username}</h2>
                 <div className="sub-header">#{user.id} - {user.address || 'Gulberg III'} - {user.owner_dairy_name || 'Dairy'}</div>
               </div>
@@ -515,28 +515,24 @@ const Dashboard = () => {
                 <div>
                   <span className="btn-text-main">⏸ Pause Delivery</span>
                 </div>
-                <div className="btn-text-urdu">ڈیلیوری<br />روکیں</div>
               </div>
 
               <div className="action-card-btn" onClick={() => setShowQtyModal(true)}>
                 <div>
                   <span className="btn-text-main">📊 Change Qty</span>
                 </div>
-                <div className="btn-text-urdu">مقدار<br />بدلیں</div>
               </div>
 
               <div className="action-card-btn" onClick={() => setShowHistoryModal(true)}>
                 <div>
                   <span className="btn-text-main">📄 Past Bills</span>
                 </div>
-                <div className="btn-text-urdu">پرانے بل</div>
               </div>
 
               <div className="action-card-btn" onClick={() => setShowComplaintModal(true)}>
                 <div>
                   <span className="btn-text-main">⚠️ Complaint</span>
                 </div>
-                <div className="btn-text-urdu">شکایت</div>
               </div>
             </div>
           </div>
@@ -585,7 +581,7 @@ const Dashboard = () => {
         <div className="driver-dashboard">
           <div className="driver-header-banner">
             <div className="banner-top">
-              <span>Driver App . ڈرائیور ایپ</span>
+              <span>Driver Dashboard</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <span className="banner-date">{new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
                 <button className="logout-pill-white" onClick={() => {
@@ -616,7 +612,6 @@ const Dashboard = () => {
             <div className="complaints-section">
               <div className="section-title">
                 <h3>Customer Complaints</h3>
-                <span className="urdu-title">کسٹمر کی شکایت</span>
               </div>
               <div className="complaints-list">
                 {pendingComplaints.map(adj => (
@@ -636,7 +631,7 @@ const Dashboard = () => {
 
           <div className="today-list-section">
             <div className="section-title">
-              <h3>TODAY'S LIST — آج کی فہرست</h3>
+              <h3>TODAY'S LIST</h3>
             </div>
             <div className="today-list">
               {enrichedDeliveries.length > 0 ? (
@@ -663,7 +658,7 @@ const Dashboard = () => {
                       <div className="item-status-icon">
                         {statusClass === 'done' && <div className="icon-circle check">✓</div>}
                         {statusClass === 'changed' && <div className="icon-circle warn">!</div>}
-                        {statusClass === 'paused' && <div className="icon-circle pause">双</div>}
+                        {statusClass === 'paused' && <div className="icon-circle pause">⏸</div>}
                         {statusClass === 'pending' && <div className="icon-circle empty"></div>}
                       </div>
 
@@ -764,13 +759,33 @@ const Dashboard = () => {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
         {/* Overdue Alerts Section */}
-        <div className="glass-card" style={{ padding: '2rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-            <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              ⚠️ Overdue Alerts <span style={{ fontFamily: '"Noto Nastaliq Urdu", serif', fontSize: '1.2rem', color: '#64748b' }}>واجب الادا</span>
+        <div className="glass-card" style={{ padding: '2rem', position: 'relative' }}>
+          <div style={{ marginBottom: '1.5rem' }}>
+            <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
+              ⚠️ Overdue Alerts
             </h3>
-            <button className="btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', borderRadius: '1rem', background: '#f8fafc', fontWeight: 700 }} onClick={() => window.location.href = '/customers'}>View All</button>
           </div>
+          <button 
+            className="btn-secondary" 
+            style={{ 
+              position: 'absolute',
+              top: '1.5rem',
+              right: '1.5rem',
+              padding: '0.2rem 0.6rem', 
+              fontSize: '0.7rem', 
+              borderRadius: '0.5rem', 
+              background: '#f1f5f9', 
+              fontWeight: 600, 
+              border: '1px solid #e2e8f0',
+              flex: 'none',
+              width: 'fit-content',
+              minWidth: 'auto',
+              lineHeight: '1.2'
+            }} 
+            onClick={() => window.location.href = '/customers'}
+          >
+            View All
+          </button>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {Array.isArray(alerts?.overdue) && alerts.overdue.length > 0 ? (

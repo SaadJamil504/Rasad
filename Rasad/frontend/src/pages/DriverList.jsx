@@ -53,12 +53,12 @@ const DriverList = () => {
               {drivers.length > 0 ? (
                 drivers.map((driver) => (
                   <tr key={driver.id}>
-                    <td className="font-bold">{driver.first_name || 'N/A'}</td>
-                    <td>{driver.username}</td>
-                    <td>{driver.email}</td>
-                    <td>{driver.phone_number || 'N/A'}</td>
-                    <td>{driver.license_number || 'N/A'}</td>
-                    <td>
+                    <td data-label="Full Name" className="font-bold">{driver.first_name || 'N/A'}</td>
+                    <td data-label="Username">{driver.username}</td>
+                    <td data-label="Email Address">{driver.email}</td>
+                    <td data-label="Phone Number">{driver.phone_number || 'N/A'}</td>
+                    <td data-label="License Number">{driver.license_number || 'N/A'}</td>
+                    <td data-label="Status">
                       <span className="status-badge active">Active</span>
                     </td>
                   </tr>
