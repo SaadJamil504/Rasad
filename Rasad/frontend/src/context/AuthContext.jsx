@@ -15,13 +15,16 @@ export const AuthProvider = ({ children }) => {
       
       if (token && savedUser) {
         try {
-          // Just set the user from local storage
-          // The API interceptor will handle token refresh if it's expired
           setUser(JSON.parse(savedUser));
+          // Verify session exists and token is valid
+          // This will trigger the API interceptor (refresh logic) if the access token is expired
+          await api.get('accounts/profile/');
         } catch (e) {
-          console.error('Failed to parse saved user:', e);
-          localStorage.clear();
-          setUser(null);
+          console.warn('Session invalid or expired');
+          // If the interceptor didn't already redirect, clean up
+          if (!localStorage.getItem('access_token')) {
+            setUser(null);
+          }
         }
       }
       setLoading(false);
