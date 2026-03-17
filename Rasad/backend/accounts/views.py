@@ -762,37 +762,18 @@ class DashboardReportsView(APIView):
         current_month = today.month
         current_year = today.year
 
-        # 1 & 2. Total milk and revenue of this month (Calculated based on active customers and current day)
-        # Assuming the dashboard should show the *expected* milk/revenue up to today, 
-        # or the *total* for the month based on current subscriptions. 
-        # The user seems to want actual delivered/billed amounts. 
-        # If Deliveries are only generated day-by-day, we might need to sum up all past deliveries 
-        # PLUS today's deliveries (whether delivered or not, as long as they aren't paused)
-        
-        # Let's get all deliveries created in this month that are NOT paused
+        # 1 & 2. Total milk and revenue of this month (Calculated based on CONFIRMED deliveries only)
         deliveries_this_month = Delivery.objects.filter(
             route__owner=request.user,
             date__month=current_month,
-            date__year=current_year
-        ).exclude(status='paused')
+            date__year=current_year,
+            status='delivered'
+        )
         
         total_milk_this_month = deliveries_this_month.aggregate(total=models.Sum('quantity'))['total'] or 0
         total_revenue_this_month = deliveries_this_month.aggregate(total=models.Sum('total_amount'))['total'] or 0
 
-        # If zero (e.g., cron jobs haven't run or records are missing), calculate based on active customers * days passed
-        if total_milk_this_month == 0:
-            customers = User.objects.filter(parent_owner=request.user, role='customer', route__isnull=False)
-            daily_milk = sum(c.daily_quantity or 0 for c in customers)
-            
-            daily_revenue = 0
-            for c in customers:
-                qty = c.daily_quantity or 0
-                price = c.cow_price if c.milk_type == 'cow' else c.buffalo_price
-                daily_revenue += (qty * price)
-
-            days_passed = today.day
-            total_milk_this_month = daily_milk * days_passed
-            total_revenue_this_month = daily_revenue * days_passed
+        # Removed fallback logic that estimated milk/revenue to ensure data accuracy with Main Dashboard
 
         # 3. Percentage of total collected amount to overdue amount
         customers = User.objects.filter(parent_owner=request.user, role='customer')
@@ -803,7 +784,7 @@ class DashboardReportsView(APIView):
         if (total_collected + total_overdue) > 0:
             collection_percentage = (total_collected / (total_collected + total_overdue)) * 100
 
-        # 4. Graph data: Month on x axis and revenue on y axis (Static starting from Mar '26)
+        # 4. Graph data: Month on x axis and revenue on y axis (Strictly confirmed deliveries)
         monthly_revenue_data = []
         start_month = 3
         start_year = 2026
@@ -818,8 +799,9 @@ class DashboardReportsView(APIView):
             rev = Delivery.objects.filter(
                 route__owner=request.user,
                 date__month=target_month,
-                date__year=target_year
-            ).exclude(status='paused').aggregate(total=models.Sum('total_amount'))['total'] or 0
+                date__year=target_year,
+                status='delivered'
+            ).aggregate(total=models.Sum('total_amount'))['total'] or 0
             
             month_name = timezone.datetime(target_year, target_month, 1).strftime('%b')
             monthly_revenue_data.append({
