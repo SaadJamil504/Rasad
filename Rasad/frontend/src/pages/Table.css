@@ -209,19 +209,19 @@
 .search-input {
   width: 100%;
   padding: 0.8rem 1rem 0.8rem 3rem;
-  background: rgba(15, 23, 42, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: white;
+  border: 1px solid #e2e8f0;
   border-radius: 12px;
-  color: white;
+  color: #1e293b;
   font-size: 0.95rem;
   transition: all 0.3s ease;
 }
 
 .search-input:focus {
   outline: none;
-  background: rgba(15, 23, 42, 0.5);
-  border-color: #6366f1;
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+  background: white;
+  border-color: #27ae60;
+  box-shadow: 0 0 0 4px rgba(39, 174, 96, 0.1);
 }
 
 .filter-dropdowns {

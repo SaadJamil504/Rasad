@@ -251,8 +251,93 @@
 
 /* Owner Theme Overrides - Green Sidebar & White Background */
 .app-layout.role-owner {
-  background: #f8fafc !important; /* Extremely light gray almost white */
-  color: #1e293b;
+  --owner-primary: #27ae60;
+  --owner-primary-hover: #1e8449;
+  --owner-bg: #f8fafc;
+  --owner-surface: #ffffff;
+  --owner-border: #e2e8f0;
+  --owner-text: #1e293b;
+  --owner-text-muted: #64748b;
+  --owner-danger: #ef4444;
+  --owner-danger-hover: #dc2626;
+  --owner-danger-light: #fef2f2;
+  
+  background: var(--owner-bg) !important;
+  color: var(--owner-text);
+}
+
+/* Standardized Owner Buttons */
+.app-layout.role-owner .btn-p {
+  background: var(--owner-primary);
+  color: white;
+  border: none;
+  height: 48px;
+  padding: 0 1.5rem;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.15);
+  white-space: nowrap;
+}
+
+.app-layout.role-owner .btn-p:hover {
+  background: var(--owner-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(39, 174, 96, 0.3);
+}
+
+.app-layout.role-owner .btn-s {
+  background: var(--owner-surface);
+  color: var(--owner-text-muted);
+  border: 1px solid var(--owner-border);
+  height: 48px;
+  padding: 0 1.5rem;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  white-space: nowrap;
+}
+
+.app-layout.role-owner .btn-s:hover {
+  background: var(--owner-bg);
+  border-color: var(--owner-text-muted);
+  color: var(--owner-text);
+}
+
+.app-layout.role-owner .btn-d {
+  background: var(--owner-danger-light);
+  color: var(--owner-danger);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  height: 48px;
+  padding: 0 1.5rem;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  white-space: nowrap;
+}
+
+.app-layout.role-owner .btn-d:hover {
+  background: var(--owner-danger);
+  color: white;
+  border-color: var(--owner-danger);
 }
 
 .app-layout.role-owner .sidebar {

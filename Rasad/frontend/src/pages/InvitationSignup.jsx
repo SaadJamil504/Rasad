@@ -111,7 +111,6 @@ const InvitationSignup = () => {
     <div className="login-page-bg">
       <div className="signup-white-card">
         <div className="login-header-area">
-          <div className="login-icon">🥛</div>
           <h1 className="login-brand-title">Rasad</h1>
           <p className="login-brand-subtitle">Registration as {invitation.role}</p>
           <p className="field-hint-clean">Invited by: {invitation.owner_name}</p>

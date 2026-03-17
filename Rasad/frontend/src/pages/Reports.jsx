@@ -59,8 +59,8 @@ const Reports = () => {
           gap: '1rem', 
           borderLeft: '4px solid #3b82f6' 
         }}>
-          <div style={{ background: '#eff6ff', width: isMobile ? '50px' : '60px', height: isMobile ? '50px' : '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? '1.4rem' : '1.8rem' }}>
-            🥛
+          <div style={{ background: '#eff6ff', width: isMobile ? '50px' : '60px', height: isMobile ? '50px' : '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? '0.8rem' : '1rem', fontWeight: 800, color: '#3b82f6' }}>
+            MLK
           </div>
           <div>
             <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>MILK DELIVERED</div>
@@ -76,8 +76,8 @@ const Reports = () => {
           gap: '1rem', 
           borderLeft: '4px solid #10b981' 
         }}>
-          <div style={{ background: '#f0fdf4', width: isMobile ? '50px' : '60px', height: isMobile ? '50px' : '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? '1.4rem' : '1.8rem' }}>
-            💰
+          <div style={{ background: '#f0fdf4', width: isMobile ? '50px' : '60px', height: isMobile ? '50px' : '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? '0.8rem' : '1rem', fontWeight: 800, color: '#10b981' }}>
+            PKR
           </div>
           <div>
             <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>REVENUE</div>
@@ -93,8 +93,8 @@ const Reports = () => {
           gap: '1rem', 
           borderLeft: '4px solid #8b5cf6' 
         }}>
-          <div style={{ background: '#f5f3ff', width: isMobile ? '50px' : '60px', height: isMobile ? '50px' : '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? '1.4rem' : '1.8rem' }}>
-            📈
+          <div style={{ background: '#f5f3ff', width: isMobile ? '50px' : '60px', height: isMobile ? '50px' : '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? '0.8rem' : '1rem', fontWeight: 800, color: '#8b5cf6' }}>
+            COL
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.2rem' }}>

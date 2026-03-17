@@ -149,18 +149,7 @@
   transform: none;
 }
 
-.modal-footer {
-  display: flex;
-  flex-direction: row;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
-
-.modal-footer button {
-  flex: 1 !important; /* Force equal sizing */
-  padding: 0.7rem !important;
-  font-size: 0.9rem !important;
-}
+/* Footer and Button Consistency Styles moved to bottom */
 
 @media (max-width: 600px) {
   .route-modal .modal-header {
@@ -207,4 +196,62 @@
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     max-height: 350px;
   }
+}
+/* Button Alignment & Size Consistency Overrides */
+.modal-footer {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 1rem !important;
+  margin-top: 2rem !important;
+  width: 100% !important;
+}
+
+.modal-footer button {
+  flex: 1 1 0% !important; /* Force exact 50/50 split */
+  width: 0 !important;
+  min-width: 0 !important;
+  height: 52px !important;
+  padding: 0 1rem !important;
+  white-space: nowrap;
+  font-weight: 700 !important;
+  border-radius: 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 !important;
+}
+
+/* Ensure Owner Light Theme for Modal */
+.role-owner .route-modal {
+  background: white !important;
+  color: #1e293b !important;
+}
+
+.role-owner .route-modal h2 {
+  color: #1e293b !important;
+  background: none !important;
+  -webkit-text-fill-color: #1e293b !important;
+}
+
+.role-owner .form-section {
+  background: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+.role-owner .glass-input, 
+.role-owner .search-input {
+  background: white !important;
+  border-color: #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+.role-owner .member-card {
+  background: white !important;
+  border-color: #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+.role-owner .close-btn {
+  background: #f1f5f9;
+  color: #64748b;
 }

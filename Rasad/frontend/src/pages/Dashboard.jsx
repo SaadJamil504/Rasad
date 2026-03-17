@@ -404,7 +404,7 @@ const Dashboard = () => {
       {showPaymentModal && (
         <div className="modal-overlay">
           <div className="glass-card modal-content" style={{ maxWidth: '400px', width: '90%' }}>
-            <h3>💸 Report Past Payment</h3>
+            <h3>Report Past Payment</h3>
             <p style={{ margin: '1rem 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
               Report the amount you have paid to the owner for confirmation.
             </p>
@@ -513,41 +513,43 @@ const Dashboard = () => {
             <div className="actions-grid">
               <div className="action-card-btn" onClick={() => setShowPauseModal(true)}>
                 <div>
-                  <span className="btn-text-main">⏸ Pause Delivery</span>
+                  <span className="btn-text-main">Pause Delivery</span>
                 </div>
               </div>
 
               <div className="action-card-btn" onClick={() => setShowQtyModal(true)}>
                 <div>
-                  <span className="btn-text-main">📊 Change Qty</span>
+                  <span className="btn-text-main">Change Qty</span>
                 </div>
               </div>
 
               <div className="action-card-btn" onClick={() => setShowHistoryModal(true)}>
                 <div>
-                  <span className="btn-text-main">📄 Past Bills</span>
+                  <span className="btn-text-main">Past Bills</span>
                 </div>
               </div>
 
               <div className="action-card-btn" onClick={() => setShowComplaintModal(true)}>
                 <div>
-                  <span className="btn-text-main">⚠️ Complaint</span>
+                  <span className="btn-text-main">Complaint</span>
                 </div>
               </div>
             </div>
           </div>
 
           <div className="payment-report-section" style={{ paddingBottom: '0.5rem' }}>
-            <button className="btn-primary-large" onClick={() => setShowPaymentModal(true)} style={{ background: '#1e8449' }}>
-              💸 Report Payment to Owner
+            <button className="btn-p" onClick={() => setShowPaymentModal(true)} style={{ width: '100%', height: '56px' }}>
+              Report Payment to Owner
             </button>
           </div>
 
           <div style={{ padding: '0 2rem 2rem' }}>
-            <button className="btn-secondary" onClick={() => {
-              localStorage.clear();
-              window.location.href = '/login';
-            }} style={{ width: '100%', borderRadius: '0.5rem' }}>Logout</button>
+            <button className="btn-s" onClick={() => {
+              if (window.confirm('Are you sure you want to log out?')) {
+                localStorage.clear();
+                window.location.href = '/login';
+              }
+            }} style={{ width: '100%' }}>Logout</button>
           </div>
         </div>
         {/* Modals for Quick Actions */}
@@ -585,8 +587,10 @@ const Dashboard = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <span className="banner-date">{new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
                 <button className="logout-pill-white" onClick={() => {
-                  localStorage.clear();
-                  window.location.href = '/login';
+                  if (window.confirm('Are you sure you want to log out?')) {
+                    localStorage.clear();
+                    window.location.href = '/login';
+                  }
                 }}>Logout</button>
               </div>
             </div>
@@ -599,7 +603,7 @@ const Dashboard = () => {
               <span className="stat-lbl">Total</span>
             </div>
             <div className="stat-box">
-              <span className="stat-val green">{done} <span style={{ fontSize: '1rem' }}>✅</span></span>
+              <span className="stat-val green">{done}</span>
               <span className="stat-lbl">Done</span>
             </div>
             <div className="stat-box">
@@ -719,18 +723,16 @@ const Dashboard = () => {
     <div className="dashboard fade-in owner-dashboard-wrapper">
       <div className="owner-stats-row stats-grid-owner">
         <div className="stat-card owner-card green-top" onClick={() => window.location.href = '/customers'}>
-          <div className="card-icon">🚴</div>
           <div className="stat-value">{ownerStats.deliveries.total}</div>
           <div className="stat-label">Today's Deliveries</div>
           <div className="stat-sub">
-            <span className="sc-done">✅ {ownerStats.deliveries.done} done</span>
+            <span className="sc-done">{ownerStats.deliveries.done} done</span>
             <span className="sc-dot">·</span>
             <span className="sc-pending">{ownerStats.deliveries.pending} pending</span>
           </div>
         </div>
 
         <div className="stat-card owner-card yellow-top">
-          <div className="card-icon">💰</div>
           <div className="stat-value">Rs {ownerStats.revenue.amount.toLocaleString()}</div>
           <div className="stat-label">Today's Revenue</div>
           <div className="stat-sub">
@@ -741,7 +743,6 @@ const Dashboard = () => {
         </div>
 
         <div className="stat-card owner-card red-top">
-          <div className="card-icon">⚠️</div>
           <div className="stat-value">{ownerStats.overdue.count}</div>
           <div className="stat-label">Overdue Payments</div>
           <div className="stat-sub">
@@ -750,7 +751,6 @@ const Dashboard = () => {
         </div>
 
         <div className="stat-card owner-card purple-top" onClick={() => window.location.href = '/customers'}>
-          <div className="card-icon">👥</div>
           <div className="stat-value">{ownerStats.customers.total}</div>
           <div className="stat-label">Active Customers</div>
           <div className="stat-sub sc-paused">{ownerStats.customers.paused_today} paused today</div>
@@ -762,25 +762,20 @@ const Dashboard = () => {
         <div className="glass-card" style={{ padding: '2rem', position: 'relative' }}>
           <div style={{ marginBottom: '1.5rem' }}>
             <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
-              ⚠️ Overdue Alerts
+              Overdue Alerts
             </h3>
           </div>
           <button 
-            className="btn-secondary" 
+            className="btn-s" 
             style={{ 
               position: 'absolute',
               top: '1.5rem',
               right: '1.5rem',
-              padding: '0.2rem 0.6rem', 
+              padding: '0.4rem 0.8rem', 
               fontSize: '0.7rem', 
-              borderRadius: '0.5rem', 
-              background: '#f1f5f9', 
-              fontWeight: 600, 
-              border: '1px solid #e2e8f0',
-              flex: 'none',
-              width: 'fit-content',
+              height: 'auto',
               minWidth: 'auto',
-              lineHeight: '1.2'
+              width: 'fit-content'
             }} 
             onClick={() => window.location.href = '/customers'}
           >
@@ -823,7 +818,6 @@ const Dashboard = () => {
               })
             ) : (
               <div style={{ padding: '2rem', textAlign: 'center', background: '#f8fafc', borderRadius: '1rem', border: '1px dashed #cbd5e1' }}>
-                <span style={{ fontSize: '2rem', marginBottom: '0.5rem', display: 'block' }}>🎉</span>
                 <div style={{ fontWeight: 700, color: '#334155', marginBottom: '0.25rem' }}>All Caught Up!</div>
                 <div style={{ fontSize: '0.85rem', color: '#64748b' }}>No overdue customers at the moment.</div>
               </div>
@@ -834,7 +828,7 @@ const Dashboard = () => {
         {/* Today's Paused Deliveries Section */}
         <div className="glass-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column' }}>
           <h3 style={{ margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#0f172a' }}>
-            📦 Today's Paused Deliveries
+            Today's Paused Deliveries
           </h3>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
@@ -856,7 +850,6 @@ const Dashboard = () => {
               ))
             ) : (
               <div style={{ padding: '2rem', textAlign: 'center', background: '#f8fafc', borderRadius: '1rem', border: '1px dashed #cbd5e1' }}>
-                <span style={{ fontSize: '2rem', marginBottom: '0.5rem', display: 'block' }}>✅</span>
                 <div style={{ fontWeight: 700, color: '#334155', marginBottom: '0.25rem' }}>No Paused Routes</div>
                 <div style={{ fontSize: '0.85rem', color: '#64748b' }}>Running smoothly. No paused deliveries for today.</div>
               </div>
@@ -886,9 +879,9 @@ const Dashboard = () => {
                   <div style={{ fontSize: '1.1rem', color: 'var(--accent)', fontWeight: 700 }}>Rs. {payment.amount}</div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{new Date(payment.created_at).toLocaleDateString()}</div>
                 </div>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                  <button className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }} onClick={() => handleConfirmPayment(payment.id, 'confirm')}>Confirm</button>
-                  <button className="btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem', color: '#ff4d4d' }} onClick={() => handleConfirmPayment(payment.id, 'reject')}>Reject</button>
+                <div style={{ display: 'flex', gap: '0.75rem', width: '200px' }}>
+                  <button className="btn-p" style={{ flex: 1, height: '44px', fontSize: '0.85rem' }} onClick={() => handleConfirmPayment(payment.id, 'confirm')}>Confirm</button>
+                  <button className="btn-d" style={{ flex: 1, height: '44px', fontSize: '0.85rem' }} onClick={() => handleConfirmPayment(payment.id, 'reject')}>Reject</button>
                 </div>
               </div>
             ))}

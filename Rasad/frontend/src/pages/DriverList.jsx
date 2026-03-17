@@ -28,8 +28,8 @@ const DriverList = () => {
 
   return (
     <div className="page-container">
-      <div className="page-header">
-        <button className="primary-btn" onClick={() => setIsModalOpen(true)}>
+      <div className="premium-toolbar" style={{ justifyContent: 'flex-end' }}>
+        <button className="premium-btn-green" onClick={() => setIsModalOpen(true)}>
           <span>+</span> Add New Driver
         </button>
       </div>
@@ -59,7 +59,7 @@ const DriverList = () => {
                     <td data-label="Phone Number">{driver.phone_number || 'N/A'}</td>
                     <td data-label="License Number">{driver.license_number || 'N/A'}</td>
                     <td data-label="Status">
-                      <span className="status-badge active">Active</span>
+                      <span className="status-label-premium active">Active</span>
                     </td>
                   </tr>
                 ))

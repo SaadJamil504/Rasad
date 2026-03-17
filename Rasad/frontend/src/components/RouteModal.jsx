@@ -86,7 +86,6 @@ const RouteModal = ({ isOpen, onClose, onRouteCreated, editRoute }) => {
       <div className="modal-content route-modal glass fade-in">
         <div className="modal-header">
           <div className="header-title">
-            <span className="icon">{editRoute ? '🛠️' : '🚚'}</span>
             <h2>{editRoute ? 'Update Delivery Route' : 'Create Delivery Route'}</h2>
           </div>
           <button className="close-btn" onClick={onClose}>&times;</button>
@@ -142,14 +141,11 @@ const RouteModal = ({ isOpen, onClose, onRouteCreated, editRoute }) => {
               {filteredCustomers.length === 0 ? (
                 <div className="no-results">
                   <p className="muted-text">
-                    {searchTerm ? 'No customers match your search.' : 'No unassigned customers available.'}
+                    {searchTerm ? 'No customers match your search.' : 'No customers found in your database.'}
                   </p>
                 </div>
               ) : (
-                availableCustomers.filter(customer => 
-                  (customer.first_name || customer.username).toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  customer.address?.toLowerCase().includes(searchTerm.toLowerCase())
-                ).map(customer => {
+                filteredCustomers.map(customer => {
                   const isAssignedElsewhere = customer.route && (!editRoute || customer.route !== editRoute.id);
                   const isSelected = formData.customer_ids.includes(customer.id);
                   
@@ -180,9 +176,9 @@ const RouteModal = ({ isOpen, onClose, onRouteCreated, editRoute }) => {
           {error && <div className="error-message">{error}</div>}
 
           <div className="modal-footer">
-            <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn-primary" disabled={loading}>
-              {loading ? (editRoute ? 'Updating...' : 'Creating...') : (editRoute ? 'Confirm & Update' : 'Confirm & Create')}
+            <button type="button" className="btn-s" onClick={onClose}>Cancel</button>
+            <button type="submit" className="btn-p" disabled={loading}>
+              {loading ? (editRoute ? 'Updating...' : 'Creating...') : (editRoute ? 'Confirm' : 'Confirm & Create')}
             </button>
           </div>
         </form>

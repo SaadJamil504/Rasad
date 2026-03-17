@@ -36,8 +36,10 @@ const MainLayout = () => {
   if (!user) return <Navigate to="/login" replace />;
 
   const handleLogout = () => {
-    logout();
-    navigate('/login');
+    if (window.confirm('Are you sure you want to log out?')) {
+      logout();
+      navigate('/login');
+    }
   };
 
   const showSidebar = user.role === 'owner';
@@ -60,27 +62,27 @@ const MainLayout = () => {
           </div>
           <nav className="sidebar-nav">
             <Link to="/" className={`nav-item ${window.location.pathname === '/' ? 'active' : ''}`} onClick={closeSidebar}>
-              <span className="icon">📊</span> Dashboard
+              Dashboard
             </Link>
             <Link to="/routes" className={`nav-item ${window.location.pathname === '/routes' ? 'active' : ''}`} onClick={closeSidebar}>
-              <span className="icon">🛣️</span> Routes
+              Routes
             </Link>
             <Link to="/drivers" className={`nav-item ${window.location.pathname === '/drivers' ? 'active' : ''}`} onClick={closeSidebar}>
-              <span className="icon">🚛</span> Drivers
+              Drivers
             </Link>
             <Link to="/customers" className={`nav-item ${window.location.pathname === '/customers' ? 'active' : ''}`} onClick={closeSidebar}>
-              <span className="icon">👥</span> Customers
+              Customers
             </Link>
             {user.role === 'owner' && (
               <>
                 <Link to="/bills" className={`nav-item ${window.location.pathname === '/bills' ? 'active' : ''}`} onClick={closeSidebar}>
-                  <span className="icon">📄</span> Monthly Bills
+                  Monthly Bills
                 </Link>
                 <Link to="/reports" className={`nav-item ${window.location.pathname === '/reports' ? 'active' : ''}`} onClick={closeSidebar}>
-                  <span className="icon">📊</span> Reports
+                  Reports
                 </Link>
                 <div className="nav-item" style={{ cursor: 'pointer' }} onClick={() => { setShowPriceModal(true); closeSidebar(); }}>
-                  <span className="icon">⚙️</span> Adjust Price
+                  Adjust Price
                 </div>
               </>
             )}

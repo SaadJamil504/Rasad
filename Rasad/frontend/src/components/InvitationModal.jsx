@@ -78,11 +78,11 @@ const InvitationModal = ({ isOpen, onClose, role, onInviteSuccess }) => {
           <form onSubmit={handleSubmit} className="modal-body">
             <p>Generate a secure invitation link for a new {role}.</p>
             {error && <div className="error-message">{error}</div>}
-            <div className="modal-footer">
-              <button type="button" onClick={onClose} className="btn-secondary" disabled={loading}>
+            <div className="modal-footer" style={{ gap: '1rem' }}>
+              <button type="button" onClick={onClose} className="btn-s" disabled={loading} style={{ flex: 1 }}>
                 Cancel
               </button>
-              <button type="submit" className="btn-primary" disabled={loading}>
+              <button type="submit" className="btn-p" disabled={loading} style={{ flex: 1 }}>
                 {loading ? 'Creating...' : 'Generate Link'}
               </button>
             </div>
@@ -94,12 +94,12 @@ const InvitationModal = ({ isOpen, onClose, role, onInviteSuccess }) => {
             <div className="link-display glass">
               <code>{generatedLink}</code>
             </div>
-            <div className="share-actions">
-              <button onClick={copyToClipboard} className="btn-secondary">
+            <div className="share-actions" style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+              <button onClick={copyToClipboard} className="btn-s" style={{ flex: 1, height: '48px' }}>
                 Copy Link
               </button>
-              <button onClick={shareOnWhatsApp} className="btn-whatsapp">
-                Share on WhatsApp
+              <button onClick={shareOnWhatsApp} className="btn-whatsapp" style={{ flex: 1, height: '48px', background: '#25D366', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 700, cursor: 'pointer' }}>
+                WhatsApp
               </button>
             </div>
             <div className="modal-footer">

@@ -35,7 +35,6 @@ const Login = () => {
     <div className="login-page-bg">
       <div className="login-white-card">
         <div className="login-header-area">
-          <div className="login-icon">🥛</div>
           <h1 className="login-brand-title">Rasad</h1>
           <p className="login-brand-subtitle">Milk Delivery Management</p>
         </div>

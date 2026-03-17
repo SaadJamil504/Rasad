@@ -31,7 +31,7 @@ const RouteList = () => {
 
   return (
     <div className="page-container">
-      <div className="page-header" style={{ marginBottom: '1.5rem' }}>
+      <div className="page-header" style={{ marginBottom: '1.5rem', justifyContent: 'flex-end' }}>
         <button className="premium-btn-green" onClick={() => {
           setSelectedRoute(null);
           setIsModalOpen(true);
