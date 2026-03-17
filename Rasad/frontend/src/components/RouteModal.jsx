@@ -161,7 +161,10 @@ const RouteModal = ({ isOpen, onClose, onRouteCreated, editRoute }) => {
                       <div className="check-circle"></div>
                     </div>
                     <div className="member-info">
-                      <span className="member-name">{customer.first_name || customer.username}</span>
+                      <span className="member-name">
+                        {customer.first_name || customer.username}
+                        {formData.customer_ids.includes(customer.id) && <span style={{ color: '#22c55e', fontSize: '0.8rem', marginLeft: '0.5rem' }}>(Added)</span>}
+                      </span>
                       <span className="member-detail">{customer.address?.substring(0, 40)}...</span>
                     </div>
                   </div>
