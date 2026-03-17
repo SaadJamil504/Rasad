@@ -192,11 +192,11 @@ button[type="submit"]:active {
   margin: 0;
 }
 
-.login-brand-urdu {
-  color: #64748b;
-  font-family: 'Noto Nastaliq Urdu', serif; /* Or fallback */
-  font-size: 1.1rem;
-  margin: 0.25rem 0 0 0;
+.login-brand-subtitle {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0;
 }
 
 .login-form-clean {
@@ -251,7 +251,7 @@ button[type="submit"]:active {
   cursor: pointer;
   margin-top: 1rem;
   transition: background 0.2s ease;
-  font-family: 'Inter', 'Noto Nastaliq Urdu', sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 .login-submit-btn:hover {
@@ -304,4 +304,42 @@ button[type="submit"]:active {
   margin-top: -0.75rem;
   margin-bottom: 1rem;
   font-style: italic;
+}
+
+/* Response Grid Utility */
+.auth-grid-responsive {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 600px) {
+  .auth-grid-responsive {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  
+  .login-page-bg {
+    padding: 1rem;
+    align-items: flex-start;
+    overflow-y: auto;
+  }
+
+  .signup-white-card, .login-white-card {
+    padding: 2rem 1.5rem;
+    margin: 1rem auto;
+    border-radius: 16px;
+  }
+  
+  .login-brand-title {
+    font-size: 1.5rem;
+  }
+  
+  .login-icon {
+    font-size: 2.5rem;
+  }
+  
+  .form-group-clean label {
+    font-size: 0.7rem;
+  }
 }

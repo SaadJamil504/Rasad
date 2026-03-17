@@ -143,7 +143,7 @@ const InvitationSignup = () => {
           </div>
           <p className="field-hint-clean">Only Gmail addresses are supported.</p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="auth-grid-responsive">
             <div className="form-group-clean">
               <label>PHONE</label>
               <input
@@ -178,7 +178,7 @@ const InvitationSignup = () => {
                     value={formData.milk_type} 
                     onChange={handleChange}
                     required
-                    style={{ width: '100%', padding: '0.875rem', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white' }}
+                    style={{ width: '100%', padding: '0.875rem', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', fontSize: '0.95rem' }}
                   >
                     <option value="cow">Cow Milk</option>
                     <option value="buffalo">Buffalo Milk</option>
@@ -199,7 +199,7 @@ const InvitationSignup = () => {
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: invitation.role === 'customer' ? '1fr 1fr' : '1fr', gap: '1rem' }}>
+          <div className="auth-grid-responsive" style={{ gridTemplateColumns: invitation.role === 'customer' ? undefined : '1fr' }}>
             <div className="form-group-clean">
               <label>PASSWORD</label>
               <input
