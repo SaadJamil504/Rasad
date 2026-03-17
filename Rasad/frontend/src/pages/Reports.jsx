@@ -47,168 +47,148 @@ const Reports = () => {
 
       <div style={{ 
         display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', 
-        gap: isMobile ? '1rem' : '2rem', 
+        gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(280px, 1fr))', 
+        gap: '1rem', 
         marginBottom: '2rem' 
       }}>
         {/* Total Milk This Month */}
         <div className="glass-card" style={{ 
-          padding: isMobile ? '1.25rem' : '2rem', 
+          padding: '1.25rem', 
           display: 'flex', 
           alignItems: 'center', 
           gap: '1rem', 
-          borderLeft: '4px solid #3b82f6' 
+          borderLeft: '4px solid #3b82f6',
+          background: 'white'
         }}>
-          <div style={{ background: '#eff6ff', width: isMobile ? '50px' : '60px', height: isMobile ? '50px' : '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? '0.8rem' : '1rem', fontWeight: 800, color: '#3b82f6' }}>
+          <div style={{ background: '#eff6ff', width: '50px', height: '50px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: 800, color: '#3b82f6' }}>
             MLK
           </div>
           <div>
-            <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>MILK DELIVERED</div>
-            <div style={{ fontSize: isMobile ? '1.4rem' : '2rem', fontWeight: 800, color: '#1e293b' }}>{reportData.this_month_milk}L</div>
+            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Milk Delivered</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1e293b' }}>{reportData.this_month_milk}L</div>
           </div>
         </div>
 
         {/* Total Revenue This Month */}
         <div className="glass-card" style={{ 
-          padding: isMobile ? '1.25rem' : '2rem', 
+          padding: '1.25rem', 
           display: 'flex', 
           alignItems: 'center', 
           gap: '1rem', 
-          borderLeft: '4px solid #10b981' 
+          borderLeft: '4px solid #10b981',
+          background: 'white'
         }}>
-          <div style={{ background: '#f0fdf4', width: isMobile ? '50px' : '60px', height: isMobile ? '50px' : '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? '0.8rem' : '1rem', fontWeight: 800, color: '#10b981' }}>
+          <div style={{ background: '#f0fdf4', width: '50px', height: '50px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: 800, color: '#10b981' }}>
             PKR
           </div>
           <div>
-            <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>REVENUE</div>
-            <div style={{ fontSize: isMobile ? '1.4rem' : '1.8rem', fontWeight: 800, color: '#1e293b' }}>Rs {reportData.this_month_revenue.toLocaleString()}</div>
+            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Revenue</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1e293b' }}>Rs {reportData.this_month_revenue.toLocaleString()}</div>
           </div>
         </div>
 
         {/* Collection Percentage */}
         <div className="glass-card" style={{ 
-          padding: isMobile ? '1.25rem' : '2rem', 
+          padding: '1.25rem', 
           display: 'flex', 
-          alignItems: 'center', 
-          gap: '1rem', 
-          borderLeft: '4px solid #8b5cf6' 
+          flexDirection: 'column',
+          gap: '0.75rem', 
+          borderLeft: '4px solid #8b5cf6',
+          background: 'white'
         }}>
-          <div style={{ background: '#f5f3ff', width: isMobile ? '50px' : '60px', height: isMobile ? '50px' : '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? '0.8rem' : '1rem', fontWeight: 800, color: '#8b5cf6' }}>
-            COL
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700 }}>COLLECTION RATE</span>
+            <span style={{ fontSize: '1rem', color: '#8b5cf6', fontWeight: 800 }}>{reportData.collection_percentage.toFixed(1)}%</span>
           </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.2rem' }}>
-              <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>COLLECTION</span>
-              <span style={{ fontSize: '0.8rem', color: '#8b5cf6', fontWeight: 800 }}>{reportData.collection_percentage.toFixed(1)}%</span>
-            </div>
-            <div style={{ background: '#e2e8f0', height: '8px', borderRadius: '4px', overflow: 'hidden' }}>
-              <div style={{ background: '#8b5cf6', height: '100%', width: `${reportData.collection_percentage}%` }}></div>
-            </div>
+          <div style={{ background: '#f1f5f9', height: '10px', borderRadius: '5px', overflow: 'hidden' }}>
+            <div style={{ background: 'linear-gradient(90deg, #8b5cf6, #a78bfa)', height: '100%', width: `${reportData.collection_percentage}%`, borderRadius: '5px' }}></div>
           </div>
         </div>
       </div>
 
-      <div className="glass-card" style={{ padding: isMobile ? '1.25rem' : '2.5rem' }}>
-        <h3 style={{ margin: '0 0 2rem 0', color: '#1e293b' }}>Monthly Revenue Overview</h3>
+      <div className="glass-card" style={{ padding: isMobile ? '1rem' : '2.5rem', background: 'white' }}>
+        <h3 style={{ margin: '0 0 1.5rem 0', color: '#1e293b', fontSize: isMobile ? '1.1rem' : '1.3rem' }}>Revenue Trends</h3>
 
-        {/* Improved Responsive Graph Container */}
-        <div style={{ display: 'flex', gap: '1rem', height: '320px', alignItems: 'stretch' }}>
-          
-          {/* Y-Axis (Standard Flow) */}
-          <div style={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            justifyContent: 'space-between', 
-            color: '#94a3b8', 
-            fontSize: '0.7rem', 
-            fontWeight: 700, 
-            alignItems: 'flex-end', 
-            paddingBottom: '2.5rem',
-            width: '40px',
-            flexShrink: 0
-          }}>
-            {yAxisSteps.map((step, i) => (
-              <span key={i}>{step === 0 ? '0' : `${(step / 1000).toFixed(0)}k`}</span>
+        <div style={{ width: '100%', height: isMobile ? '250px' : '350px', position: 'relative', marginTop: '1rem' }}>
+          {/* SVG Area Chart */}
+          <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ overflow: 'visible' }}>
+            {/* Horizontal Grid Lines */}
+            {[0, 25, 50, 75, 100].map(p => (
+              <line key={p} x1="0" y1={p} x2="100" y2={p} stroke="#f1f5f9" strokeWidth="0.5" />
             ))}
-          </div>
+            
+            {/* Area Path */}
+            <path
+              d={`
+                M 0 100
+                ${reportData.monthly_revenue.map((d, i) => {
+                  const x = (i / (reportData.monthly_revenue.length - 1)) * 100;
+                  const y = 100 - (d.revenue / maxRev) * 100;
+                  return `L ${x} ${y}`;
+                }).join(' ')}
+                L 100 100
+                Z
+              `}
+              fill="url(#areaGradient)"
+            />
 
-          {/* Chart Area with Fluid Fill and Conditional Scroll */}
-          <div style={{ flex: 1, overflowX: 'auto', paddingBottom: '2.5rem', display: 'flex' }}>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'flex-end', 
-              gap: '1rem', 
-              flex: 1, 
-              borderBottom: '2px solid #e2e8f0', 
-              position: 'relative'
-            }}>
-              
-              {/* Grid Lines */}
-              <div style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', pointerEvents: 'none', zIndex: 0 }}>
-                {yAxisSteps.map((step, i) => (
-                  <div key={i} style={{ width: '100%', height: '1px', borderBottom: step === 0 ? 'none' : '1px dashed #e2e8f0' }}></div>
-                ))}
-              </div>
+            {/* Line Path */}
+            <path
+              d={`
+                M ${0} ${100 - (reportData.monthly_revenue[0].revenue / maxRev) * 100}
+                ${reportData.monthly_revenue.slice(1).map((d, i) => {
+                  const x = ((i + 1) / (reportData.monthly_revenue.length - 1)) * 100;
+                  const y = 100 - (d.revenue / maxRev) * 100;
+                  return `L ${x} ${y}`;
+                }).join(' ')}
+              `}
+              fill="none"
+              stroke="#10b981"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
 
-              {/* Bars */}
-              {reportData.monthly_revenue.map((data, index) => {
-                const heightPct = (data.revenue / maxRev) * 100;
-                return (
-                  <div key={index} style={{ 
-                    flex: 1, 
-                    minWidth: '40px',
-                    maxWidth: '100px',
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    alignItems: 'center', 
-                    height: '100%', 
-                    justifyContent: 'flex-end', 
-                    zIndex: 1, 
-                    position: 'relative' 
-                  }}>
-                    <div
-                      className="chart-bar"
-                      style={{
-                        width: '80%',
-                        height: `${heightPct}%`,
-                        background: 'linear-gradient(to top, #10b981, #34d399)',
-                        borderRadius: '4px 4px 0 0',
-                        transition: 'all 0.5s ease',
-                        position: 'relative',
-                        boxShadow: '0 4px 6px rgba(16, 185, 129, 0.15)'
-                      }}
-                      title={`Rs ${data.revenue.toLocaleString()}`}
-                    >
-                      <div style={{ 
-                        position: 'absolute', 
-                        top: '-20px', 
-                        width: '140%', 
-                        left: '-20%', 
-                        textAlign: 'center', 
-                        fontSize: '0.65rem', 
-                        fontWeight: 800, 
-                        color: '#1e293b', 
-                        whiteSpace: 'nowrap' 
-                      }}>
-                        {data.revenue >= 1000 ? (data.revenue / 1000).toFixed(1) + 'k' : data.revenue}
-                      </div>
-                    </div>
-                    <div style={{ 
-                      position: 'absolute', 
-                      bottom: '-2rem', 
-                      fontSize: '0.75rem', 
-                      fontWeight: 700, 
-                      color: '#64748b', 
-                      whiteSpace: 'nowrap',
-                      textAlign: 'center'
-                    }}>
-                      {data.month}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+            {/* Gradient Definition */}
+            <defs>
+              <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
+                <stop offset="100%" stopColor="#10b981" stopOpacity="0.01" />
+              </linearGradient>
+            </defs>
+
+            {/* Data Points and Labels */}
+            {reportData.monthly_revenue.map((d, i) => {
+              const x = (i / (reportData.monthly_revenue.length - 1)) * 100;
+              const y = 100 - (d.revenue / maxRev) * 100;
+              return (
+                <g key={i}>
+                  <circle cx={x} cy={y} r="1.5" fill="white" stroke="#10b981" strokeWidth="0.8" />
+                  <text 
+                    x={x} 
+                    y="112" 
+                    fontSize="4" 
+                    fill="#94a3b8" 
+                    textAnchor="middle" 
+                    fontWeight="700" 
+                    style={{ fontFamily: 'Inter, sans-serif' }}
+                  >
+                    {d.month.substring(0, 3)}
+                  </text>
+                  <text 
+                    x={x} 
+                    y={y - 5} 
+                    fontSize="3.5" 
+                    fill="#1e293b" 
+                    textAnchor="middle" 
+                    fontWeight="800"
+                  >
+                    {d.revenue >= 1000 ? (d.revenue / 1000).toFixed(0) + 'k' : d.revenue}
+                  </text>
+                </g>
+              );
+            })}
+          </svg>
         </div>
       </div>
     </div>
