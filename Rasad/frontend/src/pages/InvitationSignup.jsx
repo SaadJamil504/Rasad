@@ -199,7 +199,7 @@ const InvitationSignup = () => {
             />
           </div>
 
-          <div className="auth-grid-responsive" style={{ gridTemplateColumns: invitation.role === 'customer' ? undefined : '1fr' }}>
+          <div className="auth-grid-responsive">
             <div className="form-group-clean">
               <label>PASSWORD</label>
               <input
