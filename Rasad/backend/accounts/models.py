@@ -113,3 +113,4 @@ class DeliveryAdjustment(models.Model):
 
     def __str__(self):
         return f"{self.get_adjustment_type_display()} request by {self.customer.username} for {self.date}"
+

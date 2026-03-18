@@ -47,3 +47,16 @@ class Customer(models.Model):
 
     def __str__(self):
         return f"{self.full_name} ({self.route.name})"
+
+
+
+
+class Complaint(models.Model):
+    customer = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name='complaints')
+    subject = models.CharField(max_length=255)
+    description = models.TextField()
+    is_resolved = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Complaint by {self.customer.username} - {self.subject}"

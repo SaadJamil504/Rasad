@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Route, Customer
 from accounts.serializers import UserSerializer
+from .models import Route, Customer, Complaint
 
 class RouteSerializer(serializers.ModelSerializer):
     driver_details = UserSerializer(source='driver', read_only=True)
@@ -34,3 +35,8 @@ class CustomerSerializer(serializers.ModelSerializer):
             'status', 'created_at'
         )
         read_only_fields = ('created_at',)
+class ComplaintSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Complaint
+        fields = ['id', 'subject', 'description', 'is_resolved', 'created_at']
+        read_only_fields = ['customer']
