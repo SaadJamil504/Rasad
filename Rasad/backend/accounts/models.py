@@ -42,10 +42,12 @@ class User(AbstractUser):
 class Invitation(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(unique=True, null=True, blank=True)
+    token = models.CharField(max_length=100, unique=True, null=True, blank=True)
     role = models.CharField(max_length=20, choices=[('driver', 'Driver'), ('customer', 'Customer')])
     invited_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_invitations')
     is_used = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"Invitation for {self.role} by {self.invited_by.username}"
