@@ -18,6 +18,7 @@ from django.http import Http404
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
+from datetime import datetime
 import threading
 import logging
 
@@ -818,7 +819,7 @@ class DashboardReportsView(APIView):
                 status='delivered'
             ).aggregate(total=models.Sum('total_amount'))['total'] or 0
             
-            month_name = timezone.datetime(target_year, target_month, 1).strftime('%b')
+            month_name = datetime(target_year, target_month, 1).strftime('%b')
             monthly_revenue_data.append({
                 'month': f"{month_name} '{str(target_year)[-2:]}",
                 'revenue': float(rev)
