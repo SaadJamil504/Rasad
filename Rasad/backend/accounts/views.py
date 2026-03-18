@@ -738,7 +738,7 @@ class DashboardAlertsView(APIView):
             route__owner=request.user,
             date=today,
             status='paused'
-        ).select_related('customer')
+        ).select_related('customer', 'route')
 
         paused_data = []
         for d in paused_deliveries:
@@ -753,7 +753,7 @@ class DashboardAlertsView(APIView):
             paused_data.append({
                 'id': d.id,
                 'customer_name': d.customer.first_name or d.customer.username,
-                'route': d.route.name,
+                'route': d.route.name if d.route else 'Unassigned',
                 'reason': adj.message if adj and adj.message else 'Paused'
             })
 

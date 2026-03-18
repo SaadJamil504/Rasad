@@ -54,6 +54,7 @@ class Route(models.Model):
     name = models.CharField(max_length=100)
     # Changed related_name from 'routes' to 'owned_routes' to avoid clash
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_routes')
+    driver = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_route', help_text='Assigned Driver for this route')
     description = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -69,10 +70,14 @@ class Delivery(models.Model):
     )
     customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='deliveries')
     driver = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_deliveries')
+    route = models.ForeignKey(Route, on_delete=models.CASCADE, related_name='deliveries', null=True, blank=True)
     date = models.DateField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     price_at_delivery = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, validators=[MinValueValidator(0)])
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    is_delivered = models.BooleanField(default=False)
+    delivered_at = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         unique_together = ('customer', 'date')
@@ -82,11 +87,18 @@ class Delivery(models.Model):
         return f"Delivery for {self.customer.username} on {self.date} - {self.get_status_display()}"
 
 class Payment(models.Model):
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('confirmed', 'Confirmed'),
+        ('rejected', 'Rejected'),
+    )
     customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payments')
     amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     date = models.DateField(default=timezone.now)
     received_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='collected_payments')
     note = models.TextField(null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    confirmed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
