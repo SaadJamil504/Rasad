@@ -395,12 +395,15 @@ class UpdateMilkPricesView(APIView):
         if request.user.role != 'owner':
             return Response({'error': 'Only owners can set prices.'}, status=status.HTTP_403_FORBIDDEN)
         
-        user = request.user
-        user.cow_price = request.data.get('cow_price', user.cow_price)
-        user.buffalo_price = request.data.get('buffalo_price', user.buffalo_price)
-        user.save()
-        return Response(UserSerializer(user).data)
-
+        # Use partial=True so you don't have to send all user fields
+        serializer = UserSerializer(request.user, data=request.data, partial=True)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        # If validation fails (e.g., negative price), this returns a 400 error
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 class DeliveryHistoryView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
