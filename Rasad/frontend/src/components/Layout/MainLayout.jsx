@@ -19,6 +19,13 @@ const MainLayout = () => {
 
   const handleUpdatePrices = async (e) => {
     e.preventDefault();
+    
+    // Validate prices are positive
+    if (parseFloat(prices.cow_price) <= 0 || parseFloat(prices.buffalo_price) <= 0) {
+      alert('Prices must be greater than 0.');
+      return;
+    }
+    
     setUpdatingPrices(true);
     try {
       await deliveryAPI.updatePrices(prices);
@@ -130,6 +137,8 @@ const MainLayout = () => {
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#64748b', fontSize: '0.9rem' }}>Cow Milk Price (per Liter)</label>
                 <input
                   type="number"
+                  step="0.01"
+                  min="0.01"
                   value={prices.cow_price}
                   onChange={(e) => setPrices({ ...prices, cow_price: e.target.value })}
                   required
@@ -140,6 +149,8 @@ const MainLayout = () => {
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#64748b', fontSize: '0.9rem' }}>Buffalo Milk Price (per Liter)</label>
                 <input
                   type="number"
+                  step="0.01"
+                  min="0.01"
                   value={prices.buffalo_price}
                   onChange={(e) => setPrices({ ...prices, buffalo_price: e.target.value })}
                   required

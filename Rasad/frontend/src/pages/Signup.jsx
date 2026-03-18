@@ -139,7 +139,9 @@ const Signup = () => {
               <label>COW MILK PRICE (Rs)</label>
               <input 
                 name="cow_price"
-                type="number" 
+                type="number"
+                step="0.01"
+                min="0.01"
                 value={formData.cow_price} 
                 onChange={handleChange} 
                 required 
@@ -150,7 +152,9 @@ const Signup = () => {
               <label>BUFFALO MILK PRICE (Rs)</label>
               <input 
                 name="buffalo_price"
-                type="number" 
+                type="number"
+                step="0.01"
+                min="0.01"
                 value={formData.buffalo_price} 
                 onChange={handleChange} 
                 required 
