@@ -236,10 +236,10 @@ class InvitationSignupSerializer(serializers.ModelSerializer):
         model = User
         fields = ('token', 'email', 'password', 'full_name', 'phone_number', 'license_number', 'milk_type', 'daily_quantity', 'address')
         extra_kwargs = {
-            'license_number': {'required': False},
-            'milk_type': {'required': False},
-            'daily_quantity': {'required': False},
-            'address': {'required': False},
+            'license_number': {'required': False, 'allow_blank': True, 'allow_null': True},
+            'milk_type': {'required': False, 'allow_blank': True, 'allow_null': True},
+            'daily_quantity': {'required': False, 'allow_null': True},
+            'address': {'required': False, 'allow_blank': True, 'allow_null': True},
             'phone_number': {'required': True},
             'email': {'required': True},
         }
@@ -285,12 +285,28 @@ class InvitationSignupSerializer(serializers.ModelSerializer):
         phone_number = validated_data.get('phone_number')
         
         invitation = Invitation.objects.get(token=token)
+        role = invitation.role
+
+        # Remove irrelevant fields based on role
+        if role == 'driver':
+            validated_data.pop('milk_type', None)
+            validated_data.pop('daily_quantity', None)
+        elif role == 'customer':
+            validated_data.pop('license_number', None)
         
+        # Clean up any remaining None or empty values for optional fields
+        for field in ['license_number', 'milk_type', 'address']:
+            if field in validated_data and (validated_data[field] is None or validated_data[field] == ""):
+                validated_data[field] = ""
+        
+        if 'daily_quantity' in validated_data and (validated_data['daily_quantity'] is None or validated_data['daily_quantity'] == ""):
+            validated_data['daily_quantity'] = 0
+
         user = User.objects.create_user(
             username=phone_number,
             first_name=full_name,
             password=password,
-            role=invitation.role,
+            role=role,
             parent_owner=invitation.invited_by,
             **validated_data
         )

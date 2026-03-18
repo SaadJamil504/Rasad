@@ -92,10 +92,19 @@ const InvitationSignup = () => {
     }
 
     try {
-      const response = await authAPI.invitationSignup({
-        ...formData,
-        token: token
-      });
+      // Create a clean copy of the data based on the role
+      const submissionData = { ...formData, token };
+      
+      if (invitation.role === 'driver') {
+        // Drivers don't need these
+        delete submissionData.daily_quantity;
+        delete submissionData.milk_type;
+      } else if (invitation.role === 'customer') {
+        // Customers don't need these
+        delete submissionData.license_number;
+      }
+
+      const response = await authAPI.invitationSignup(submissionData);
       localStorage.setItem('access_token', response.data.access);
       localStorage.setItem('refresh_token', response.data.refresh);
       localStorage.setItem('user', JSON.stringify(response.data.user));
