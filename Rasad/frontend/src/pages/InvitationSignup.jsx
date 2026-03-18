@@ -40,7 +40,23 @@ const InvitationSignup = () => {
   }, [token]);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    
+    // Validation for full_name: only alphabets and spaces allowed
+    if (name === 'full_name') {
+      const filteredValue = value.replace(/[^a-zA-Z\s]/g, '');
+      setFormData({ ...formData, [name]: filteredValue });
+      return;
+    }
+    
+    // Validation for license_number: only alphanumeric characters allowed (no special characters)
+    if (name === 'license_number') {
+      const filteredValue = value.replace(/[^a-zA-Z0-9]/g, '');
+      setFormData({ ...formData, [name]: filteredValue });
+      return;
+    }
+    
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleSubmit = async (e) => {
@@ -66,6 +82,11 @@ const InvitationSignup = () => {
     }
     if (invitation.role === 'customer' && !formData.address) {
       setError('Permanent address is required for delivery.');
+      setLoading(false);
+      return;
+    }
+    if (invitation.role === 'customer' && (!formData.daily_quantity || parseFloat(formData.daily_quantity) <= 0)) {
+      setError('Daily quantity must be greater than 0.');
       setLoading(false);
       return;
     }

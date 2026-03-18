@@ -180,8 +180,9 @@ const Dashboard = () => {
 
   const handleCreateAdjustment = async (type) => {
     console.log('[DEBUG] handleCreateAdjustment called:', type);
-    if (type === 'quantity' && (!adjQty || parseFloat(adjQty) < 0)) {
+    if (type === 'quantity' && (!adjQty || parseFloat(adjQty) <= 0)) {
       console.warn('[DEBUG] Invalid quantity:', adjQty);
+      alert('Quantity must be greater than 0.');
       return;
     }
     setIsSubmittingAdj(true);
