@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.core.validators import MinValueValidator
 from django.utils import timezone
 
 class User(AbstractUser):
@@ -14,13 +15,13 @@ class User(AbstractUser):
     license_number = models.CharField(max_length=50, null=True, blank=True)
     address = models.TextField(null=True, blank=True)
     dairy_name = models.CharField(max_length=100, null=True, blank=True, help_text="For Owner users")
-    buffalo_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    cow_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    buffalo_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, validators=[MinValueValidator(0)])
+    cow_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, validators=[MinValueValidator(0)])
     milk_type = models.CharField(max_length=20, choices=[('cow', 'Cow'), ('buffalo', 'Buffalo'), ('both', 'Both')], null=True, blank=True)
-    daily_quantity = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text="Daily milk quantity in liters")
+    daily_quantity = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text="Daily milk quantity in liters", validators=[MinValueValidator(0)])
     route = models.ForeignKey('Route', on_delete=models.SET_NULL, null=True, blank=True, related_name='customers', help_text="Assigned route for Customers")
-    outstanding_balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    total_paid = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    outstanding_balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, validators=[MinValueValidator(0)])
+    total_paid = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, validators=[MinValueValidator(0)])
 
     def __str__(self):
         return f"{self.username} ({self.get_role_display()})"
@@ -53,7 +54,7 @@ class Payment(models.Model):
         ('rejected', 'Rejected'),
     )
     customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payments')
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
     confirmed_at = models.DateTimeField(null=True, blank=True)
@@ -73,9 +74,9 @@ class Delivery(models.Model):
     is_delivered = models.BooleanField(default=False)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     delivered_at = models.DateTimeField(null=True, blank=True)
-    quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    price_at_delivery = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, validators=[MinValueValidator(0)])
+    price_at_delivery = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, validators=[MinValueValidator(0)])
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, validators=[MinValueValidator(0)])
 
     class Meta:
         unique_together = ('customer', 'date')

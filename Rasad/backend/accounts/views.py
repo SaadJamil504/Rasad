@@ -409,21 +409,18 @@ class DeliveryHistoryView(APIView):
         description="Get full delivery history for the user."
     )
     def get(self, request):
+        # Determine filters
+        today = timezone.now().date()
         month = request.query_params.get('month')
         year = request.query_params.get('year')
-        
+        period = request.query_params.get('period')  # daily, weekly, monthly
+
         if request.user.role == 'customer':
             queryset = Delivery.objects.filter(customer=request.user)
-            queryset = queryset.filter(
-                models.Q(is_delivered=True) | models.Q(status='paused')
-            )
         elif request.user.role == 'driver':
             try:
                 route = Route.objects.get(driver=request.user)
                 queryset = Delivery.objects.filter(route=route)
-                queryset = queryset.filter(
-                    models.Q(is_delivered=True) | models.Q(status='paused')
-                )
             except Route.DoesNotExist:
                 return Response({'error': 'No route assigned.'}, status=status.HTTP_404_NOT_FOUND)
         elif request.user.role == 'owner':
@@ -439,11 +436,26 @@ class DeliveryHistoryView(APIView):
         else:
             return Response({'error': 'Unauthorized.'}, status=status.HTTP_403_FORBIDDEN)
 
-        if month:
-            queryset = queryset.filter(date__month=month)
-        if year:
-            queryset = queryset.filter(date__year=year)
-            
+        # Apply period filters
+        if period == 'daily':
+            queryset = queryset.filter(date=today)
+        elif period == 'weekly':
+            week_ago = today - timezone.timedelta(days=7)
+            queryset = queryset.filter(date__gte=week_ago, date__lte=today)
+        elif period == 'monthly' or (month and year):
+            # If explicit month/year provided, use them; otherwise current month/year
+            if not month:
+                month = today.month
+            if not year:
+                year = today.year
+            queryset = queryset.filter(date__month=month, date__year=year)
+        # If no period or month/year provided, default to current month
+        elif not period:
+            queryset = queryset.filter(date__month=today.month, date__year=today.year)
+
+        # Include only delivered or paused deliveries
+        queryset = queryset.filter(models.Q(is_delivered=True) | models.Q(status='paused'))
+
         deliveries = queryset.order_by('-date')
         serializer = DeliverySerializer(deliveries, many=True)
         return Response(serializer.data)

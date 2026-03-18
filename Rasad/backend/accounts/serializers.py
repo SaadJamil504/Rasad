@@ -17,16 +17,17 @@ class LoginSerializer(serializers.Serializer):
         phone_number = data.get('phone_number')
         password = data.get('password')
         
-        # Try to find user by phone number First
-        user_obj = User.objects.filter(phone_number=phone_number).first()
+        # Find user by phone number
+        try:
+            user_obj = User.objects.get(phone_number=phone_number)
+        except User.DoesNotExist:
+            raise serializers.ValidationError("Incorrect Credentials")
         
-        if user_obj:
-            # Authenticate using the username corresponding to this phone number
-            user = authenticate(username=user_obj.username, password=password)
-            if user and user.is_active:
-                return user
-                
-        raise serializers.ValidationError("Incorrect Credentials")
+        # Use Django's built-in authentication (username is phone_number)
+        user = authenticate(username=user_obj.username, password=password)
+        if not user or not user.is_active:
+            raise serializers.ValidationError("Incorrect Credentials")
+        return user
 
 class UserSerializer(serializers.ModelSerializer):
     owner_dairy_name = serializers.SerializerMethodField()
@@ -37,6 +38,47 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'email', 'role', 'phone_number', 'first_name', 'license_number', 'milk_type', 'daily_quantity', 'address', 'dairy_name', 'owner_dairy_name', 'route', 'route_name', 'buffalo_price', 'cow_price', 'outstanding_balance', 'total_paid')
+        extra_kwargs = {
+            'first_name': {'required': False, 'allow_blank': True},
+            'license_number': {'required': False, 'allow_blank': True},
+            'address': {'required': False, 'allow_blank': True},
+            'dairy_name': {'required': False, 'allow_blank': True},
+        }
+
+    def validate_first_name(self, value):
+        # Allow only alphabets and spaces
+        import re
+        if not re.fullmatch(r'[A-Za-z ]+', value):
+            raise serializers.ValidationError('Name must contain only letters and spaces.')
+        return value.strip()
+
+    def validate_license_number(self, value):
+        # Alphanumeric only
+        import re
+        if not re.fullmatch(r'[A-Za-z0-9]+', value):
+            raise serializers.ValidationError('License number must be alphanumeric.')
+        return value.strip()
+
+    def validate_daily_quantity(self, value):
+        # Prevent negative and handle "-0"
+        if value is None:
+            return value
+        if value < 0:
+            raise serializers.ValidationError('Daily quantity cannot be negative.')
+        if value == -0:
+            return 0
+        return value
+
+    def validate_address(self, value):
+        from django.utils.html import strip_tags
+        cleaned = strip_tags(value)
+        return cleaned.strip()
+
+    def validate_dairy_name(self, value):
+        from django.utils.html import strip_tags
+        cleaned = strip_tags(value)
+        return cleaned.strip()
+
 
     def get_owner_dairy_name(self, obj):
         if obj.role == 'owner':
@@ -75,6 +117,30 @@ class SignupSerializer(serializers.ModelSerializer):
             'phone_number': {'required': True},
             'email': {'required': True},
         }
+
+    def validate_full_name(self, value):
+        import re
+        if not re.fullmatch(r'[A-Za-z ]+', value):
+            raise serializers.ValidationError('Name must contain only letters and spaces.')
+        return value.strip()
+
+    def validate_address(self, value):
+        from django.utils.html import strip_tags
+        return strip_tags(value).strip()
+
+    def validate_dairy_name(self, value):
+        from django.utils.html import strip_tags
+        return strip_tags(value).strip()
+
+    def validate_cow_price(self, value):
+        if value < 0:
+            raise serializers.ValidationError('Cow price cannot be negative.')
+        return value
+
+    def validate_buffalo_price(self, value):
+        if value < 0:
+            raise serializers.ValidationError('Buffalo price cannot be negative.')
+        return value
 
     def validate_email(self, value):
         email = value.lower()
@@ -295,6 +361,18 @@ class DeliverySerializer(serializers.ModelSerializer):
         fields = ('id', 'customer', 'customer_name', 'customer_username', 'customer_address', 'customer_milk_type', 'customer_quantity', 'route', 'date', 'is_delivered', 'status', 'delivered_at', 'quantity', 'price_at_delivery', 'total_amount')
         read_only_fields = ('delivered_at', 'total_amount')
 
+    def validate_quantity(self, value):
+        if value < 0:
+            raise serializers.ValidationError('Quantity cannot be negative.')
+        if value == -0:
+            return 0
+        return value
+
+    def validate_price_at_delivery(self, value):
+        if value < 0:
+            raise serializers.ValidationError('Price cannot be negative.')
+        return value
+
 class DeliveryAdjustmentSerializer(serializers.ModelSerializer):
     customer_name = serializers.CharField(source='customer.first_name', read_only=True)
     customer_username = serializers.CharField(source='customer.username', read_only=True)
@@ -304,6 +382,15 @@ class DeliveryAdjustmentSerializer(serializers.ModelSerializer):
         fields = ('id', 'customer', 'customer_name', 'customer_username', 'date', 'adjustment_type', 'new_quantity', 'message', 'status', 'driver_comment', 'created_at', 'updated_at')
         read_only_fields = ('customer', 'status', 'driver_comment', 'created_at', 'updated_at')
 
+    def validate_new_quantity(self, value):
+        if value is not None and value < 0:
+            raise serializers.ValidationError('New quantity cannot be negative.')
+        return value
+
+    def validate_message(self, value):
+        from django.utils.html import strip_tags
+        return strip_tags(value).strip()
+
 class PaymentSerializer(serializers.ModelSerializer):
     customer_name = serializers.CharField(source='customer.first_name', read_only=True)
     customer_username = serializers.CharField(source='customer.username', read_only=True)
@@ -312,3 +399,8 @@ class PaymentSerializer(serializers.ModelSerializer):
         model = Payment
         fields = ('id', 'customer', 'customer_name', 'customer_username', 'amount', 'status', 'created_at', 'confirmed_at')
         read_only_fields = ('customer', 'status', 'created_at', 'confirmed_at')
+
+    def validate_amount(self, value):
+        if value < 0:
+            raise serializers.ValidationError('Payment amount cannot be negative.')
+        return value
