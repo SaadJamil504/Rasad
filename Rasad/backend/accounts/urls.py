@@ -37,4 +37,8 @@ urlpatterns = [
     path('dashboard/stats/', DashboardStatsView.as_view(), name='dashboard_stats'),
     path('dashboard/alerts/', DashboardAlertsView.as_view(), name='dashboard_alerts'),
     path('dashboard/reports/', DashboardReportsView.as_view(), name='dashboard_reports'),
+    # Direct paths for frontend compatibility
+    path('stats/', DashboardStatsView.as_view(), name='stats'),
+    path('alerts/', DashboardAlertsView.as_view(), name='alerts'),
+    path('reports/', DashboardReportsView.as_view(), name='reports'),
 ]
