@@ -291,7 +291,7 @@ class InvitationSignupSerializer(serializers.ModelSerializer):
             first_name=full_name,
             password=password,
             role=invitation.role,
-            parent_owner=invitation.owner,
+            parent_owner=invitation.invited_by,
             **validated_data
         )
         

@@ -123,7 +123,7 @@ class InvitationListCreateView(APIView):
             
         serializer = InvitationSerializer(data=request.data)
         if serializer.is_valid():
-            invitation = serializer.save(owner=request.user)
+            invitation = serializer.save(invited_by=request.user)
             
             # Generate Link instead of sending email
             frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173').rstrip('/')
@@ -142,7 +142,7 @@ class InvitationListCreateView(APIView):
         description="List all invitations sent by the owner."
     )
     def get(self, request):
-        invitations = Invitation.objects.filter(owner=request.user)
+        invitations = Invitation.objects.filter(invited_by=request.user)
         serializer = InvitationSerializer(invitations, many=True)
         return Response(serializer.data)
 
@@ -162,7 +162,7 @@ class InvitationValidateView(APIView):
             return Response({
                 'role': invitation.role,
                 'email': invitation.email,
-                'owner_name': invitation.owner.first_name or invitation.owner.username
+                'owner_name': invitation.invited_by.first_name or invitation.invited_by.username
             }, status=status.HTTP_200_OK)
         except Invitation.DoesNotExist:
             return Response({'error': 'Invalid token'}, status=status.HTTP_404_NOT_FOUND)
