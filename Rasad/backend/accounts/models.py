@@ -1,6 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.core.validators import MinValueValidator
+from django.core.validators import RegexValidator, MinValueValidator
 from django.utils import timezone
 import uuid
 
@@ -10,12 +10,18 @@ class User(AbstractUser):
         ('driver', 'Driver'),
         ('customer', 'Customer'),
     )
+
+    alphabet_only = RegexValidator(
+        regex=r'^[a-zA-Z\s]+$',
+        message='Dairy Name must only contain alphabets and spaces.'
+    )
+
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='owner')
     phone_number = models.CharField(max_length=15, unique=True, null=True, blank=True)
     parent_owner = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='staff')
     license_number = models.CharField(max_length=50, null=True, blank=True)
     address = models.TextField(null=True, blank=True)
-    dairy_name = models.CharField(max_length=100, null=True, blank=True, help_text="For Owner users")
+    dairy_name = models.CharField(max_length=100, null=True, blank=True, help_text="For Owner users",validators=[alphabet_only])
     
     # Pricing fields
     buffalo_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, validators=[MinValueValidator(0)])

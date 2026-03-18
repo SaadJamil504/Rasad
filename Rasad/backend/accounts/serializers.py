@@ -75,9 +75,9 @@ class UserSerializer(serializers.ModelSerializer):
         return cleaned.strip()
 
     def validate_dairy_name(self, value):
-        from django.utils.html import strip_tags
-        cleaned = strip_tags(value)
-        return cleaned.strip()
+        if value and not all(x.isalpha() or x.isspace() for x in value):
+            raise serializers.ValidationError("Dairy Name must only contain alphabets.")
+        return value
 
 
     def get_owner_dairy_name(self, obj):
