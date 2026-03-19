@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { staffAPI } from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 import InvitationModal from '../components/InvitationModal';
 import './Table.css';
 
 const DriverList = () => {
+  const { t } = useLanguage();
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -30,23 +32,22 @@ const DriverList = () => {
     <div className="page-container">
       <div className="premium-toolbar" style={{ justifyContent: 'flex-end' }}>
         <button className="premium-btn-green" onClick={() => setIsModalOpen(true)}>
-          <span>+</span> Add New Driver
+          <span>+</span> {t('Add New Driver', 'نیا ڈرائیور')}
         </button>
       </div>
 
       {loading ? (
-        <div className="loading">Loading drivers...</div>
+        <div className="loading">{t('Loading drivers...', 'ڈرائیور لوڈ ہو رہے ہیں')}</div>
       ) : (
         <div className="glass-table-wrapper">
           <table className="glass-table">
             <thead>
               <tr>
-                <th>Full Name</th>
-                <th>Username</th>
-                <th>Email Address</th>
-                <th>Phone Number</th>
-                <th>License Number</th>
-                <th>Status</th>
+                <th>{t('Full Name', 'پورا نام')}</th>
+                <th>{t('Email Address', 'ای میل')}</th>
+                <th>{t('Phone Number', 'فون نمبر')}</th>
+                <th>{t('License Number', 'لائسنس نمبر')}</th>
+                <th>{t('Status', 'اسٹیٹس')}</th>
               </tr>
             </thead>
             <tbody>
@@ -54,18 +55,17 @@ const DriverList = () => {
                 drivers.map((driver) => (
                   <tr key={driver.id}>
                     <td data-label="Full Name" className="font-bold">{driver.first_name || 'N/A'}</td>
-                    <td data-label="Username">{driver.username}</td>
                     <td data-label="Email Address">{driver.email}</td>
                     <td data-label="Phone Number">{driver.phone_number || 'N/A'}</td>
                     <td data-label="License Number">{driver.license_number || 'N/A'}</td>
                     <td data-label="Status">
-                      <span className="status-label-premium active">Active</span>
+                      <span className="status-label-premium active">{t('Active', 'فعال')}</span>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="empty-row">No drivers found. Recruit your first driver!</td>
+                  <td colSpan="6" className="empty-row">{t('No drivers found. Recruit your first driver!', 'کوئی ڈرائیور نہیں ملا۔')}</td>
                 </tr>
               )}
             </tbody>

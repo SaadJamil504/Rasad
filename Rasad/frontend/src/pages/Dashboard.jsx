@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { staffAPI, deliveryAPI, authAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import './Dashboard.css';
 import './DashboardExtra.css';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { t, ts } = useLanguage();
   const [currentUser, setCurrentUser] = useState(null);
   const [counts, setCounts] = useState({ drivers: 0, customers: 0 });
   const [deliveries, setDeliveries] = useState([]);
@@ -113,7 +115,7 @@ const Dashboard = () => {
       setDeliveries(deliveries.map(d => d.id === deliveryId ? res.data : d));
     } catch (err) {
       console.error('Failed to toggle delivery:', err);
-      alert('Error updating delivery status.');
+      alert(ts('Error updating delivery status.', 'ڈیلیوری اسٹیٹس اپ ڈیٹ کرنے میں غلطی۔'));
     }
   };
 
@@ -125,7 +127,7 @@ const Dashboard = () => {
       alert('Milk prices updated successfully!');
     } catch (err) {
       console.error('Failed to update prices:', err);
-      alert('Error updating prices.');
+      alert(ts('Error updating prices.', 'نرخ اپ ڈیٹ کرنے میں غلطی۔'));
     } finally {
       setUpdatingPrices(false);
     }
@@ -137,7 +139,7 @@ const Dashboard = () => {
     setSubmittingPayment(true);
     try {
       await deliveryAPI.reportPayment({ amount: paymentAmount });
-      alert('Payment reported successfully! Waiting for owner confirmation.');
+      alert(ts('Payment reported successfully! Waiting for owner confirmation.', 'ادائیگی کی رپورٹ ہو گئی! مالک کی تصدیق کا انتظار کریں۔'));
       setPaymentAmount('');
       // Refresh history/status/profile
       const [statusRes, historyRes, profileRes] = await Promise.all([
@@ -161,7 +163,7 @@ const Dashboard = () => {
   const handleConfirmPayment = async (id, action = 'confirm') => {
     try {
       await deliveryAPI.confirmPayment(id, action);
-      alert(`Payment ${action === 'confirm' ? 'confirmed' : 'rejected'}.`);
+      alert(ts(`Payment ${action === 'confirm' ? 'confirmed' : 'rejected'}.`, `ادائیگی ${action === 'confirm' ? 'تصدیق' : 'مسترد'} کر دی گئی ہے۔`));
       // Refresh pending payments and customer counts
       const [paymentsRes, customersRes] = await Promise.all([
         deliveryAPI.getPayments(),
@@ -196,7 +198,7 @@ const Dashboard = () => {
       };
       console.log('[DEBUG] Sending request with data:', data);
       await deliveryAPI.createAdjustment(data);
-      alert('Request sent to driver for approval.');
+      alert(ts('Request sent to driver for approval.', 'درخواست ڈرائیور کو بھیج دی گئی ہے۔'));
       setShowPauseModal(false);
       setShowQtyModal(false);
       setAdjMessage('');
@@ -224,7 +226,7 @@ const Dashboard = () => {
         message: complaintMessage
       };
       await deliveryAPI.createAdjustment(data);
-      alert('Complaint sent to driver.');
+      alert(ts('Complaint sent to driver.', 'شکایت ڈرائیور کو بھیج دی گئی ہے۔'));
       setShowComplaintModal(false);
       setComplaintMessage('');
       // Refresh adjustments
@@ -254,7 +256,7 @@ const Dashboard = () => {
     try {
       await deliveryAPI.actionAdjustment(id, { action, driver_comment: adjComment });
       setAdjComment('');
-      alert(`Request ${action === 'accept' ? 'accepted' : 'rejected'}.`);
+      alert(ts(`Request ${action === 'accept' ? 'accepted' : 'rejected'}.`, `درخواست ${action === 'accept' ? 'منظور' : 'مسترد'} کر دی گئی ہے۔`));
       // Refresh data
       const [dailyRes, adjRes] = await Promise.all([
         deliveryAPI.getDailyDeliveries(),
@@ -278,7 +280,7 @@ const Dashboard = () => {
             </p>
             <textarea
               className="form-input"
-              placeholder="Message for driver (optional)"
+              placeholder={ts('Message for driver (optional)', 'ڈرائیور کے لیے پیغام (اختیاری)')}
               value={adjMessage}
               onChange={(e) => setAdjMessage(e.target.value)}
               style={{ minHeight: '100px', marginBottom: '1.5rem' }}
@@ -307,12 +309,12 @@ const Dashboard = () => {
                 className="form-input"
                 value={adjQty}
                 onChange={(e) => setAdjQty(e.target.value)}
-                placeholder="e.g. 4"
+                placeholder={ts('e.g. 4', 'مثلاً 4')}
               />
             </div>
             <textarea
               className="form-input"
-              placeholder="Message for driver (optional)"
+              placeholder={ts('Message for driver (optional)', 'ڈرائیور کے لیے پیغام (اختیاری)')}
               value={adjMessage}
               onChange={(e) => setAdjMessage(e.target.value)}
               style={{ minHeight: '80px', marginBottom: '1.5rem' }}
@@ -336,7 +338,7 @@ const Dashboard = () => {
             </p>
             <textarea
               className="form-input"
-              placeholder="Write your complaint here..."
+              placeholder={ts('Write your complaint here...', 'اپنی شکایت یہاں لکھیں...')}
               value={complaintMessage}
               onChange={(e) => setComplaintMessage(e.target.value)}
               style={{ minHeight: '120px', marginBottom: '1.5rem' }}
@@ -415,7 +417,7 @@ const Dashboard = () => {
                 <input
                   type="number"
                   className="form-input"
-                  placeholder="Enter amount"
+                  placeholder={ts('Enter amount', 'رقم درج کریں')}
                   value={paymentAmount}
                   onChange={(e) => setPaymentAmount(e.target.value)}
                   required
@@ -456,36 +458,32 @@ const Dashboard = () => {
       <div className="dashboard fade-in">
         <div className="customer-dashboard">
           <div className="customer-header-banner">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
-                <div className="greeting">Welcome Back,</div>
-                <h2>{user.first_name || user.username}</h2>
-                <div className="sub-header">#{user.id} - {user.address || 'Gulberg III'} - {user.owner_dairy_name || 'Dairy'}</div>
-              </div>
-              <button className="logout-pill" onClick={() => {
-                localStorage.clear();
-                window.location.href = '/login';
-              }}>Logout</button>
+            <div>
+              <div className="greeting">{t('Welcome Back,', 'خوش آمدید')}</div>
+              <h2>{user.first_name || user.username}</h2>
+              <div className="sub-header">#{user.id} - {user.address || 'Gulberg III'} - {user.owner_dairy_name || 'Dairy'}</div>
             </div>
           </div>
 
           <div className="customer-stats-row">
             <div className="stat-box">
               <span className="stat-val red">Rs {Math.floor(currentUser?.outstanding_balance || 0)}</span>
-              <span className="stat-lbl">Amount Due</span>
+              <span className="stat-lbl">{t('Amount Due', 'واجب الادا رقم')}</span>
             </div>
             <div className="stat-box">
               <span className="stat-val green">{Number(user.daily_quantity || 0).toFixed(1)}L</span>
-              <span className="stat-lbl">Daily Qty</span>
+              <span className="stat-lbl">{t('Daily Qty', 'روزانہ کی مقدار')}</span>
             </div>
             <div className="stat-box">
               <span className="stat-val">{Number(monthlyQty).toFixed(1)}L</span>
-              <span className="stat-lbl">This Month</span>
+              <span className="stat-lbl">{t('This Month', 'اس مہینے')}</span>
             </div>
           </div>
 
           <div className="bill-section">
-            <h3>{currentMonthName} {currentYear} — Bill</h3>
+            <h3 style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+              <span>{currentMonthName} {currentYear} — {t('Bill', 'بل')}</span>
+            </h3>
             <div className="bill-list">
               {currentMonthHistory.length > 0 ? (
                 currentMonthHistory.slice(0, 10).map(item => (
@@ -502,7 +500,7 @@ const Dashboard = () => {
               {currentMonthHistory.length > 0 && (
                 <div className="bill-item total-row">
                   <span className="bill-day" style={{ visibility: 'hidden' }}>0</span>
-                  <span className="bill-qty">Total {monthlyQty} Liter</span>
+                  <span className="bill-qty">{t('Total', 'کل')} {monthlyQty} Liter</span>
                   <span className="bill-price">Rs {monthlyTotalAmount}</span>
                 </div>
               )}
@@ -510,48 +508,42 @@ const Dashboard = () => {
           </div>
 
           <div className="quick-actions-section">
-            <h3>Quick Actions</h3>
+            <h3 style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+              <span>{t('Quick Actions', 'فوری کارروائی')}</span>
+            </h3>
             <div className="actions-grid">
               <div className="action-card-btn" onClick={() => setShowPauseModal(true)}>
                 <div>
-                  <span className="btn-text-main">Pause Delivery</span>
+                  <span className="btn-text-main">{t('Pause Delivery', 'سپلائی روکیں')}</span>
                 </div>
               </div>
 
               <div className="action-card-btn" onClick={() => setShowQtyModal(true)}>
                 <div>
-                  <span className="btn-text-main">Change Qty</span>
+                  <span className="btn-text-main">{t('Change Qty', 'مقدار بدلیں')}</span>
                 </div>
               </div>
 
               <div className="action-card-btn" onClick={() => setShowHistoryModal(true)}>
                 <div>
-                  <span className="btn-text-main">Past Bills</span>
+                  <span className="btn-text-main">{t('Past Bills', 'پرانے بل')}</span>
                 </div>
               </div>
 
               <div className="action-card-btn" onClick={() => setShowComplaintModal(true)}>
                 <div>
-                  <span className="btn-text-main">Complaint</span>
+                  <span className="btn-text-main">{t('Complaint', 'شکایت')}</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="payment-report-section" style={{ paddingBottom: '0.5rem' }}>
-            <button className="btn-p" onClick={() => setShowPaymentModal(true)} style={{ width: '100%', height: '56px' }}>
-              Report Payment to Owner
+          <div className="payment-report-section" style={{ paddingBottom: '2rem' }}>
+            <button className="btn-primary-large" onClick={() => setShowPaymentModal(true)}>
+              {t('Report Payment to Owner', 'مالک کو ادائیگی بتائیں')}
             </button>
           </div>
 
-          <div style={{ padding: '0 2rem 2rem' }}>
-            <button className="btn-s" onClick={() => {
-              if (window.confirm('Are you sure you want to log out?')) {
-                localStorage.clear();
-                window.location.href = '/login';
-              }
-            }} style={{ width: '100%' }}>Logout</button>
-          </div>
         </div>
         {/* Modals for Quick Actions */}
         {renderModals()}
@@ -584,15 +576,9 @@ const Dashboard = () => {
         <div className="driver-dashboard">
           <div className="driver-header-banner">
             <div className="banner-top">
-              <span>Driver Dashboard</span>
+              <span>{t('Driver Dashboard', 'ڈرائیور ڈیش بورڈ')}</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <span className="banner-date">{new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
-                <button className="logout-pill-white" onClick={() => {
-                  if (window.confirm('Are you sure you want to log out?')) {
-                    localStorage.clear();
-                    window.location.href = '/login';
-                  }
-                }}>Logout</button>
               </div>
             </div>
             <h2>{user.first_name || user.username}</h2>
@@ -601,22 +587,24 @@ const Dashboard = () => {
           <div className="driver-stats-row">
             <div className="stat-box">
               <span className="stat-val">{total}</span>
-              <span className="stat-lbl">Total</span>
+              <span className="stat-lbl">{t('Total', 'کل')}</span>
             </div>
             <div className="stat-box">
               <span className="stat-val green">{done}</span>
-              <span className="stat-lbl">Done</span>
+              <span className="stat-lbl">{t('Done', 'مکمل')}</span>
             </div>
             <div className="stat-box">
               <span className="stat-val orange">{left}</span>
-              <span className="stat-lbl">Left</span>
+              <span className="stat-lbl">{t('Left', 'باقی')}</span>
             </div>
           </div>
 
           {pendingComplaints.length > 0 && (
             <div className="complaints-section">
               <div className="section-title">
-                <h3>Customer Complaints</h3>
+                <h3 style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%'}}>
+                  <span>{t('Customer Complaints', 'گاہکوں کی شکایات')}</span>
+                </h3>
               </div>
               <div className="complaints-list">
                 {pendingComplaints.map(adj => (
@@ -636,7 +624,9 @@ const Dashboard = () => {
 
           <div className="today-list-section">
             <div className="section-title">
-              <h3>TODAY'S LIST</h3>
+              <h3 style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%'}}>
+                <span>{t("TODAY'S LIST", 'آج کی فہرست')}</span>
+              </h3>
             </div>
             <div className="today-list">
               {enrichedDeliveries.length > 0 ? (
@@ -692,15 +682,23 @@ const Dashboard = () => {
 
                         {statusClass === 'changed' && (
                           <>
-                            <button className="btn-deliver" onClick={() => handleActionAdjustment(delivery.pendingAdj.id, 'accept')}>Accept</button>
-                            <button className="btn-skip" onClick={() => handleActionAdjustment(delivery.pendingAdj.id, 'reject')}>Reject</button>
+                            <button className="btn-deliver" onClick={() => handleActionAdjustment(delivery.pendingAdj.id, 'accept')}>
+                              {t('Accept', 'منظور')}
+                            </button>
+                            <button className="btn-skip" onClick={() => handleActionAdjustment(delivery.pendingAdj.id, 'reject')}>
+                              {t('Reject', 'مسترد')}
+                            </button>
                           </>
                         )}
 
                         {statusClass === 'pending' && (
                           <>
-                            <button className="btn-deliver" onClick={() => handleToggleDelivery(delivery.id)}>Deliver</button>
-                            <button className="btn-skip" onClick={() => handleActionAdjustment(delivery.id, 'pause')}>Skip</button>
+                            <button className="btn-deliver" onClick={() => handleToggleDelivery(delivery.id)}>
+                              {t('Deliver', 'پہنچائیں')}
+                            </button>
+                            <button className="btn-skip" onClick={() => handleActionAdjustment(delivery.id, 'pause')}>
+                              {t('Skip', 'چھوڑیں')}
+                            </button>
                           </>
                         )}
                       </div>
@@ -725,45 +723,53 @@ const Dashboard = () => {
       <div className="owner-stats-row stats-grid-owner">
         <div className="stat-card owner-card green-top" onClick={() => window.location.href = '/customers'}>
           <div className="stat-value">{ownerStats.deliveries.total}</div>
-          <div className="stat-label">Today's Deliveries</div>
+          <div className="stat-label">
+            {t("Today's Deliveries", 'آج کی سپلائی')}
+          </div>
           <div className="stat-sub">
-            <span className="sc-done">{ownerStats.deliveries.done} done</span>
+            <span className="sc-done">{ownerStats.deliveries.done} {t('done', 'مکمل')}</span>
             <span className="sc-dot">·</span>
-            <span className="sc-pending">{ownerStats.deliveries.pending} pending</span>
+            <span className="sc-pending">{ownerStats.deliveries.pending} {t('pending', 'باقی')}</span>
           </div>
         </div>
 
         <div className="stat-card owner-card yellow-top">
           <div className="stat-value">Rs {ownerStats.revenue.amount.toLocaleString()}</div>
-          <div className="stat-label">Today's Revenue</div>
+          <div className="stat-label">
+            {t("Today's Revenue", 'آج کی آمدنی')}
+          </div>
           <div className="stat-sub">
             <span className={`sc-change ${ownerStats.revenue.change_pct >= 0 ? 'pos' : 'neg'}`}>
-              {ownerStats.revenue.change_pct >= 0 ? '↑' : '↓'} {Math.abs(ownerStats.revenue.change_pct).toFixed(1)}% vs yesterday
+              {ownerStats.revenue.change_pct >= 0 ? '↑' : '↓'} {Math.abs(ownerStats.revenue.change_pct).toFixed(1)}% {t('vs yesterday', 'کل سے')}
             </span>
           </div>
         </div>
 
         <div className="stat-card owner-card red-top">
           <div className="stat-value">{ownerStats.overdue.count}</div>
-          <div className="stat-label">Overdue Payments</div>
+          <div className="stat-label">
+            {t('Overdue Payments', 'بقایا جات')}
+          </div>
           <div className="stat-sub">
-            <span className="sc-total">Rs {ownerStats.overdue.total_amount.toLocaleString()} total due</span>
+            <span className="sc-total">Rs {ownerStats.overdue.total_amount.toLocaleString()} {t('total due', 'کل بقایا')}</span>
           </div>
         </div>
 
         <div className="stat-card owner-card purple-top" onClick={() => window.location.href = '/customers'}>
           <div className="stat-value">{ownerStats.customers.total}</div>
-          <div className="stat-label">Active Customers</div>
-          <div className="stat-sub sc-paused">{ownerStats.customers.paused_today} paused today</div>
+          <div className="stat-label">
+            {t('Active Customers', 'فعال گاہک')}
+          </div>
+          <div className="stat-sub sc-paused">{ownerStats.customers.paused_today} {t('paused today', 'آج رکے ہوئے')}</div>
         </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
         {/* Overdue Alerts Section */}
         <div className="glass-card" style={{ padding: '2rem', position: 'relative' }}>
-          <div style={{ marginBottom: '1.5rem' }}>
+          <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
             <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
-              Overdue Alerts
+              {t('Overdue Alerts', 'بقایا الرٹس')}
             </h3>
           </div>
           <button 
@@ -780,7 +786,7 @@ const Dashboard = () => {
             }} 
             onClick={() => window.location.href = '/customers'}
           >
-            View All
+            {t('View All', 'سب دیکھیں')}
           </button>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -808,7 +814,7 @@ const Dashboard = () => {
                     }}></div>
                     <div style={{ flex: 1 }}>
                       <div style={{ color: '#1e293b', marginBottom: '0.25rem', fontSize: '0.95rem' }}>
-                        <span style={{ fontWeight: 800 }}>{customer.name}</span> — Rs {customer.amount} overdue
+                        <span style={{ fontWeight: 800 }}>{customer.name}</span> — Rs {customer.amount} {t('overdue', 'بقایا')}
                       </div>
                       <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
                         {customer.address}, {customer.route}
@@ -819,8 +825,8 @@ const Dashboard = () => {
               })
             ) : (
               <div style={{ padding: '2rem', textAlign: 'center', background: '#f8fafc', borderRadius: '1rem', border: '1px dashed #cbd5e1' }}>
-                <div style={{ fontWeight: 700, color: '#334155', marginBottom: '0.25rem' }}>All Caught Up!</div>
-                <div style={{ fontSize: '0.85rem', color: '#64748b' }}>No overdue customers at the moment.</div>
+                <div style={{ fontWeight: 700, color: '#334155', marginBottom: '0.25rem' }}>{t('All Caught Up!', 'سب مکمل ہے!')}</div>
+                <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{t('No overdue customers at the moment.', 'اس وقت کوئی بقایا نہیں ہے۔')}</div>
               </div>
             )}
           </div>
@@ -828,9 +834,11 @@ const Dashboard = () => {
 
         {/* Today's Paused Deliveries Section */}
         <div className="glass-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column' }}>
-          <h3 style={{ margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#0f172a' }}>
-            Today's Paused Deliveries
-          </h3>
+          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem'}}>
+            <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#0f172a' }}>
+              {t("Today's Paused Deliveries", 'رکی ہوئی سپلائی')}
+            </h3>
+          </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
             {Array.isArray(alerts?.paused) && alerts.paused.length > 0 ? (
@@ -851,19 +859,19 @@ const Dashboard = () => {
               ))
             ) : (
               <div style={{ padding: '2rem', textAlign: 'center', background: '#f8fafc', borderRadius: '1rem', border: '1px dashed #cbd5e1' }}>
-                <div style={{ fontWeight: 700, color: '#334155', marginBottom: '0.25rem' }}>No Paused Routes</div>
-                <div style={{ fontSize: '0.85rem', color: '#64748b' }}>Running smoothly. No paused deliveries for today.</div>
+                <div style={{ fontWeight: 700, color: '#334155', marginBottom: '0.25rem' }}>{t('No Paused Routes', 'کوئی رکی ہوئی سپلائی نہیں')}</div>
+                <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{t('Running smoothly. No paused deliveries for today.', 'سب ٹھیک چل رہا ہے۔ آج کوئی رکی ہوئی سپلائی نہیں ہے۔')}</div>
               </div>
             )}
           </div>
           
           <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid #e2e8f0' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-              <span style={{ fontSize: '0.9rem', color: '#64748b' }}>Today's quantity changes</span>
-              <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#16a34a' }}>0 requests</span>
+              <span style={{ fontSize: '0.9rem', color: '#64748b' }}>{t("Today's quantity changes", 'آج کی مقدار میں تبدیلی')}</span>
+              <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#16a34a' }}>0 {t('requests', 'درخواستیں')}</span>
             </div>
             <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
-              No quantity modifications scheduled for today.
+              {t('No quantity modifications scheduled for today.', 'آج مقدار میں تبدیلی کی کوئی درخواست نہیں ہے۔')}
             </div>
           </div>
         </div>
@@ -871,7 +879,7 @@ const Dashboard = () => {
 
       {pendingPayments.length > 0 && (
         <div className="recent-activity glass-card" style={{ padding: '2.5rem', marginBottom: '2rem' }}>
-          <h3>Pending Payment Requests</h3>
+          <h3>{t('Pending Payment Requests', 'ادائیگی کی نئی درخواستیں')}</h3>
           <div className="history-list" style={{ marginTop: '1.5rem' }}>
             {pendingPayments.map(payment => (
               <div key={payment.id} className="history-item glass-card" style={{ padding: '1.5rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -881,8 +889,8 @@ const Dashboard = () => {
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{new Date(payment.created_at).toLocaleDateString()}</div>
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem', width: '200px' }}>
-                  <button className="btn-p" style={{ flex: 1, height: '44px', fontSize: '0.85rem' }} onClick={() => handleConfirmPayment(payment.id, 'confirm')}>Confirm</button>
-                  <button className="btn-d" style={{ flex: 1, height: '44px', fontSize: '0.85rem' }} onClick={() => handleConfirmPayment(payment.id, 'reject')}>Reject</button>
+                  <button className="btn-p" style={{ flex: 1, height: '44px', fontSize: '0.85rem' }} onClick={() => handleConfirmPayment(payment.id, 'confirm')}>{t('Confirm', 'تصدیق')}</button>
+                  <button className="btn-d" style={{ flex: 1, height: '44px', fontSize: '0.85rem' }} onClick={() => handleConfirmPayment(payment.id, 'reject')}>{t('Reject', 'مسترد')}</button>
                 </div>
               </div>
             ))}

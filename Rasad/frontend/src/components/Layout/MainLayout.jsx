@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Navigate, Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { deliveryAPI } from '../../services/api';
+import { useLanguage } from '../../context/LanguageContext';
 import './Layout.css';
 
 const MainLayout = () => {
@@ -10,6 +11,7 @@ const MainLayout = () => {
   const [showPriceModal, setShowPriceModal] = useState(false);
   const [prices, setPrices] = useState({ cow_price: 0, buffalo_price: 0 });
   const [updatingPrices, setUpdatingPrices] = useState(false);
+  const { language, toggleLanguage, t } = useLanguage();
 
   useEffect(() => {
     if (user) {
@@ -69,27 +71,27 @@ const MainLayout = () => {
           </div>
           <nav className="sidebar-nav">
             <Link to="/" className={`nav-item ${window.location.pathname === '/' ? 'active' : ''}`} onClick={closeSidebar}>
-              Dashboard
+              {t('Dashboard', 'ڈیش بورڈ')}
             </Link>
             <Link to="/routes" className={`nav-item ${window.location.pathname === '/routes' ? 'active' : ''}`} onClick={closeSidebar}>
-              Routes
+              {t('Routes', 'روٹس')}
             </Link>
             <Link to="/drivers" className={`nav-item ${window.location.pathname === '/drivers' ? 'active' : ''}`} onClick={closeSidebar}>
-              Drivers
+              {t('Drivers', 'ڈرائیورز')}
             </Link>
             <Link to="/customers" className={`nav-item ${window.location.pathname === '/customers' ? 'active' : ''}`} onClick={closeSidebar}>
-              Customers
+              {t('Customers', 'گاہک')}
             </Link>
             {user.role === 'owner' && (
               <>
                 <Link to="/bills" className={`nav-item ${window.location.pathname === '/bills' ? 'active' : ''}`} onClick={closeSidebar}>
-                  Monthly Bills
+                  {t('Monthly Bills', 'ماہانہ بل')}
                 </Link>
                 <Link to="/reports" className={`nav-item ${window.location.pathname === '/reports' ? 'active' : ''}`} onClick={closeSidebar}>
-                  Reports
+                  {t('Reports', 'رپورٹس')}
                 </Link>
                 <div className="nav-item" style={{ cursor: 'pointer' }} onClick={() => { setShowPriceModal(true); closeSidebar(); }}>
-                  Adjust Price
+                  {t('Adjust Price', 'نرخ بدلیں')}
                 </div>
               </>
             )}
@@ -99,30 +101,47 @@ const MainLayout = () => {
               <div className="avatar">{user.username?.charAt(0).toUpperCase()}</div>
               <div className="user-info">
                 <span className="name">{user.username}</span>
-                <span className="role">{user.role || 'User'}</span>
+                <span className="role">{t(user.role || 'User', user.role === 'owner' ? 'مالک' : (user.role === 'driver' ? 'ڈرائیور' : 'گاہک'))}</span>
               </div>
             </div>
           </div>
         </aside>
       )}
       <main className="main-content">
-        {showSidebar && (
-          <header className="owner-header-compact">
+        <header className={showSidebar ? "owner-header-compact" : "customer-driver-header"}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <button className="hamburger-btn owner-hamburger" onClick={toggleSidebar} style={{ color: '#1e293b', fontSize: '2.2rem', fontWeight: 'bold', minWidth: '44px', minHeight: '44px', alignItems: 'center', justifyContent: 'center' }}>
-                  ☰
-                </button>
+                {showSidebar && (
+                  <button className="hamburger-btn owner-hamburger" onClick={toggleSidebar} style={{ color: '#1e293b', fontSize: '2.2rem', fontWeight: 'bold', minWidth: '44px', minHeight: '44px', alignItems: 'center', justifyContent: 'center' }}>
+                    ☰
+                  </button>
+                )}
                 <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#1e293b' }}>
-                  Dashboard
+                  {t('Dashboard', 'ڈیش بورڈ')}
                 </span>
               </div>
-              <button onClick={handleLogout} className="logout-banner-btn-compact">
-                Logout
-              </button>
+              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                <button 
+                  onClick={toggleLanguage} 
+                  className="lang-toggle-btn"
+                  style={{ 
+                    padding: '0.5rem 1rem', 
+                    borderRadius: '2rem', 
+                    border: '1px solid #e2e8f0', 
+                    background: 'white', 
+                    fontWeight: 700, 
+                    cursor: 'pointer',
+                    fontSize: '0.85rem'
+                  }}
+                >
+                  {language === 'en' ? 'اردو' : 'English'}
+                </button>
+                <button onClick={handleLogout} className="logout-banner-btn-compact">
+                  {t('Logout', 'لاگ آؤٹ')}
+                </button>
+              </div>
             </div>
           </header>
-        )}
         <section className={`page-body ${!showSidebar ? 'full-width' : ''}`}>
           <Outlet />
         </section>
@@ -131,10 +150,10 @@ const MainLayout = () => {
       {showPriceModal && (
         <div className="modal-overlay-layout" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
           <div style={{ background: 'white', padding: '2.5rem', borderRadius: '1.5rem', width: '90%', maxWidth: '400px', boxShadow: '0 20px 50px rgba(0,0,0,0.3)' }}>
-            <h3 style={{ marginTop: 0, marginBottom: '1.5rem', color: '#1e293b' }}>Adjust Daily Milk Prices</h3>
+            <h3 style={{ marginTop: 0, marginBottom: '1.5rem', color: '#1e293b' }}>{t('Adjust Daily Milk Prices', 'دودھ کے روزانہ نرخ بدلیں')}</h3>
             <form onSubmit={handleUpdatePrices}>
               <div style={{ marginBottom: '1.25rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#64748b', fontSize: '0.9rem' }}>Cow Milk Price (per Liter)</label>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#64748b', fontSize: '0.9rem' }}>{t('Cow Milk Price (per Liter)', 'گائے کے دودھ کا ریٹ (فی لیٹر)')}</label>
                 <input
                   type="number"
                   step="0.01"
@@ -146,7 +165,7 @@ const MainLayout = () => {
                 />
               </div>
               <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#64748b', fontSize: '0.9rem' }}>Buffalo Milk Price (per Liter)</label>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#64748b', fontSize: '0.9rem' }}>{t('Buffalo Milk Price (per Liter)', 'بھینس کے دودھ کا ریٹ (فی لیٹر)')}</label>
                 <input
                   type="number"
                   step="0.01"
@@ -180,7 +199,7 @@ const MainLayout = () => {
                     boxSizing: 'border-box'
                   }}
                 >
-                  Cancel
+                  {t('Cancel', 'کینسل')}
                 </button>
                 <button
                   type="submit"
@@ -205,7 +224,7 @@ const MainLayout = () => {
                     boxShadow: '0 4px 12px rgba(39, 174, 96, 0.2)'
                   }}
                 >
-                  {updatingPrices ? 'Saving...' : 'Save Prices'}
+                  {updatingPrices ? t('Saving...', 'محفوظ ہو رہا ہے...') : t('Save Prices', 'ریٹ محفوظ کریں')}
                 </button>
               </div>
             </form>

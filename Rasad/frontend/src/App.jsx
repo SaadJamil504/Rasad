@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { LanguageProvider } from './context/LanguageContext';
 import MainLayout from './components/Layout/MainLayout';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
@@ -17,6 +18,7 @@ import RoleRoute from './components/Auth/RoleRoute';
 function App() {
   return (
     <AuthProvider>
+      <LanguageProvider>
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -47,6 +49,7 @@ function App() {
           </Route>
         </Routes>
       </Router>
+      </LanguageProvider>
     </AuthProvider>
   );
 }

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { staffAPI, deliveryAPI } from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 
 const MonthlyBills = () => {
+  const { t } = useLanguage();
   const [customers, setCustomers] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState('');
   const [viewMonth, setViewMonth] = useState(new Date().getMonth() + 1);
@@ -52,14 +54,14 @@ const MonthlyBills = () => {
 
       <div className="premium-toolbar" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: '200px' }}>
-          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#64748b', marginBottom: '0.5rem' }}>Select Customer</label>
+          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#64748b', marginBottom: '0.5rem' }}>{t('Select Customer', 'گاہک منتخب کریں')}</label>
           <select 
             className="premium-select" 
             style={{ width: '100%' }}
             value={selectedCustomer}
             onChange={(e) => setSelectedCustomer(e.target.value)}
           >
-            <option value="">-- Choose a Customer --</option>
+            <option value="">{t('-- Choose a Customer --', '-- گاہک کا انتخاب کریں --')}</option>
             {customers.map(c => (
               <option key={c.id} value={c.id}>{c.first_name || c.username} - {c.address || 'No Address'}</option>
             ))}
@@ -67,7 +69,7 @@ const MonthlyBills = () => {
         </div>
 
         <div style={{ minWidth: '150px' }}>
-          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#64748b', marginBottom: '0.5rem' }}>Select Month</label>
+          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#64748b', marginBottom: '0.5rem' }}>{t('Select Month', 'مہینہ منتخب کریں')}</label>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <select className="premium-select" value={viewMonth} onChange={(e) => setViewMonth(e.target.value)}>
               {Array.from({ length: 12 }, (_, i) => (
@@ -86,10 +88,10 @@ const MonthlyBills = () => {
       {!selectedCustomer ? (
         <div className="glass-card" style={{ padding: '4rem 2rem', textAlign: 'center', color: '#64748b', marginTop: '2rem' }}>
           <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📄</div>
-          <h3>Select a customer to view their monthly bill</h3>
+          <h3>{t('Select a customer to view their monthly bill', 'ماہانہ بل دیکھنے کے لیے گاہک منتخب کریں')}</h3>
         </div>
       ) : loading ? (
-        <div style={{ marginTop: '2rem', textAlign: 'center' }}>Loading bill details...</div>
+        <div style={{ marginTop: '2rem', textAlign: 'center' }}>{t('Loading bill details...', 'بل کی تفصیل لوڈ ہو رہی ہے')}</div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem', marginTop: '2rem' }}>
           {customerDetails && (
@@ -97,34 +99,34 @@ const MonthlyBills = () => {
               <div>
                 <h2 style={{ margin: '0 0 0.5rem 0' }}>{customerDetails.first_name || customerDetails.username}</h2>
                 <div style={{ color: '#64748b', fontSize: '0.9rem' }}>
-                  {customerDetails.address || 'N/A'} • {customerDetails.route_name || 'Unassigned'}
+                  {customerDetails.address || t('N/A', 'نامعلوم')} • {customerDetails.route_name || t('Unassigned', 'غیر مختص')}
                 </div>
               </div>
               <div style={{ borderLeft: '1px solid #e2e8f0', paddingLeft: '2rem' }}>
-                <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>DAILY QTY</div>
+                <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>{t('DAILY QTY', 'روزانہ مقدار')}</div>
                 <div style={{ fontSize: '1.25rem', fontWeight: 800 }}>{customerDetails.daily_quantity || '0'}L ({customerDetails.milk_type})</div>
               </div>
               <div style={{ borderLeft: '1px solid #e2e8f0', paddingLeft: '2rem' }}>
-                <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>CURRENT BALANCE</div>
+                <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>{t('CURRENT BALANCE', 'موجودہ بیلنس')}</div>
                 <div style={{ fontSize: '1.25rem', fontWeight: 800, color: parseFloat(customerDetails.outstanding_balance) > 0 ? '#ef4444' : '#27ae60' }}>
-                  {parseFloat(customerDetails.outstanding_balance) > 0 ? 'Rs ' + customerDetails.outstanding_balance : 'Advance Rs ' + Math.abs(customerDetails.outstanding_balance)}
+                  {parseFloat(customerDetails.outstanding_balance) > 0 ? 'Rs ' + customerDetails.outstanding_balance : t('Advance', 'ایڈوانس') + ' Rs ' + Math.abs(customerDetails.outstanding_balance)}
                 </div>
               </div>
             </div>
           )}
 
           <div className="glass-card" style={{ padding: '2rem' }}>
-            <h3 style={{ margin: '0 0 1.5rem 0' }}>Deliveries & Bill for {new Date(viewYear, viewMonth - 1).toLocaleString('default', { month: 'long', year: 'numeric' })}</h3>
+            <h3 style={{ margin: '0 0 1.5rem 0' }}>{t('Deliveries & Bill for', 'ڈیلیوری اور بل برائے')} {new Date(viewYear, viewMonth - 1).toLocaleString('default', { month: 'long', year: 'numeric' })}</h3>
             
             {customerHistory.length > 0 ? (
               <div style={{ border: '1px solid #e2e8f0', borderRadius: '1rem', overflow: 'hidden' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                   <thead style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                     <tr>
-                      <th style={{ padding: '1rem', fontWeight: 700, color: '#475569', fontSize: '0.85rem' }}>DATE</th>
-                      <th style={{ padding: '1rem', fontWeight: 700, color: '#475569', fontSize: '0.85rem' }}>QUANTITY</th>
-                      <th style={{ padding: '1rem', fontWeight: 700, color: '#475569', fontSize: '0.85rem' }}>AMOUNT</th>
-                      <th style={{ padding: '1rem', fontWeight: 700, color: '#475569', fontSize: '0.85rem' }}>STATUS</th>
+                      <th style={{ padding: '1rem', fontWeight: 700, color: '#475569', fontSize: '0.85rem' }}>{t('DATE', 'تاریخ')}</th>
+                      <th style={{ padding: '1rem', fontWeight: 700, color: '#475569', fontSize: '0.85rem' }}>{t('QUANTITY', 'مقدار')}</th>
+                      <th style={{ padding: '1rem', fontWeight: 700, color: '#475569', fontSize: '0.85rem' }}>{t('AMOUNT', 'رقم')}</th>
+                      <th style={{ padding: '1rem', fontWeight: 700, color: '#475569', fontSize: '0.85rem' }}>{t('STATUS', 'اسٹیٹس')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -145,7 +147,7 @@ const MonthlyBills = () => {
                             background: item.status === 'paused' ? '#f1f5f9' : '#dcfce7',
                             color: item.status === 'paused' ? '#64748b' : '#16a34a'
                           }}>
-                            {item.status === 'paused' ? 'Paused' : 'Delivered'}
+                            {item.status === 'paused' ? t('Paused', 'رکا ہوا') : t('Delivered', 'مکمل')}
                           </span>
                         </td>
                       </tr>
@@ -153,7 +155,7 @@ const MonthlyBills = () => {
                   </tbody>
                   <tfoot style={{ background: '#f8fafc', borderTop: '2px solid #cbd5e1' }}>
                     <tr>
-                      <td style={{ padding: '1rem', fontWeight: 800, color: '#1e293b' }}>TOTAL</td>
+                      <td style={{ padding: '1rem', fontWeight: 800, color: '#1e293b' }}>{t('TOTAL', 'کل')}</td>
                       <td style={{ padding: '1rem', fontWeight: 800, color: '#1e293b' }}>
                         {customerHistory.reduce((s, i) => s + parseFloat(i.quantity || 0), 0)}L
                       </td>
@@ -165,7 +167,7 @@ const MonthlyBills = () => {
                 </table>
               </div>
             ) : (
-              <p style={{ textAlign: 'center', color: '#94a3b8', margin: '3rem 0' }}>No deliveries found for this month.</p>
+              <p style={{ textAlign: 'center', color: '#94a3b8', margin: '3rem 0' }}>{t('No deliveries found for this month.', 'اس مہینے کی کوئی ڈیلیوری نہیں ملی۔')}</p>
             )}
           </div>
         </div>

@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { routeAPI } from '../services/api';
 import RouteModal from '../components/RouteModal';
+import { useLanguage } from '../context/LanguageContext';
 import './Table.css';
 
 const RouteList = () => {
+  const { t } = useLanguage();
   const [routes, setRoutes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -36,12 +38,12 @@ const RouteList = () => {
           setSelectedRoute(null);
           setIsModalOpen(true);
         }}>
-          <span>+</span> Add Route
+          <span>+</span> {t('Add Route', 'نیا روٹ')}
         </button>
       </div>
 
       {loading ? (
-        <div className="loading">Loading routes...</div>
+        <div className="loading">{t('Loading routes...', 'روٹس لوڈ ہو رہے ہیں')}</div>
       ) : error ? (
         <div className="error">{error}</div>
       ) : (
@@ -54,17 +56,17 @@ const RouteList = () => {
                   <div className="route-info-stack">
                     <span className="route-name-text">{route.name}</span>
                     <div className="route-driver-info">
-                      <span>Driver: {route.driver_name}</span>
+                      <span>{t('Driver', 'ڈرائیور')}: {route.driver_name}</span>
                       <span>•</span>
-                      <span>{route.customer_count} customers</span>
+                      <span>{route.customer_count} {t('customers', 'گاہک')}</span>
                       <span>•</span>
-                      <span>{route.total_quantity}L/day</span>
+                      <span>{route.total_quantity}L/{t('day', 'دن')}</span>
                     </div>
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                   <span className={index % 3 === 2 ? 'pending-start-label' : 'active-today-label'}>
-                    {index % 3 === 2 ? 'Pending Start' : 'Active Today'}
+                    {index % 3 === 2 ? t('Pending Start', 'پینڈنگ') : t('Active Today', 'آج فعال')}
                   </span>
                   <button
                     className="edit-action-btn"
@@ -73,7 +75,7 @@ const RouteList = () => {
                       setIsModalOpen(true);
                     }}
                   >
-                    Edit
+                    {t('Edit', 'تبدیل')}
                   </button>
                 </div>
               </div>
@@ -85,7 +87,7 @@ const RouteList = () => {
                   </span>
                 ))}
                 {route.customer_count > 5 && (
-                  <span className="customer-small-pill">+{route.customer_count - 5} more</span>
+                  <span className="customer-small-pill">+{route.customer_count - 5} {t('more', 'اور')}</span>
                 )}
                 {route.customer_count === 0 && (
                   <span className="text-muted" style={{ fontSize: '0.8rem' }}>No customers assigned</span>
@@ -95,7 +97,7 @@ const RouteList = () => {
           ))}
           {routes.length === 0 && (
             <div className="empty-row" style={{ background: 'white', borderRadius: '20px' }}>
-              No routes found. Create your first delivery route!
+              {t('No routes found. Create your first delivery route!', 'کوئی روٹ نہیں ملا- اپنا پہلا روٹ بنائیں')}
             </div>
           )}
         </div>

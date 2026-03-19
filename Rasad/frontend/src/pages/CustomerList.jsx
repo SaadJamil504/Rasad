@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { staffAPI, deliveryAPI } from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 import InvitationModal from '../components/InvitationModal';
 import './Table.css';
 
 const CustomerList = () => {
+  const { t, ts } = useLanguage();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -65,15 +67,14 @@ const CustomerList = () => {
   const formatBalance = (balance) => {
     const val = parseFloat(balance || 0);
     if (val > 0) return <span className="balance-text negative">Rs {val.toLocaleString()}</span>;
-    if (val < 0) return <span className="balance-text positive">Advance Rs {Math.abs(val).toLocaleString()}</span>;
+    if (val < 0) return <span className="balance-text positive">{t('Advance', 'ایڈوانس')} Rs {Math.abs(val).toLocaleString()}</span>;
     return <span className="balance-text">Rs 0</span>;
   };
 
   const getStatusBadge = (balance) => {
     const val = parseFloat(balance || 0);
-    if (val > 0) return <span className="status-label-premium overdue">Overdue</span>;
-    if (val < 0) return <span className="status-label-premium active">Active</span>;
-    return <span className="status-label-premium active">Active</span>;
+    if (val > 0) return <span className="status-label-premium overdue">{t('Overdue', 'بقایا')}</span>;
+    return <span className="status-label-premium active">{t('Active', 'فعال')}</span>;
   };
 
   const filteredCustomers = customers.filter(customer => {
@@ -109,7 +110,7 @@ const CustomerList = () => {
             </span>
             <input
               type="text"
-              placeholder="Search by name, area, number..."
+              placeholder={ts('Search by name, area, number...', 'نام یا نمبر سے تلاش کریں')}
               className="search-input"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -121,7 +122,7 @@ const CustomerList = () => {
               value={routeFilter}
               onChange={(e) => setRouteFilter(e.target.value)}
             >
-              <option>All Routes</option>
+              <option value="All Routes">{t('All Routes', 'تمام روٹس')}</option>
               {[...new Set(customers.map(c => c.route_name).filter(Boolean))].map(r => (
                 <option key={r}>{r}</option>
               ))}
@@ -131,20 +132,20 @@ const CustomerList = () => {
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
-              <option>All Status</option>
-              <option>Active</option>
-              <option>Overdue</option>
-              <option>Paused</option>
+              <option value="All Status">{t('All Status', 'تمام اسٹیٹس')}</option>
+              <option value="Active">{t('Active', 'فعال')}</option>
+              <option value="Overdue">{t('Overdue', 'بقایا')}</option>
+              <option value="Paused">{t('Paused', 'رکا ہوا')}</option>
             </select>
           </div>
         </div>
         <button className="premium-btn-green" onClick={() => setIsModalOpen(true)}>
-          <span>+</span> Add Customer
+          <span>+</span> {t('Add Customer', 'نیا گاہک')}
         </button>
       </div>
 
       {loading ? (
-        <div className="loading">Loading customers...</div>
+        <div className="loading">{t('Loading customers...', 'گاہک لوڈ ہو رہے ہیں')}</div>
       ) : error ? (
         <div className="error">{error}</div>
       ) : (
@@ -152,14 +153,14 @@ const CustomerList = () => {
           <table className="premium-table">
             <thead>
               <tr>
-                <th>NO.</th>
-                <th>CUSTOMER</th>
-                <th>AREA</th>
-                <th>ROUTE</th>
-                <th>DAILY QTY</th>
-                <th>RATE</th>
-                <th>BALANCE</th>
-                <th>STATUS</th>
+                <th>{t('NO.', 'نمبر')}</th>
+                <th>{t('CUSTOMER', 'گاہک')}</th>
+                <th>{t('AREA', 'علاقہ')}</th>
+                <th>{t('ROUTE', 'روٹ')}</th>
+                <th>{t('DAILY QTY', 'روزانہ مقدار')}</th>
+                <th>{t('RATE', 'ریٹ')}</th>
+                <th>{t('BALANCE', 'بقایا')}</th>
+                <th>{t('STATUS', 'اسٹیٹس')}</th>
                 <th></th>
               </tr>
             </thead>
@@ -171,14 +172,14 @@ const CustomerList = () => {
                     <div className="customer-cell">
                       <span className="customer-name-main">{customer.first_name || customer.username}</span>
                       <span className="customer-sub-info">
-                        {customer.phone_number || 'No Number'}
+                        {customer.phone_number || t('No Number', 'کوئی نمبر نہیں')}
                       </span>
                     </div>
                   </td>
                   <td data-label="AREA"><span className="area-text">{customer.address || 'General'}</span></td>
                   <td data-label="ROUTE">
                     <span className={`route-badge ${customer.route_name === 'Route B' ? 'route-b' : customer.route_name === 'Route C' ? 'route-c' : 'route-a'}`}>
-                      {customer.route_name || 'Unassigned'}
+                      {customer.route_name || t('Unassigned', 'غیر مختص')}
                     </span>
                   </td>
                   <td data-label="DAILY QTY"><strong>{customer.daily_quantity || '0'}L</strong></td>
@@ -186,13 +187,13 @@ const CustomerList = () => {
                   <td data-label="BALANCE">{formatBalance(customer.outstanding_balance)}</td>
                   <td data-label="STATUS">{getStatusBadge(customer.outstanding_balance)}</td>
                   <td className="action-cell">
-                    <button className="view-btn" onClick={() => handleViewCustomer(customer)}>View</button>
+                    <button className="view-btn" onClick={() => handleViewCustomer(customer)}>{t('View', 'دیکھیں')}</button>
                   </td>
                 </tr>
               ))}
               {filteredCustomers.length === 0 && (
                 <tr>
-                  <td colSpan="9" className="empty-row">No customers found matching your filters.</td>
+                  <td colSpan="9" className="empty-row">{t('No customers found matching your filters.', 'تعین کردہ فلٹرز کے مطابق کوئی گاہک نہیں ملا۔')}</td>
                 </tr>
               )}
             </tbody>
@@ -212,33 +213,33 @@ const CustomerList = () => {
         <div className="modal-overlay">
           <div className="modal-content glass-card" style={{ maxWidth: '700px', width: '95%', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h2>Customer Profile</h2>
-              <button className="btn-s" style={{ padding: '0.4rem 0.8rem', height: '36px' }} onClick={() => setSelectedCustomer(null)}>Close</button>
+              <h2>{t('Customer Profile', 'گاہک کا پروفائل')}</h2>
+              <button className="btn-s" style={{ padding: '0.4rem 0.8rem', height: '36px' }} onClick={() => setSelectedCustomer(null)}>{t('Close', 'بند کریں')}</button>
             </div>
 
             <div className="customer-profile-grid">
               <div style={{ flex: 1, minWidth: '0', background: '#f8fafc', padding: '1.25rem', borderRadius: '1rem', border: '1px solid #e2e8f0' }}>
                 <h3 style={{ margin: '0 0 0.75rem 0', color: '#1e293b', fontSize: '1.1rem' }}>{selectedCustomer.first_name || selectedCustomer.username}</h3>
-                <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>Phone:</strong> {selectedCustomer.phone_number || 'N/A'}</p>
-                <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>Address:</strong> {selectedCustomer.address || 'N/A'}</p>
-                <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>Route:</strong> {selectedCustomer.route_name || 'Unassigned'}</p>
+                <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>{t('Phone', 'فون')}:</strong> {selectedCustomer.phone_number || 'N/A'}</p>
+                <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>{t('Address', 'پتہ')}:</strong> {selectedCustomer.address || 'N/A'}</p>
+                <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>{t('Route', 'روٹ')}:</strong> {selectedCustomer.route_name || t('Unassigned', 'غیر مختص')}</p>
               </div>
               <div style={{ flex: 1, minWidth: '0', background: '#f8fafc', padding: '1.25rem', borderRadius: '1rem', border: '1px solid #e2e8f0' }}>
-                <h3 style={{ margin: '0 0 0.75rem 0', color: '#1e293b', fontSize: '1.1rem' }}>Account Specs</h3>
-                <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>Daily Qty:</strong> {selectedCustomer.daily_quantity || '0'}L ({selectedCustomer.milk_type})</p>
-                <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>Milk Rate:</strong> Rs {selectedCustomer.milk_type === 'cow' ? selectedCustomer.cow_price : selectedCustomer.buffalo_price}/L</p>
-                <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>Balance Due:</strong> {formatBalance(selectedCustomer.outstanding_balance)}</p>
+                <h3 style={{ margin: '0 0 0.75rem 0', color: '#1e293b', fontSize: '1.1rem' }}>{t('Account Specs', 'اکاؤنٹ کی تفصیلات')}</h3>
+                <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>{t('Daily Qty', 'روزانہ مقدار')}:</strong> {selectedCustomer.daily_quantity || '0'}L ({selectedCustomer.milk_type})</p>
+                <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>{t('Milk Rate', 'دودھ کا ریٹ')}:</strong> Rs {selectedCustomer.milk_type === 'cow' ? selectedCustomer.cow_price : selectedCustomer.buffalo_price}/L</p>
+                <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>{t('Balance Due', 'بقایا واجب الادا')}:</strong> {formatBalance(selectedCustomer.outstanding_balance)}</p>
               </div>
             </div>
 
             {loadingDetails ? (
-              <p>Loading details...</p>
+              <p>{t('Loading details...', 'تفصیل لوڈ ہو رہی ہے')}</p>
             ) : (
               <div className="customer-details-grid">
                 {/* Monthly Bill Section */}
                 <div style={{ flex: 1, minWidth: '0' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Monthly Bill</h3>
+                    <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{t('Monthly Bill', 'ماہانہ بل')}</h3>
                     <div style={{ display: 'flex', gap: '0.4rem' }}>
                       <select className="form-input" style={{ padding: '0.3rem', fontSize: '0.8rem' }} value={viewMonth} onChange={(e) => setViewMonth(e.target.value)}>
                         {Array.from({ length: 12 }, (_, i) => (
@@ -259,25 +260,25 @@ const CustomerList = () => {
                         {customerHistory.map(item => (
                           <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px dashed #cbd5e1', fontSize: '0.9rem' }}>
                             <span style={{ color: '#64748b', width: '30px' }}>{new Date(item.date).getDate()}</span>
-                            <span style={{ flex: 1, fontWeight: 600 }}>{item.status === 'paused' ? 'Paused' : `${item.quantity} Liter`}</span>
+                            <span style={{ flex: 1, fontWeight: 600 }}>{item.status === 'paused' ? t('Paused', 'رکا ہوا') : `${item.quantity} ${t('Liter', 'لیٹر')}`}</span>
                             <span style={{ color: '#27ae60', fontWeight: 600 }}>Rs {item.status === 'paused' ? '0' : item.total_amount}</span>
                           </div>
                         ))}
                         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem 0 0 0', marginTop: '0.5rem', borderTop: '2px solid #cbd5e1', fontWeight: 800, fontSize: '1rem' }}>
                           <span style={{ visibility: 'hidden', width: '30px' }}>0</span>
-                          <span style={{ flex: 1 }}>Total {customerHistory.reduce((s, i) => s + parseFloat(i.quantity || 0), 0)}L</span>
+                          <span style={{ flex: 1 }}>{t('Total', 'کل')} {customerHistory.reduce((s, i) => s + parseFloat(i.quantity || 0), 0)}{t('L', 'لیٹر')}</span>
                           <span style={{ color: '#27ae60' }}>Rs {customerHistory.reduce((s, i) => s + parseFloat(i.total_amount || 0), 0)}</span>
                         </div>
                       </>
                     ) : (
-                      <p style={{ textAlign: 'center', color: '#94a3b8', margin: '2rem 0' }}>No deliveries for this month.</p>
+                      <p style={{ textAlign: 'center', color: '#94a3b8', margin: '2rem 0' }}>{t('No deliveries for this month.', 'اس مہینے کی کوئی ڈیلیوری نہیں ہے۔')}</p>
                     )}
                   </div>
                 </div>
 
                 {/* Payment History Section */}
                 <div style={{ flex: 1, minWidth: '0' }}>
-                  <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem' }}>Payment History</h3>
+                  <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem' }}>{t('Payment History', 'ادائیگی کی ہسٹری')}</h3>
                   <div style={{ background: '#f8fafc', borderRadius: '1rem', border: '1px solid #e2e8f0', padding: '1rem', maxHeight: '300px', overflowY: 'auto' }}>
                     {customerPayments.length > 0 ? (
                       customerPayments.map(payment => (
@@ -289,16 +290,18 @@ const CustomerList = () => {
                               background: payment.status === 'confirmed' ? '#dcfce7' : payment.status === 'rejected' ? '#fee2e2' : '#fef3c7',
                               color: payment.status === 'confirmed' ? '#166534' : payment.status === 'rejected' ? '#991b1b' : '#92400e'
                             }}>
-                              {payment.status.toUpperCase()}
+                              {t(payment.status.toUpperCase(), 
+                                payment.status === 'confirmed' ? 'تصدیق شدہ' : 
+                                payment.status === 'rejected' ? 'مسترد شدہ' : 'پینڈنگ')}
                             </span>
                           </div>
                           <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                            Reported: {new Date(payment.created_at).toLocaleDateString()}
+                            {t('Reported', 'رپورٹ شدہ')}: {new Date(payment.created_at).toLocaleDateString()}
                           </div>
                         </div>
                       ))
                     ) : (
-                      <p style={{ textAlign: 'center', color: '#94a3b8', margin: '2rem 0' }}>No payment history found.</p>
+                      <p style={{ textAlign: 'center', color: '#94a3b8', margin: '2rem 0' }}>{t('No payment history found.', 'ادائیگی کی کوئی ہسٹری نہیں ملی۔')}</p>
                     )}
                   </div>
                 </div>

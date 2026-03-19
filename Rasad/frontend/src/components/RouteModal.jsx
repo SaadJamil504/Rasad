@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { staffAPI, routeAPI } from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 import './RouteModal.css';
 
 const RouteModal = ({ isOpen, onClose, onRouteCreated, editRoute }) => {
+  const { t, ts } = useLanguage();
   const [formData, setFormData] = useState({
     name: '',
     driver: '',
@@ -63,17 +65,17 @@ const RouteModal = ({ isOpen, onClose, onRouteCreated, editRoute }) => {
     try {
       if (editRoute) {
         await routeAPI.updateRoute(editRoute.id, formData);
-        alert('Route updated successfully!');
+        alert(ts('Route updated successfully!', 'روٹ میں کامیابی سے تبدیلی کر دی گئی ہے!'));
       } else {
         await routeAPI.createRoute(formData);
-        alert('Route created successfully!');
+        alert(ts('Route created successfully!', 'نیا روٹ کامیابی سے بنا لیا گیا ہے!'));
       }
       onRouteCreated();
       onClose();
       setFormData({ name: '', driver: '', customer_ids: [] });
       setSearchTerm('');
     } catch (err) {
-      setError(err.response?.data?.error || `Failed to ${editRoute ? 'update' : 'create'} route.`);
+      setError(err.response?.data?.error || ts(`Failed to ${editRoute ? 'update' : 'create'} route.`, `${editRoute ? 'روٹ کی تبدیلی' : 'نیا روٹ بنانے'} میں ناکامی ہوئی۔`));
     } finally {
       setLoading(false);
     }
@@ -86,7 +88,7 @@ const RouteModal = ({ isOpen, onClose, onRouteCreated, editRoute }) => {
       <div className="modal-content route-modal glass fade-in">
         <div className="modal-header">
           <div className="header-title">
-            <h2>{editRoute ? 'Update Delivery Route' : 'Create Delivery Route'}</h2>
+            <h2>{editRoute ? t('Update Delivery Route', 'ڈیلیوری روٹ بدلیں') : t('Create Delivery Route', 'نیا ڈیلیوری روٹ بنائیں')}</h2>
           </div>
           <button className="close-btn" onClick={onClose}>&times;</button>
         </div>
@@ -94,26 +96,26 @@ const RouteModal = ({ isOpen, onClose, onRouteCreated, editRoute }) => {
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="form-grid">
             <div className="form-group">
-              <label>Route Identity</label>
+              <label>{t('Route Identity', 'روٹ کا نام')}</label>
               <input
                 type="text"
                 required
                 className="glass-input"
-                placeholder="e.g. Gulberg Morning"
+                placeholder={ts('e.g. Gulberg Morning', 'مثلاً گلبرگ مارننگ')}
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               />
             </div>
 
             <div className="form-group">
-              <label>Assign Driver</label>
+              <label>{t('Assign Driver', 'ڈرائیور مقرر کریں')}</label>
               <select
                 className="glass-input"
                 required
                 value={formData.driver}
                 onChange={(e) => setFormData({ ...formData, driver: e.target.value })}
               >
-                <option value="">Select a Driver</option>
+                <option value="">{ts('Select a Driver', 'ڈرائیور منتخب کریں')}</option>
                 {drivers.map(driver => (
                   <option key={driver.id} value={driver.id}>
                     {driver.first_name || driver.username}
@@ -125,11 +127,11 @@ const RouteModal = ({ isOpen, onClose, onRouteCreated, editRoute }) => {
 
           <div className="form-section">
             <div className="section-header">
-              <label style={{ margin: 0 }}>Assign Customers <span style={{ color: '#22c55e', marginLeft: '0.5rem' }}>({formData.customer_ids.length})</span></label>
+              <label style={{ margin: 0 }}>{t('Assign Customers', 'گاہک مقرر کریں')} <span style={{ color: '#22c55e', marginLeft: '0.5rem' }}>({formData.customer_ids.length})</span></label>
               <div className="search-box">
                 <input 
                   type="text" 
-                  placeholder="Search by name or address..." 
+                  placeholder={ts('Search by name or address...', 'نام یا پتہ سے تلاش کریں')} 
                   className="search-input"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -141,7 +143,7 @@ const RouteModal = ({ isOpen, onClose, onRouteCreated, editRoute }) => {
               {filteredCustomers.length === 0 ? (
                 <div className="no-results">
                   <p className="muted-text">
-                    {searchTerm ? 'No customers match your search.' : 'No customers found in your database.'}
+                    {searchTerm ? t('No customers match your search.', 'تلاش کے مطابق کوئی گاہک نہیں ملا۔') : t('No customers found in your database.', 'ڈیٹا بیس میں کوئی گاہک نہیں ملا۔')}
                   </p>
                 </div>
               ) : (
@@ -161,8 +163,8 @@ const RouteModal = ({ isOpen, onClose, onRouteCreated, editRoute }) => {
                       <div className="member-info">
                         <span className="member-name">
                           {customer.first_name || customer.username}
-                          {isSelected && <span style={{ color: '#22c55e', fontSize: '0.8rem', marginLeft: '0.5rem' }}>(Selected)</span>}
-                          {isAssignedElsewhere && <span style={{ color: '#ef4444', fontSize: '0.7rem', marginLeft: '0.5rem' }}>(In Route #{customer.route})</span>}
+                          {isSelected && <span style={{ color: '#22c55e', fontSize: '0.8rem', marginLeft: '0.5rem' }}>({t('Selected', 'منتخب')})</span>}
+                          {isAssignedElsewhere && <span style={{ color: '#ef4444', fontSize: '0.7rem', marginLeft: '0.5rem' }}>({t('In Route', 'روٹ میں ہے')} #{customer.route})</span>}
                         </span>
                         <span className="member-detail">{customer.address?.substring(0, 40)}...</span>
                       </div>
@@ -176,9 +178,9 @@ const RouteModal = ({ isOpen, onClose, onRouteCreated, editRoute }) => {
           {error && <div className="error-message">{error}</div>}
 
           <div className="modal-footer">
-            <button type="button" className="btn-s" onClick={onClose}>Cancel</button>
+            <button type="button" className="btn-s" onClick={onClose}>{t('Cancel', 'کینسل')}</button>
             <button type="submit" className="btn-p" disabled={loading}>
-              {loading ? (editRoute ? 'Updating...' : 'Creating...') : (editRoute ? 'Confirm' : 'Confirm & Create')}
+              {loading ? (editRoute ? t('Updating...', 'تبدیلی ہو رہی ہے...') : t('Creating...', 'تیار ہو رہا ہے...')) : (editRoute ? t('Confirm', 'تصدیق کریں') : t('Confirm & Create', 'تصدیق اور تخلیق کریں'))}
             </button>
           </div>
         </form>
