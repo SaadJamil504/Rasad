@@ -17,6 +17,21 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [updatingPrices, setUpdatingPrices] = useState(false);
   const [submittingPayment, setSubmittingPayment] = useState(false);
+  const [adjustments, setAdjustments] = useState([]);
+  const [showPauseModal, setShowPauseModal] = useState(false);
+  const [showQtyModal, setShowQtyModal] = useState(false);
+  const [showComplaintModal, setShowComplaintModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [adjMessage, setAdjMessage] = useState('');
+  const [adjQty, setAdjQty] = useState('');
+  const [isSubmittingAdj, setIsSubmittingAdj] = useState(false);
+  const [adjComment, setAdjComment] = useState('');
+  const [complaintMessage, setComplaintMessage] = useState('');
+  const [filterMonth, setFilterMonth] = useState(new Date().getMonth() + 1);
+  const [filterYear, setFilterYear] = useState(new Date().getFullYear());
+  const [filteredHistory, setFilteredHistory] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -38,15 +53,21 @@ const Dashboard = () => {
             cow_price: user.cow_price || 0,
             buffalo_price: user.buffalo_price || 0
           });
-          const paymentsRes = await deliveryAPI.getPayments();
+          const [paymentsRes, adjustmentsRes] = await Promise.all([
+            deliveryAPI.getPayments(),
+            deliveryAPI.getAdjustments()
+          ]);
           setPendingPayments(paymentsRes.data);
+          setAdjustments(adjustmentsRes.data);
         } else if (user.role === 'driver') {
-          const [dailyRes, historyRes] = await Promise.all([
+          const [dailyRes, historyRes, adjustmentsRes] = await Promise.all([
             deliveryAPI.getDailyDeliveries(),
-            deliveryAPI.getHistory()
+            deliveryAPI.getHistory(),
+            deliveryAPI.getAdjustments()
           ]);
           setDeliveries(dailyRes.data);
           setHistory(historyRes.data);
+          setAdjustments(adjustmentsRes.data);
         } else if (user.role === 'customer') {
           const [statusRes, historyRes, profileRes] = await Promise.all([
             deliveryAPI.getCustomerStatus(),
@@ -55,6 +76,8 @@ const Dashboard = () => {
           ]);
           setCustomerStatus(statusRes.data);
           setHistory(historyRes.data);
+          const adjustmentsRes = await deliveryAPI.getAdjustments();
+          setAdjustments(adjustmentsRes.data);
           setCurrentUser(profileRes.data);
         }
       } catch (err) {
@@ -66,6 +89,12 @@ const Dashboard = () => {
 
     fetchData();
   }, [user]);
+
+  useEffect(() => {
+    if (showHistoryModal) {
+      handleFetchFilteredHistory();
+    }
+  }, [showHistoryModal, filterMonth, filterYear]);
 
   const handleToggleDelivery = async (deliveryId) => {
     try {
@@ -108,6 +137,7 @@ const Dashboard = () => {
       setCustomerStatus(statusRes.data);
       setHistory(historyRes.data);
       setCurrentUser(profileRes.data);
+      setShowPaymentModal(false);
     } catch (err) {
       console.error('Failed to report payment:', err);
       const errorMsg = err.response?.data ? JSON.stringify(err.response.data) : 'Error reporting payment.';
@@ -137,152 +167,535 @@ const Dashboard = () => {
     }
   };
 
+  const handleCreateAdjustment = async (type) => {
+    console.log('[DEBUG] handleCreateAdjustment called:', type);
+    if (type === 'quantity' && (!adjQty || parseFloat(adjQty) < 0)) {
+      console.warn('[DEBUG] Invalid quantity:', adjQty);
+      return;
+    }
+    setIsSubmittingAdj(true);
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const data = {
+        date: today,
+        adjustment_type: type,
+        new_quantity: type === 'quantity' ? adjQty : null,
+        message: adjMessage
+      };
+      console.log('[DEBUG] Sending request with data:', data);
+      await deliveryAPI.createAdjustment(data);
+      alert('Request sent to driver for approval.');
+      setShowPauseModal(false);
+      setShowQtyModal(false);
+      setAdjMessage('');
+      setAdjQty('');
+      // Refresh adjustments
+      const res = await deliveryAPI.getAdjustments();
+      setAdjustments(res.data);
+    } catch (err) {
+      console.error('Failed to create adjustment Error:', err);
+      const errorMsg = err.response?.data ? JSON.stringify(err.response.data) : 'Error sending request.';
+      alert('Error: ' + errorMsg);
+    } finally {
+      setIsSubmittingAdj(false);
+    }
+  };
+
+  const handleCreateComplaint = async () => {
+    if (!complaintMessage.trim()) return;
+    setIsSubmittingAdj(true);
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const data = {
+        date: today,
+        adjustment_type: 'complaint',
+        message: complaintMessage
+      };
+      await deliveryAPI.createAdjustment(data);
+      alert('Complaint sent to driver.');
+      setShowComplaintModal(false);
+      setComplaintMessage('');
+      // Refresh adjustments
+      const res = await deliveryAPI.getAdjustments();
+      setAdjustments(res.data);
+    } catch (err) {
+      console.error('Failed to send complaint:', err);
+      alert('Error sending complaint.');
+    } finally {
+      setIsSubmittingAdj(false);
+    }
+  };
+
+  const handleFetchFilteredHistory = async () => {
+    setLoadingHistory(true);
+    try {
+      const res = await deliveryAPI.getDeliveryHistory(filterMonth, filterYear);
+      setFilteredHistory(res.data);
+    } catch (err) {
+      console.error('Failed to fetch filtered history:', err);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  const handleActionAdjustment = async (id, action) => {
+    try {
+      await deliveryAPI.actionAdjustment(id, { action, driver_comment: adjComment });
+      setAdjComment('');
+      alert(`Request ${action === 'accept' ? 'accepted' : 'rejected'}.`);
+      // Refresh data
+      const [dailyRes, adjRes] = await Promise.all([
+        deliveryAPI.getDailyDeliveries(),
+        deliveryAPI.getAdjustments()
+      ]);
+      setDeliveries(dailyRes.data);
+      setAdjustments(adjRes.data);
+    } catch (err) {
+      console.error('Failed to action adjustment:', err);
+      alert('Error updating request.');
+    }
+  };
+  const renderModals = () => (
+    <>
+      {showPauseModal && (
+        <div className="modal-overlay">
+          <div className="glass-card modal-content" style={{ maxWidth: '400px', width: '90%' }}>
+            <h3>Pause Delivery</h3>
+            <p style={{ margin: '1rem 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+              Pause delivery for today. Your driver will need to accept this request.
+            </p>
+            <textarea 
+              className="form-input" 
+              placeholder="Message for driver (optional)"
+              value={adjMessage}
+              onChange={(e) => setAdjMessage(e.target.value)}
+              style={{ minHeight: '100px', marginBottom: '1.5rem' }}
+            />
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button className="btn-secondary" style={{ flex: 1 }} onClick={() => setShowPauseModal(false)}>Cancel</button>
+              <button className="btn-primary" style={{ flex: 1 }} disabled={isSubmittingAdj} onClick={() => handleCreateAdjustment('pause')}>
+                {isSubmittingAdj ? 'Sending...' : 'Send Request'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showQtyModal && (
+        <div className="modal-overlay">
+          <div className="glass-card modal-content" style={{ maxWidth: '400px', width: '90%' }}>
+            <h3>Change Quantity</h3>
+            <p style={{ margin: '1rem 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+              Request a different quantity for today.
+            </p>
+            <div className="input-group" style={{ marginBottom: '1.5rem' }}>
+              <label>New Quantity (Liters)</label>
+              <input 
+                type="number" 
+                className="form-input"
+                value={adjQty}
+                onChange={(e) => setAdjQty(e.target.value)}
+                placeholder="e.g. 4"
+              />
+            </div>
+            <textarea 
+              className="form-input" 
+              placeholder="Message for driver (optional)"
+              value={adjMessage}
+              onChange={(e) => setAdjMessage(e.target.value)}
+              style={{ minHeight: '80px', marginBottom: '1.5rem' }}
+            />
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button className="btn-secondary" style={{ flex: 1 }} onClick={() => setShowQtyModal(false)}>Cancel</button>
+              <button className="btn-primary" style={{ flex: 1 }} disabled={isSubmittingAdj} onClick={() => handleCreateAdjustment('quantity')}>
+                {isSubmittingAdj ? 'Sending...' : 'Send Request'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showComplaintModal && (
+        <div className="modal-overlay">
+          <div className="glass-card modal-content" style={{ maxWidth: '400px', width: '90%' }}>
+            <h3>File a Complaint</h3>
+            <p style={{ margin: '1rem 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+              Send a message to your driver regarding any issues (e.g. spoiled milk).
+            </p>
+            <textarea 
+              className="form-input" 
+              placeholder="Write your complaint here..."
+              value={complaintMessage}
+              onChange={(e) => setComplaintMessage(e.target.value)}
+              style={{ minHeight: '120px', marginBottom: '1.5rem' }}
+            />
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button className="btn-secondary" style={{ flex: 1 }} onClick={() => setShowComplaintModal(false)}>Cancel</button>
+              <button className="btn-primary" style={{ flex: 1 }} disabled={isSubmittingAdj} onClick={handleCreateComplaint}>
+                {isSubmittingAdj ? 'Sending...' : 'Send Complaint'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showHistoryModal && (
+        <div className="modal-overlay">
+          <div className="glass-card modal-content" style={{ maxWidth: '600px', width: '95%', maxHeight: '80vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3>Past Bills & History</h3>
+              <button className="btn-secondary" style={{ padding: '0.4rem 0.8rem' }} onClick={() => setShowHistoryModal(false)}>Close</button>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Month</label>
+                <select className="form-input" value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)}>
+                  {Array.from({ length: 12 }, (_, i) => (
+                    <option key={i + 1} value={i + 1}>
+                      {new Date(0, i).toLocaleString('default', { month: 'long' })}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Year</label>
+                <select className="form-input" value={filterYear} onChange={(e) => setFilterYear(e.target.value)}>
+                  {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="bill-list">
+              {loadingHistory ? <p>Loading history...</p> : (
+                filteredHistory.length > 0 ? (
+                  <>
+                    {filteredHistory.map(item => (
+                      <div key={item.id} className="bill-item">
+                        <span className="bill-day">{new Date(item.date).getDate()}</span>
+                        <span className="bill-qty">{item.status === 'paused' ? 'Paused' : `${item.quantity} Liter`}</span>
+                        <span className="bill-price">Rs {item.status === 'paused' ? '0' : item.total_amount}</span>
+                      </div>
+                    ))}
+                    <div className="bill-item total-row">
+                      <span className="bill-day" style={{ visibility: 'hidden' }}>0</span>
+                      <span className="bill-qty">Total {filteredHistory.reduce((s, i) => s + parseFloat(i.quantity || 0), 0)} Liter</span>
+                      <span className="bill-price">Rs {filteredHistory.reduce((s, i) => s + parseFloat(i.total_amount || 0), 0)}</span>
+                    </div>
+                  </>
+                ) : <p style={{ textAlign: 'center', color: '#888' }}>No records found for this period.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPaymentModal && (
+        <div className="modal-overlay">
+          <div className="glass-card modal-content" style={{ maxWidth: '400px', width: '90%' }}>
+            <h3>💸 Report Past Payment</h3>
+            <p style={{ margin: '1rem 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+              Report the amount you have paid to the owner for confirmation.
+            </p>
+            <form onSubmit={handleReportPayment}>
+              <div className="input-group" style={{ marginBottom: '1.5rem' }}>
+                <label>Amount (Rs.)</label>
+                <input 
+                  type="number" 
+                  className="form-input"
+                  placeholder="Enter amount"
+                  value={paymentAmount}
+                  onChange={(e) => setPaymentAmount(e.target.value)}
+                  required
+                />
+              </div>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button type="button" className="btn-secondary" style={{ flex: 1 }} onClick={() => setShowPaymentModal(false)}>Cancel</button>
+                <button type="submit" className="btn-primary" style={{ flex: 1 }} disabled={submittingPayment}>
+                  {submittingPayment ? 'Reporting...' : 'Report Amount'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </>
+  );
+
   if (loading) return <div className="loading">Loading Dashboard...</div>;
   if (!user) return <div className="loading">Redirecting...</div>;
 
   // Customer Profile View
   if (user.role === 'customer') {
+    const today = new Date();
+    const currentMonthName = today.toLocaleString('default', { month: 'long' }).toUpperCase();
+    const currentYear = today.getFullYear();
+    
+    // Calculate Monthly Stats
+    const currentMonthHistory = history.filter(item => {
+      const itemDate = new Date(item.date);
+      return itemDate.getMonth() === today.getMonth() && itemDate.getFullYear() === today.getFullYear();
+    });
+
+    const monthlyQty = currentMonthHistory.reduce((sum, item) => sum + (parseFloat(item.quantity) || 0), 0);
+    const monthlyTotalAmount = currentMonthHistory.reduce((sum, item) => sum + (parseFloat(item.total_amount) || 0), 0);
+
     return (
       <div className="dashboard fade-in">
-        <div className="glass-card profile-card">
-          <div className="profile-header">
-            <div className="avatar-large">{user.username?.charAt(0).toUpperCase()}</div>
-            <h2>{user.first_name || user.username} Profile</h2>
-            <div className={`status-indicator ${customerStatus?.is_delivered ? 'status-done' : 'status-pending'}`}>
-              Today's Delivery: {customerStatus?.is_delivered ? 'Delivered' : 'Pending'}
-            </div>
+        <div className="customer-dashboard">
+          <div className="customer-header-banner">
+            <div className="greeting">السلام علیکم</div>
+            <h2>{user.first_name || user.username}</h2>
+            <div className="sub-header">#{user.id} - {user.address || 'Gulberg III'} - {user.owner_dairy_name || 'Dairy'}</div>
           </div>
-          
-          <div className="profile-details">
-            <div className="detail-item">
-              <label>Outstanding Balance</label>
-              <span className="text-accent" style={{ color: '#ff4d4d' }}>Rs. {currentUser?.outstanding_balance || 0}</span>
+
+          <div className="customer-stats-row">
+            <div className="stat-box">
+              <span className="stat-val red">Rs {currentUser?.outstanding_balance || 0}</span>
+              <span className="stat-lbl">Amount Due</span>
             </div>
-            <div className="detail-item">
-              <label>Daily Milk Amount</label>
-              <span className="text-accent">Rs. {customerStatus?.total_amount || 0}</span>
+            <div className="stat-box">
+              <span className="stat-val green">{user.daily_quantity || 0}L</span>
+              <span className="stat-lbl">Daily Qty</span>
             </div>
-            <div className="detail-item">
-              <label>Milk Type</label>
-              <span>{user.milk_type || 'N/A'}</span>
-            </div>
-            <div className="detail-item">
-              <label>Daily Quantity</label>
-              <span>{user.daily_quantity || '0'} Liters</span>
-            </div>
-            <div className="detail-item">
-              <label>Rate (per Liter)</label>
-              <span>Rs. {customerStatus?.price_at_delivery || 0}</span>
+            <div className="stat-box">
+              <span className="stat-val">{monthlyQty}L</span>
+              <span className="stat-lbl">This Month</span>
             </div>
           </div>
 
-          <div className="delivery-section" style={{ marginTop: '2rem', textAlign: 'left' }}>
-            <h3>Report a Payment</h3>
-            <form onSubmit={handleReportPayment} style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-              <input 
-                type="number" 
-                className="form-input" 
-                placeholder="Amount Paid" 
-                value={paymentAmount}
-                onChange={(e) => setPaymentAmount(e.target.value)}
-                required 
-              />
-              <button type="submit" className="btn-primary" disabled={submittingPayment} style={{ whiteSpace: 'nowrap' }}>
-                {submittingPayment ? 'Reporting...' : 'Report Payment'}
-              </button>
-            </form>
-          </div>
-
-          <div className="delivery-section" style={{ marginTop: '2.5rem', textAlign: 'left' }}>
-            <h3>Recent Delivery History</h3>
-            <div className="history-list" style={{ marginTop: '1rem' }}>
-              {history.length > 0 ? (
-                history.map(item => (
-                  <div key={item.id} className="history-item glass-card" style={{ padding: '1rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between' }}>
-                    <div>
-                      <div style={{ fontWeight: 800 }}>{item.date}</div>
-                      <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{item.quantity}L x Rs. {item.price_at_delivery}</div>
-                    </div>
-                    <div style={{ fontWeight: 800, color: 'var(--accent)' }}>Rs. {item.total_amount}</div>
+          <div className="bill-section">
+            <h3>{currentMonthName} {currentYear} — Bill</h3>
+            <div className="bill-list">
+              {currentMonthHistory.length > 0 ? (
+                currentMonthHistory.slice(0, 10).map(item => (
+                  <div key={item.id} className="bill-item">
+                    <span className="bill-day">{new Date(item.date).getDate()}</span>
+                    <span className="bill-qty">{item.status === 'paused' ? 'Paused' : `${item.quantity} Liter`}</span>
+                    <span className="bill-price">Rs. {item.status === 'paused' ? '0' : item.total_amount}</span>
                   </div>
                 ))
               ) : (
-                <p>No delivery records found.</p>
+                <p style={{ textAlign: 'center', color: '#888', padding: '1rem' }}>No deliveries recorded for this month.</p>
+              )}
+              
+              {currentMonthHistory.length > 0 && (
+                <div className="bill-item total-row">
+                  <span className="bill-day" style={{ visibility: 'hidden' }}>0</span>
+                  <span className="bill-qty">Total {monthlyQty} Liter</span>
+                  <span className="bill-price">Rs {monthlyTotalAmount}</span>
+                </div>
               )}
             </div>
           </div>
 
-          <button className="btn-secondary" onClick={() => {
-            localStorage.clear();
-            window.location.href = '/login';
-          }} style={{ marginTop: '2rem', width: '100%' }}>Logout</button>
+          <div className="quick-actions-section">
+            <h3>Quick Actions</h3>
+            <div className="actions-grid">
+              <div className="action-card-btn" onClick={() => setShowPauseModal(true)}>
+                <div>
+                  <span className="btn-text-main">⏸ Pause Delivery</span>
+                </div>
+                <div className="btn-text-urdu">ڈیلیوری<br/>روکیں</div>
+              </div>
+              
+              <div className="action-card-btn" onClick={() => setShowQtyModal(true)}>
+                <div>
+                  <span className="btn-text-main">📊 Change Qty</span>
+                </div>
+                <div className="btn-text-urdu">مقدار<br/>بدلیں</div>
+              </div>
+
+              <div className="action-card-btn" onClick={() => setShowHistoryModal(true)}>
+                <div>
+                  <span className="btn-text-main">📄 Past Bills</span>
+                </div>
+                <div className="btn-text-urdu">پرانے بل</div>
+              </div>
+
+              <div className="action-card-btn" onClick={() => setShowComplaintModal(true)}>
+                <div>
+                  <span className="btn-text-main">⚠️ Complaint</span>
+                </div>
+                <div className="btn-text-urdu">شکایت</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="payment-report-section" style={{ paddingBottom: '0.5rem' }}>
+            <button className="btn-primary-large" onClick={() => setShowPaymentModal(true)} style={{ background: '#1e8449' }}>
+               💸 Report Payment to Owner
+            </button>
+          </div>
+
+          <div style={{ padding: '0 2rem 2rem' }}>
+            <button className="btn-secondary" onClick={() => {
+              localStorage.clear();
+              window.location.href = '/login';
+            }} style={{ width: '100%', borderRadius: '0.5rem' }}>Logout</button>
+          </div>
         </div>
+        {/* Modals for Quick Actions */}
+        {renderModals()}
       </div>
     );
   }
 
-  // Driver Welcome View
+  // Driver View
   if (user.role === 'driver') {
     const total = deliveries.length;
-    const delivered = deliveries.filter(d => d.is_delivered).length;
-    const pending = total - delivered;
+    const done = deliveries.filter(d => d.is_delivered || d.status === 'paused').length;
+    const left = total - done;
+
+    // Separate complaints
+    const pendingComplaints = adjustments.filter(a => a.adjustment_type === 'complaint' && a.status === 'pending');
+    
+    // Correlate deliveries with adjustments
+    const todayStr = new Date().toISOString().split('T')[0];
+    const enrichedDeliveries = deliveries.map(d => {
+      const pendingAdj = adjustments.find(a => 
+        a.customer === d.customer && 
+        a.date === d.date && 
+        a.status === 'pending'
+      );
+      return { ...d, pendingAdj };
+    });
 
     return (
       <div className="dashboard fade-in">
-        <div className="welcome-banner">
-          <h1>Welcome, {user.first_name || user.username}! 👋</h1>
-          <p>You have {pending} deliveries remaining for today.</p>
-          
-          <div className="customer-stats-summary" style={{ marginTop: '2rem' }}>
-            <div className="summary-item">
-              <span className="label">Total Customers</span>
-              <span className="value">{total}</span>
+        <div className="driver-dashboard">
+          <div className="driver-header-banner">
+            <div className="banner-top">
+              <span>Driver App . ڈرائیور ایپ</span>
+              <span className="banner-date">{new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
             </div>
-            <div className="summary-item">
-              <span className="label">Delivered</span>
-              <span className="value">{delivered}</span>
+            <h2>{user.first_name || user.username} — {user.assigned_route_name || 'Route A'}</h2>
+          </div>
+
+          <div className="driver-stats-row">
+            <div className="stat-box">
+              <span className="stat-val">{total}</span>
+              <span className="stat-lbl">Total</span>
             </div>
-            <div className="summary-item">
-              <span className="label">Remaining</span>
-              <span className="value">{pending}</span>
+            <div className="stat-box">
+              <span className="stat-val green">{done} <span style={{fontSize: '1rem'}}>✅</span></span>
+              <span className="stat-lbl">Done</span>
+            </div>
+            <div className="stat-box">
+              <span className="stat-val orange">{left}</span>
+              <span className="stat-lbl">Left</span>
             </div>
           </div>
 
-          <button className="btn-secondary" onClick={() => {
-            localStorage.clear();
-            window.location.href = '/login';
-          }}>Logout</button>
-        </div>
-
-        <div className="delivery-section">
-          <h3>Your Delivery Route</h3>
-          <div className="delivery-grid">
-            {deliveries.length > 0 ? (
-              deliveries.map((delivery) => (
-                <div key={delivery.id} className="delivery-card">
-                  <div className="customer-info">
-                    <h4>{delivery.customer_name || delivery.customer_username}</h4>
-                    <p>{delivery.customer_address}</p>
-                    <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem', fontWeight: 700, color: 'var(--accent)' }}>
-                      <span>{delivery.customer_quantity}L {delivery.customer_milk_type}</span>
-                      <span>Rs. {delivery.total_amount}</span>
+          {pendingComplaints.length > 0 && (
+            <div className="complaints-section">
+              <div className="section-title">
+                <h3>Customer Complaints</h3>
+                <span className="urdu-title">کسٹمر کی شکایت</span>
+              </div>
+              <div className="complaints-list">
+                {pendingComplaints.map(adj => (
+                  <div key={adj.id} className="complaint-card glass-card">
+                    <div className="complaint-info">
+                      <strong>{adj.customer_name || adj.customer_username}</strong>
+                      <p className="message">"{adj.message || 'No message'}"</p>
+                    </div>
+                    <div className="complaint-actions">
+                      <button className="btn-primary-small" onClick={() => handleActionAdjustment(adj.id, 'accept')}>Got it</button>
                     </div>
                   </div>
-                  <div className="delivery-action">
-                    <input 
-                      type="checkbox" 
-                      className="delivery-status-checkbox"
-                      checked={delivery.is_delivered}
-                      onChange={() => handleToggleDelivery(delivery.id)}
-                    />
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p>No customers assigned to your route yet.</p>
-            )}
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="today-list-section">
+            <div className="section-title">
+              <h3>TODAY'S LIST — آج کی فہرست</h3>
+            </div>
+            <div className="today-list">
+              {enrichedDeliveries.length > 0 ? (
+                enrichedDeliveries.map((delivery) => {
+                  let statusClass = 'pending';
+                  let statusText = '';
+                  let showActions = true;
+
+                  if (delivery.is_delivered) {
+                    statusClass = 'done';
+                    statusText = 'Done';
+                    showActions = false;
+                  } else if (delivery.status === 'paused') {
+                    statusClass = 'paused';
+                    statusText = 'Paused';
+                    showActions = false;
+                  } else if (delivery.pendingAdj) {
+                    statusClass = 'changed';
+                    statusText = delivery.pendingAdj.adjustment_type === 'pause' ? 'Pause Request' : 'Change Request';
+                  }
+
+                  return (
+                    <div key={delivery.id} className={`today-list-item ${statusClass}`}>
+                      <div className="item-status-icon">
+                        {statusClass === 'done' && <div className="icon-circle check">✓</div>}
+                        {statusClass === 'changed' && <div className="icon-circle warn">!</div>}
+                        {statusClass === 'paused' && <div className="icon-circle pause">双</div>}
+                        {statusClass === 'pending' && <div className="icon-circle empty"></div>}
+                      </div>
+
+                      <div className="item-info">
+                        <div className="customer-name">{delivery.customer_name || delivery.customer_username}</div>
+                        <div className="customer-addr">{delivery.customer_address}</div>
+                        
+                        {statusClass === 'changed' ? (
+                          <div className="adjustment-note">
+                            {delivery.pendingAdj.adjustment_type === 'pause' ? (
+                              'Request: Pause today'
+                            ) : (
+                              `Changed: ${delivery.customer_quantity}L → ${delivery.pendingAdj.new_quantity}L today`
+                            )}
+                          </div>
+                        ) : (
+                          <div className="delivery-details">
+                            {delivery.quantity}L {delivery.customer_milk_type} · Rs {delivery.total_amount}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="item-actions">
+                        {statusClass === 'done' && <span className="status-label green">Done</span>}
+                        {statusClass === 'paused' && <span className="status-label gray">Paused</span>}
+                        
+                        {statusClass === 'changed' && (
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button className="btn-deliver" onClick={() => handleActionAdjustment(delivery.pendingAdj.id, 'accept')}>Accept</button>
+                            <button className="btn-skip" onClick={() => handleActionAdjustment(delivery.pendingAdj.id, 'reject')}>Reject</button>
+                          </div>
+                        )}
+
+                        {statusClass === 'pending' && (
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button className="btn-deliver" onClick={() => handleToggleDelivery(delivery.id)}>Deliver</button>
+                            <button className="btn-skip" onClick={() => handleActionAdjustment(delivery.id, 'pause')}>Skip</button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <p style={{ textAlign: 'center', color: '#888', padding: '2rem' }}>No customers assigned for today.</p>
+              )}
+            </div>
+          </div>
+          
+          <div style={{ padding: '0 2rem 2rem' }}>
+            <button className="btn-secondary" onClick={() => {
+              localStorage.clear();
+              window.location.href = '/login';
+            }} style={{ width: '100%', borderRadius: '0.5rem' }}>Logout</button>
           </div>
         </div>
+        {renderModals()}
       </div>
     );
   }
@@ -371,15 +784,41 @@ const Dashboard = () => {
       </div>
       
       <div className="recent-activity" style={{ marginTop: '2rem' }}>
-        <h3>Quick Actions</h3>
-        <div className="placeholder-content">
-          <div className="badge-list">
-            <button className="badge-btn" onClick={() => window.location.href='/drivers'}>Drivers List</button>
-            <button className="badge-btn" onClick={() => window.location.href='/customers'}>Customers List</button>
-            <span className="badge">Invite-only Registration Active</span>
-          </div>
+        <h3>Activity Logs (Requests)</h3>
+        <div className="history-list" style={{ marginTop: '1.5rem' }}>
+          {adjustments.length > 0 ? (
+            adjustments.slice(0, 10).map(adj => (
+              <div key={adj.id} className="history-item glass-card" style={{ padding: '1.2rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontWeight: 800 }}>{adj.customer_name || adj.customer_username}</div>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                    {adj.adjustment_type === 'pause' ? 'Pause Request' : 
+                     adj.adjustment_type === 'quantity' ? `Qty Change: ${adj.new_quantity}L` : 
+                     'Complaint'} - {adj.date}
+                  </div>
+                </div>
+                <div style={{ 
+                  padding: '0.3rem 0.8rem', 
+                  borderRadius: '20px', 
+                  fontSize: '0.75rem', 
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  background: adj.status === 'accepted' ? 'rgba(77, 255, 140, 0.1)' : adj.status === 'rejected' ? 'rgba(255, 77, 77, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                  color: adj.status === 'accepted' ? '#2ecc71' : adj.status === 'rejected' ? '#ff4d4d' : 'var(--text-muted)'
+                }}>
+                  {adj.status}
+                </div>
+              </div>
+            ))
+          ) : (
+            <p style={{ color: 'var(--text-muted)' }}>No recent activity requests.</p>
+          )}
         </div>
-      </div>
+           </div>
+
+
+      {/* Modals for Quick Actions */}
+      {renderModals()}
     </div>
   );
 };

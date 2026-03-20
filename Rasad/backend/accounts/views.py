@@ -10,9 +10,10 @@ from .serializers import (
     LoginSerializer, UserSerializer, SignupSerializer, 
     PasswordResetRequestSerializer, PasswordResetConfirmSerializer,
     InvitationSerializer, InvitationSignupSerializer, RouteSerializer,
-    DeliverySerializer, PaymentSerializer
+    DeliverySerializer, PaymentSerializer, DeliveryAdjustmentSerializer
 )
-from .models import User, Invitation, Route, Delivery, Payment
+from .models import User, Invitation, Route, Delivery, Payment, DeliveryAdjustment
+from django.db import models
 from django.http import Http404
 from django.core.mail import send_mail
 from django.conf import settings
@@ -281,17 +282,24 @@ class DailyDeliveryView(APIView):
         
         # Ensure delivery entries exist for today
         for customer in customers:
+            # Check for approved adjustments
+            adjustment = DeliveryAdjustment.objects.filter(
+                customer=customer, 
+                date=today, 
+                status='accepted'
+            ).first()
+
             delivery, created = Delivery.objects.get_or_create(
                 customer=customer,
                 date=today,
                 defaults={
                     'route': route,
                     'quantity': customer.daily_quantity or 0,
-                    'price_at_delivery': 0  # To be set below
+                    'price_at_delivery': 0
                 }
             )
             
-            if created or not delivery.is_delivered:
+            if created or (not delivery.is_delivered and delivery.status != 'paused'):
                 # Capture current price from owner
                 owner = route.owner
                 price = 0
@@ -301,7 +309,18 @@ class DailyDeliveryView(APIView):
                     price = owner.buffalo_price
                 
                 delivery.price_at_delivery = price
-                delivery.quantity = customer.daily_quantity or 0
+                
+                if adjustment:
+                    if adjustment.adjustment_type == 'pause':
+                        delivery.status = 'paused'
+                        delivery.quantity = 0
+                    elif adjustment.adjustment_type == 'quantity':
+                        delivery.quantity = adjustment.new_quantity
+                        delivery.status = 'pending'
+                else:
+                    delivery.quantity = customer.daily_quantity or 0
+                    delivery.status = 'pending'
+
                 delivery.total_amount = delivery.quantity * price
                 delivery.save()
             
@@ -323,14 +342,19 @@ class DeliveryToggleView(APIView):
         try:
             delivery = Delivery.objects.get(pk=pk, route__driver=request.user)
             
+            if delivery.status == 'paused':
+                return Response({'error': 'Cannot toggle a paused delivery.'}, status=status.HTTP_400_BAD_REQUEST)
+
             # Logic for updating customer balance
             customer = delivery.customer
             if not delivery.is_delivered:
                 # Marking as delivered: increase balance
                 customer.outstanding_balance += delivery.total_amount
+                delivery.status = 'delivered'
             else:
                 # Marking as NOT delivered: decrease balance
                 customer.outstanding_balance -= delivery.total_amount
+                delivery.status = 'pending'
             customer.save()
 
             delivery.is_delivered = not delivery.is_delivered
@@ -385,17 +409,32 @@ class DeliveryHistoryView(APIView):
         description="Get full delivery history for the user."
     )
     def get(self, request):
+        month = request.query_params.get('month')
+        year = request.query_params.get('year')
+        
         if request.user.role == 'customer':
-            deliveries = Delivery.objects.filter(customer=request.user, is_delivered=True).order_by('-date')
+            queryset = Delivery.objects.filter(customer=request.user)
+            queryset = queryset.filter(
+                models.Q(is_delivered=True) | models.Q(status='paused')
+            )
         elif request.user.role == 'driver':
             try:
                 route = Route.objects.get(driver=request.user)
-                deliveries = Delivery.objects.filter(route=route, is_delivered=True).order_by('-date')
+                queryset = Delivery.objects.filter(route=route)
+                queryset = queryset.filter(
+                    models.Q(is_delivered=True) | models.Q(status='paused')
+                )
             except Route.DoesNotExist:
                 return Response({'error': 'No route assigned.'}, status=status.HTTP_404_NOT_FOUND)
         else:
             return Response({'error': 'Unauthorized.'}, status=status.HTTP_403_FORBIDDEN)
+
+        if month:
+            queryset = queryset.filter(date__month=month)
+        if year:
+            queryset = queryset.filter(date__year=year)
             
+        deliveries = queryset.order_by('-date')
         serializer = DeliverySerializer(deliveries, many=True)
         return Response(serializer.data)
 
@@ -480,3 +519,90 @@ class ProfileView(APIView):
     )
     def get(self, request):
         return Response(UserSerializer(request.user).data)
+
+class DeliveryAdjustmentCreateView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    @extend_schema(
+        request=DeliveryAdjustmentSerializer,
+        responses={201: DeliveryAdjustmentSerializer},
+        description="Customer creates a pause or quantity change request."
+    )
+    def post(self, request):
+        if request.user.role != 'customer':
+            return Response({'error': 'Only customers can request adjustments.'}, status=status.HTTP_403_FORBIDDEN)
+        
+        serializer = DeliveryAdjustmentSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(customer=request.user, status='pending')
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class DeliveryAdjustmentListView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    @extend_schema(
+        responses={200: DeliveryAdjustmentSerializer(many=True)},
+        description="List adjustment requests. Drivers see for their route, Owners see for all their customers."
+    )
+    def get(self, request):
+        if request.user.role == 'driver':
+            try:
+                route = Route.objects.get(driver=request.user)
+                adjustments = DeliveryAdjustment.objects.filter(customer__route=route).order_by('-date')
+            except Route.DoesNotExist:
+                return Response({'error': 'No route assigned.'}, status=status.HTTP_404_NOT_FOUND)
+        elif request.user.role == 'owner':
+            adjustments = DeliveryAdjustment.objects.filter(customer__parent_owner=request.user).order_by('-date')
+        elif request.user.role == 'customer':
+            adjustments = DeliveryAdjustment.objects.filter(customer=request.user).order_by('-date')
+        else:
+            return Response({'error': 'Unauthorized.'}, status=status.HTTP_403_FORBIDDEN)
+            
+        serializer = DeliveryAdjustmentSerializer(adjustments, many=True)
+        return Response(serializer.data)
+
+class DeliveryAdjustmentActionView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    @extend_schema(
+        responses={200: DeliveryAdjustmentSerializer},
+        description="Driver accepts or rejects an adjustment request."
+    )
+    def post(self, request, pk):
+        if request.user.role != 'driver':
+            return Response({'error': 'Only drivers can action requests.'}, status=status.HTTP_403_FORBIDDEN)
+            
+        try:
+            adjustment = DeliveryAdjustment.objects.get(pk=pk, customer__route__driver=request.user)
+            action = request.data.get('action') # accept or reject
+            comment = request.data.get('driver_comment', '')
+
+            if action == 'accept':
+                adjustment.status = 'accepted'
+                # If it's for today, we might want to trigger a refresh of today's delivery record
+                # However, DailyDeliveryView already checks for accepted adjustments.
+                # If the delivery record for today ALREADY exists and is NOT delivered, we should update it now.
+                today = timezone.now().date()
+                if adjustment.date == today:
+                    delivery = Delivery.objects.filter(customer=adjustment.customer, date=today).first()
+                    if delivery and not delivery.is_delivered:
+                        if adjustment.adjustment_type == 'pause':
+                            delivery.status = 'paused'
+                            delivery.quantity = 0
+                        elif adjustment.adjustment_type == 'quantity':
+                            delivery.quantity = adjustment.new_quantity
+                            delivery.status = 'pending'
+                        
+                        delivery.total_amount = delivery.quantity * delivery.price_at_delivery
+                        delivery.save()
+            elif action == 'reject':
+                adjustment.status = 'rejected'
+            else:
+                return Response({'error': 'Invalid action.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            adjustment.driver_comment = comment
+            adjustment.save()
+            return Response(DeliveryAdjustmentSerializer(adjustment).data)
+        except DeliveryAdjustment.DoesNotExist:
+            return Response({'error': 'Adjustment request not found.'}, status=status.HTTP_404_NOT_FOUND)

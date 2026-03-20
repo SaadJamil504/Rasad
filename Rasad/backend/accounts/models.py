@@ -62,10 +62,16 @@ class Payment(models.Model):
         return f"Payment of {self.amount} by {self.customer.username} - {self.status}"
 
 class Delivery(models.Model):
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('delivered', 'Delivered'),
+        ('paused', 'Paused'),
+    )
     customer = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'role': 'customer'}, related_name='deliveries')
     route = models.ForeignKey(Route, on_delete=models.CASCADE, related_name='deliveries')
     date = models.DateField(default=timezone.now)
     is_delivered = models.BooleanField(default=False)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     delivered_at = models.DateTimeField(null=True, blank=True)
     quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     price_at_delivery = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
@@ -76,4 +82,33 @@ class Delivery(models.Model):
         ordering = ['-date']
 
     def __str__(self):
-        return f"Delivery for {self.customer.username} on {self.date} - {'Done' if self.is_delivered else 'Pending'}"
+        return f"Delivery for {self.customer.username} on {self.date} - {self.get_status_display()}"
+
+class DeliveryAdjustment(models.Model):
+    ADJUSTMENT_TYPES = (
+        ('pause', 'Pause Delivery'),
+        ('quantity', 'Change Quantity'),
+        ('complaint', 'Complaint'),
+    )
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected'),
+    )
+    
+    customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='adjustments')
+    date = models.DateField()
+    adjustment_type = models.CharField(max_length=20, choices=ADJUSTMENT_TYPES)
+    new_quantity = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    message = models.TextField(null=True, blank=True, help_text="Message for the driver")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    driver_comment = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('customer', 'date')
+        ordering = ['-date']
+
+    def __str__(self):
+        return f"{self.get_adjustment_type_display()} request by {self.customer.username} for {self.date}"

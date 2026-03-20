@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import User, Invitation, Route, Delivery, Payment
+from .models import User, Invitation, Route, Delivery, Payment, DeliveryAdjustment
 import uuid
 from django.utils import timezone
 from datetime import timedelta
@@ -232,8 +232,17 @@ class DeliverySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Delivery
-        fields = ('id', 'customer', 'customer_name', 'customer_username', 'customer_address', 'customer_milk_type', 'customer_quantity', 'route', 'date', 'is_delivered', 'delivered_at', 'quantity', 'price_at_delivery', 'total_amount')
+        fields = ('id', 'customer', 'customer_name', 'customer_username', 'customer_address', 'customer_milk_type', 'customer_quantity', 'route', 'date', 'is_delivered', 'status', 'delivered_at', 'quantity', 'price_at_delivery', 'total_amount')
         read_only_fields = ('delivered_at', 'total_amount')
+
+class DeliveryAdjustmentSerializer(serializers.ModelSerializer):
+    customer_name = serializers.CharField(source='customer.first_name', read_only=True)
+    customer_username = serializers.CharField(source='customer.username', read_only=True)
+    
+    class Meta:
+        model = DeliveryAdjustment
+        fields = ('id', 'customer', 'customer_name', 'customer_username', 'date', 'adjustment_type', 'new_quantity', 'message', 'status', 'driver_comment', 'created_at', 'updated_at')
+        read_only_fields = ('customer', 'status', 'driver_comment', 'created_at', 'updated_at')
 
 class PaymentSerializer(serializers.ModelSerializer):
     customer_name = serializers.CharField(source='customer.first_name', read_only=True)
