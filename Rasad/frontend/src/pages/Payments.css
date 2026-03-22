@@ -1,0 +1,227 @@
+.payments-page {
+  padding: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.pay-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.pay-stat-card {
+  background: white;
+  border-radius: 1.5rem;
+  padding: 1.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+  position: relative;
+  overflow: hidden;
+  border-top: 4px solid #eee;
+}
+
+.pay-stat-card.border-red { border-top-color: #e74c3c; }
+.pay-stat-card.border-green { border-top-color: #27ae60; }
+.pay-stat-card.border-yellow { border-top-color: #f39c12; }
+
+.pay-stat-icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+}
+
+.red-bg { background: rgba(231, 76, 60, 0.1); color: #e74c3c; }
+.green-bg { background: rgba(39, 174, 96, 0.1); color: #27ae60; }
+.yellow-bg { background: rgba(243, 156, 18, 0.1); color: #f39c12; }
+
+.pay-stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.pay-stat-value {
+  font-size: 2rem;
+  font-weight: 850;
+  color: #1a202c;
+  line-height: 1.2;
+}
+
+.pay-stat-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 0.25rem;
+}
+
+.pay-stat-sub {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.record-payment-section {
+  padding: 2.5rem;
+  margin-bottom: 2.5rem;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+.section-title-with-urdu {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  color: #1a202c;
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+.urdu-title-small {
+  font-family: 'Noto Nastaliq Urdu', serif;
+  font-size: 0.9rem;
+  color: #64748b;
+  font-weight: normal;
+}
+
+.form-grid-payments {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem 2rem;
+}
+
+@media (max-width: 768px) {
+  .form-grid-payments {
+    grid-template-columns: 1fr;
+  }
+}
+
+.payment-input {
+  width: 100%;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+  background: white;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a202c;
+  transition: all 0.2s;
+}
+
+.payment-input:focus {
+  border-color: #27ae60;
+  box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.1);
+  outline: none;
+}
+
+.payment-input.read-only {
+  background: #f8fafc;
+  color: #64748b;
+  cursor: default;
+}
+
+.urdu-label-small {
+  font-family: 'Noto Nastaliq Urdu', serif;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-left: 0.5rem;
+}
+
+.amount-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.currency-prefix {
+  position: absolute;
+  left: 1rem;
+  color: #1a202c;
+  font-weight: 800;
+  pointer-events: none;
+}
+
+.amount-input-wrapper input {
+  padding-left: 3rem !important;
+}
+
+.transactions-section {
+  padding: 1.5rem 2rem;
+}
+
+.transaction-line-item {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.25rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.transaction-line-item:last-child {
+  border-bottom: none;
+}
+
+.tx-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.tx-details {
+  flex: 1;
+}
+
+.tx-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.tx-user-name {
+  font-weight: 800;
+  color: #1a202c;
+  font-size: 1.05rem;
+}
+
+.tx-amount-value {
+  font-weight: 800;
+  color: #27ae60;
+  font-size: 1.1rem;
+}
+
+.tx-bottom-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tx-meta-info {
+  font-size: 0.85rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.overdue-badge-small {
+  background: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
+  padding: 0.2rem 0.6rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.no-data {
+  text-align: center;
+  padding: 3rem;
+  color: #94a3b8;
+  font-weight: 600;
+  font-style: italic;
+}

@@ -128,12 +128,15 @@ export const invitationAPI = {
 
 export const staffAPI = {
   getStaff: (role) => api.get('accounts/staff/', { params: { role } }),
+  createStaff: (data) => api.post('accounts/staff/', data),
+  updateStaff: (id, data) => api.patch(`accounts/staff/${id}/`, data),
+  deleteStaff: (id) => api.delete(`accounts/staff/${id}/`),
+  getCollectionStats: () => api.get('accounts/collection-stats/'),
 };
 
 export const routeAPI = {
   getRoutes: () => api.get('accounts/routes/'),
   createRoute: (data) => api.post('accounts/routes/', data),
-  updateRoute: (id, data) => api.put(`accounts/routes/${id}/`, data),
   deleteRoute: (id) => api.delete(`accounts/routes/${id}/`),
 };
 

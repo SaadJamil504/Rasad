@@ -97,6 +97,7 @@ class Payment(models.Model):
     customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payments')
     amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
     date = models.DateField(default=timezone.now)
+    method = models.CharField(max_length=50, default='Cash') # Cash, JazzCash, etc.
     received_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='collected_payments')
     note = models.TextField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')

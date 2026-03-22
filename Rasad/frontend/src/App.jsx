@@ -12,6 +12,7 @@ import Dashboard from './pages/Dashboard';
 import InvitationSignup from './pages/InvitationSignup';
 import MonthlyBills from './pages/MonthlyBills';
 import Reports from './pages/Reports';
+import Payments from './pages/Payments';
 
 import RoleRoute from './components/Auth/RoleRoute';
 
@@ -45,6 +46,10 @@ function App() {
             <Route
               path="drivers"
               element={<RoleRoute><DriverList /></RoleRoute>}
+            />
+            <Route
+              path="payments"
+              element={<RoleRoute><Payments /></RoleRoute>}
             />
           </Route>
         </Routes>

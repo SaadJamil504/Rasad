@@ -211,6 +211,82 @@ class StaffListView(APIView):
         serializer = UserSerializer(queryset, many=True)
         return Response(serializer.data)
 
+    def post(self, request):
+        if request.user.role != 'owner':
+            return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+        
+        from .serializers import ManualCustomerSerializer
+        serializer = ManualCustomerSerializer(data=request.data)
+        if serializer.is_valid():
+            # Create a placeholder user
+            user = serializer.save(
+                parent_owner=request.user,
+                role='customer',
+                username=f"tmp_{request.data['phone_number']}"
+            )
+            return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class StaffDetailView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_object(self, pk, owner):
+        try:
+            return User.objects.get(pk=pk, parent_owner=owner)
+        except User.DoesNotExist:
+            raise Http404
+
+    def patch(self, request, pk):
+        if request.user.role != 'owner':
+            return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+        user = self.get_object(pk, request.user)
+        serializer = UserSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        if request.user.role != 'owner':
+            return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+        user = self.get_object(pk, request.user)
+        user.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class CollectionStatsView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request):
+        if request.user.role != 'owner':
+            return Response({'error': 'Unauthorized.'}, status=status.HTTP_403_FORBIDDEN)
+        
+        today = timezone.now().date()
+        total_outstanding = User.objects.filter(parent_owner=request.user, role='customer').aggregate(sum=models.Sum('outstanding_balance'))['sum'] or 0
+        overdue_count = User.objects.filter(parent_owner=request.user, role='customer', outstanding_balance__gt=0).count()
+        
+        collected_this_month = Payment.objects.filter(customer__parent_owner=request.user, status='confirmed', confirmed_at__month=today.month, confirmed_at__year=today.year).aggregate(sum=models.Sum('amount'))['sum'] or 0
+        
+        # Last month collected for comparison
+        from datetime import timedelta
+        last_month_date = today.replace(day=1) - timedelta(days=1)
+        collected_last_month = Payment.objects.filter(customer__parent_owner=request.user, status='confirmed', confirmed_at__month=last_month_date.month, confirmed_at__year=last_month_date.year).aggregate(sum=models.Sum('amount'))['sum'] or 0
+        diff = float(collected_this_month) - float(collected_last_month)
+        
+        today_collection = Payment.objects.filter(customer__parent_owner=request.user, status='confirmed', confirmed_at__date=today).aggregate(sum=models.Sum('amount'))['sum'] or 0
+        
+        total_drivers = User.objects.filter(parent_owner=request.user, role='driver').count()
+        settled_drivers = total_drivers
+        
+        return Response({
+            'total_outstanding': float(total_outstanding),
+            'overdue_count': overdue_count,
+            'collected_this_month': float(collected_this_month),
+            'last_month_diff': diff,
+            'today_collection': float(today_collection),
+            'total_drivers': total_drivers,
+            'settled_drivers': settled_drivers
+        })
+
 class RouteListCreateView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
@@ -473,14 +549,40 @@ class PaymentRequestView(APIView):
         description="Customer reports a payment."
     )
     def post(self, request):
-        if request.user.role != 'customer':
-            return Response({'error': 'Only customers can report payments.'}, status=status.HTTP_403_FORBIDDEN)
+        if request.user.role == 'customer':
+            serializer = PaymentSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save(customer=request.user, status='pending')
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-        serializer = PaymentSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(customer=request.user, status='pending')
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        elif request.user.role == 'owner':
+            # Owner manually records a payment
+            customer_id = request.data.get('customer')
+            if not customer_id:
+                return Response({'error': 'Customer ID is required.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            try:
+                target_customer = User.objects.get(pk=customer_id, parent_owner=request.user)
+            except User.DoesNotExist:
+                return Response({'error': 'Invalid customer selection.'}, status=status.HTTP_404_NOT_FOUND)
+            
+            serializer = PaymentSerializer(data=request.data)
+            if serializer.is_valid():
+                payment = serializer.save(
+                    customer=target_customer,
+                    status='confirmed',
+                    received_by=request.user,
+                    confirmed_at=timezone.now()
+                )
+                # Deduct balance immediately
+                target_customer.outstanding_balance -= payment.amount
+                target_customer.total_paid += payment.amount
+                target_customer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response({'error': 'Unauthorized.'}, status=status.HTTP_403_FORBIDDEN)
 
 class PaymentListView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
@@ -497,8 +599,7 @@ class PaymentListView(APIView):
             if customer_id:
                 payments = Payment.objects.filter(customer__parent_owner=request.user, customer_id=customer_id).order_by('-created_at')
             else:
-                # Payments from customers linked to this owner
-                payments = Payment.objects.filter(customer__parent_owner=request.user, status='pending').order_by('-created_at')
+                payments = Payment.objects.filter(customer__parent_owner=request.user).order_by('-created_at')
         else:
             return Response({'error': 'Unauthorized.'}, status=status.HTTP_403_FORBIDDEN)
             

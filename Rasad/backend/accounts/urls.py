@@ -1,12 +1,12 @@
 from django.urls import path
 from .views import (
     LoginView, SignupView, PasswordResetRequestView, PasswordResetConfirmView,
-    InvitationListCreateView, InvitationValidateView, InvitationSignupView, StaffListView,
+    InvitationListCreateView, InvitationValidateView, InvitationSignupView, StaffListView, StaffDetailView,
     RouteListCreateView, RouteDetailView, DailyDeliveryView, DeliveryToggleView,
     CustomerDeliveryStatusView, UpdateMilkPricesView, DeliveryHistoryView,
     PaymentRequestView, PaymentListView, ConfirmPaymentView,
     DeliveryAdjustmentCreateView, DeliveryAdjustmentListView, DeliveryAdjustmentActionView,
-    ProfileView, DashboardStatsView, DashboardAlertsView, DashboardReportsView
+    ProfileView, DashboardStatsView, DashboardAlertsView, DashboardReportsView, CollectionStatsView
 )
 from rest_framework_simplejwt.views import TokenRefreshView
 
@@ -19,6 +19,7 @@ urlpatterns = [
     path('invitations/validate/<str:token>/', InvitationValidateView.as_view(), name='invitation_validate'),
     path('invitations/signup/', InvitationSignupView.as_view(), name='invitation_signup'),
     path('staff/', StaffListView.as_view(), name='staff_list'),
+    path('staff/<int:pk>/', StaffDetailView.as_view(), name='staff_detail'),
     path('login/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('routes/', RouteListCreateView.as_view(), name='route_list_create'),
     path('routes/<int:pk>/', RouteDetailView.as_view(), name='route_detail'),

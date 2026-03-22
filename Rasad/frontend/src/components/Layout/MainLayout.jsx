@@ -87,6 +87,9 @@ const MainLayout = () => {
                 <Link to="/bills" className={`nav-item ${window.location.pathname === '/bills' ? 'active' : ''}`} onClick={closeSidebar}>
                   {t('Monthly Bills', 'ماہانہ بل')}
                 </Link>
+                <Link to="/payments" className={`nav-item ${window.location.pathname === '/payments' ? 'active' : ''}`} onClick={closeSidebar}>
+                  {t('Payments', 'ادائیگیاں')}
+                </Link>
                 <Link to="/reports" className={`nav-item ${window.location.pathname === '/reports' ? 'active' : ''}`} onClick={closeSidebar}>
                   {t('Reports', 'رپورٹس')}
                 </Link>
@@ -108,7 +111,7 @@ const MainLayout = () => {
         </aside>
       )}
       <main className="main-content">
-        <header className={showSidebar ? "owner-header-compact" : "customer-driver-header"}>
+        <header className={showSidebar ? "owner-header-compact" : "customer-driver-header-transparent"}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 {showSidebar && (
@@ -116,8 +119,8 @@ const MainLayout = () => {
                     ☰
                   </button>
                 )}
-                <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#1e293b' }}>
-                  {t('Dashboard', 'ڈیش بورڈ')}
+                <span style={{ fontWeight: 800, fontSize: '1.1rem', color: showSidebar ? '#1e293b' : 'white' }}>
+                  {showSidebar ? t('Dashboard', 'ڈیش بورڈ') : ''}
                 </span>
               </div>
               <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
@@ -127,16 +130,22 @@ const MainLayout = () => {
                   style={{ 
                     padding: '0.5rem 1rem', 
                     borderRadius: '2rem', 
-                    border: '1px solid #e2e8f0', 
-                    background: 'white', 
+                    border: '1px solid rgba(255,255,255,0.3)', 
+                    background: 'rgba(255,255,255,0.1)', 
+                    color: showSidebar ? '#1e293b' : 'white',
                     fontWeight: 700, 
                     cursor: 'pointer',
-                    fontSize: '0.85rem'
+                    fontSize: '0.85rem',
+                    backdropFilter: 'blur(5px)'
                   }}
                 >
                   {language === 'en' ? 'اردو' : 'English'}
                 </button>
-                <button onClick={handleLogout} className="logout-banner-btn-compact">
+                <button 
+                  onClick={handleLogout} 
+                  className="logout-banner-btn-compact"
+                  style={!showSidebar ? { background: 'rgba(239, 68, 68, 0.2)', color: '#fee2e2', borderColor: 'rgba(239, 68, 68, 0.3)' } : {}}
+                >
                   {t('Logout', 'لاگ آؤٹ')}
                 </button>
               </div>

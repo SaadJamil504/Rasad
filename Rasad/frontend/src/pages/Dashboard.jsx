@@ -6,8 +6,8 @@ import './Dashboard.css';
 import './DashboardExtra.css';
 
 const Dashboard = () => {
-  const { user } = useAuth();
-  const { t, ts } = useLanguage();
+  const { user, logout } = useAuth();
+  const { t, ts, language, toggleLanguage } = useLanguage();
   const [currentUser, setCurrentUser] = useState(null);
   const [counts, setCounts] = useState({ drivers: 0, customers: 0 });
   const [deliveries, setDeliveries] = useState([]);

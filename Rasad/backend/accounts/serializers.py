@@ -114,8 +114,8 @@ class SignupSerializer(serializers.ModelSerializer):
         model = User
         fields = ('password', 'full_name', 'phone_number', 'email', 'role', 'address', 'dairy_name', 'cow_price', 'buffalo_price')
         extra_kwargs = {
-            'phone_number': {'required': True},
-            'email': {'required': True},
+            'phone_number': {'required': True, 'validators': []},
+            'email': {'required': True, 'validators': []},
         }
 
     def validate_full_name(self, value):
@@ -163,8 +163,11 @@ class SignupSerializer(serializers.ModelSerializer):
         import re
         if not re.match(r'^03\d{9}$', value):
             raise serializers.ValidationError("Phone number must be exactly 11 digits and start with '03'")
-        if User.objects.filter(phone_number=value).exists():
-            raise serializers.ValidationError("This phone number is already in use.")
+        
+        # Allow signup if phone exists as a placeholder 'tmp_' user
+        existing = User.objects.filter(phone_number=value).first()
+        if existing and not existing.username.startswith('tmp_'):
+            raise serializers.ValidationError("This phone number is already in use by an active account.")
         return value
 
     def create(self, validated_data):
@@ -240,8 +243,8 @@ class InvitationSignupSerializer(serializers.ModelSerializer):
             'milk_type': {'required': False, 'allow_blank': True, 'allow_null': True},
             'daily_quantity': {'required': False, 'allow_null': True},
             'address': {'required': False, 'allow_blank': True, 'allow_null': True},
-            'phone_number': {'required': True},
-            'email': {'required': True},
+            'phone_number': {'required': True, 'validators': []},
+            'email': {'required': True, 'validators': []},
         }
 
     def validate_token(self, value):
@@ -274,8 +277,11 @@ class InvitationSignupSerializer(serializers.ModelSerializer):
         import re
         if not re.match(r'^03\d{9}$', value):
             raise serializers.ValidationError("Phone number must be exactly 11 digits and start with '03'")
-        if User.objects.filter(phone_number=value).exists():
-            raise serializers.ValidationError("This phone number is already in use.")
+        
+        # Allow signup if phone exists as a placeholder 'tmp_' user
+        existing = User.objects.filter(phone_number=value).first()
+        if existing and not existing.username.startswith('tmp_'):
+            raise serializers.ValidationError("This phone number is already in use by an active account.")
         return value
 
     def create(self, validated_data):
@@ -287,29 +293,31 @@ class InvitationSignupSerializer(serializers.ModelSerializer):
         invitation = Invitation.objects.get(token=token)
         role = invitation.role
 
-        # Remove irrelevant fields based on role
-        if role == 'driver':
-            validated_data.pop('milk_type', None)
-            validated_data.pop('daily_quantity', None)
-        elif role == 'customer':
-            validated_data.pop('license_number', None)
-        
-        # Clean up any remaining None or empty values for optional fields
-        for field in ['license_number', 'milk_type', 'address']:
-            if field in validated_data and (validated_data[field] is None or validated_data[field] == ""):
-                validated_data[field] = ""
-        
-        if 'daily_quantity' in validated_data and (validated_data['daily_quantity'] is None or validated_data['daily_quantity'] == ""):
-            validated_data['daily_quantity'] = 0
+        # Try to find a pre-created record by the owner
+        existing_user = User.objects.filter(phone_number=phone_number, username__startswith='tmp_').first()
 
-        user = User.objects.create_user(
-            username=phone_number,
-            first_name=full_name,
-            password=password,
-            role=role,
-            parent_owner=invitation.invited_by,
-            **validated_data
-        )
+        if existing_user:
+            # Update the existing placeholder user
+            existing_user.username = phone_number # Move away from tmp_
+            existing_user.first_name = full_name
+            existing_user.set_password(password)
+            existing_user.role = role
+            existing_user.parent_owner = invitation.invited_by
+            # Update other provided fields
+            for attr, val in validated_data.items():
+                setattr(existing_user, attr, val)
+            existing_user.save()
+            user = existing_user
+        else:
+            # Traditional create
+            user = User.objects.create_user(
+                username=phone_number,
+                first_name=full_name,
+                password=password,
+                role=role,
+                parent_owner=invitation.invited_by,
+                **validated_data
+            )
         
         invitation.is_used = True
         invitation.save()
@@ -413,8 +421,8 @@ class PaymentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Payment
-        fields = ('id', 'customer', 'customer_name', 'customer_username', 'amount', 'status', 'created_at', 'confirmed_at')
-        read_only_fields = ('customer', 'status', 'created_at', 'confirmed_at')
+        fields = ('id', 'customer', 'customer_name', 'customer_username', 'amount', 'method', 'status', 'created_at', 'confirmed_at', 'date')
+        read_only_fields = ('status', 'created_at', 'confirmed_at')
 
     def validate_amount(self, value):
         if value < 0:
@@ -422,3 +430,12 @@ class PaymentSerializer(serializers.ModelSerializer):
         return value
 
 
+class ManualCustomerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('first_name', 'phone_number', 'address', 'milk_type', 'daily_quantity', 'route')
+
+    def validate_phone_number(self, value):
+        if User.objects.filter(phone_number=value).exists():
+            raise serializers.ValidationError("A user with this phone number already exists.")
+        return value

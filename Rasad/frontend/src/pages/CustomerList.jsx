@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { staffAPI, deliveryAPI } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
 import InvitationModal from '../components/InvitationModal';
+import ManualCustomerModal from '../components/ManualCustomerModal';
 import './Table.css';
 
 const CustomerList = () => {
@@ -9,7 +10,11 @@ const CustomerList = () => {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isManualModalOpen, setIsManualModalOpen] = useState(false);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({});
+  const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [routeFilter, setRouteFilter] = useState('All Routes');
   const [statusFilter, setStatusFilter] = useState('All Status');
@@ -24,6 +29,7 @@ const CustomerList = () => {
 
   const handleViewCustomer = async (customer) => {
     setSelectedCustomer(customer);
+    setIsEditing(false); // Reset edit mode when opening new customer
     setLoadingDetails(true);
     try {
       const [historyRes, paymentsRes] = await Promise.all([
@@ -36,6 +42,34 @@ const CustomerList = () => {
       console.error('Failed to fetch customer details:', err);
     } finally {
       setLoadingDetails(false);
+    }
+  };
+
+  const handleEditToggle = () => {
+    if (!isEditing) {
+      setEditForm({
+        first_name: selectedCustomer.first_name,
+        phone_number: selectedCustomer.phone_number,
+        address: selectedCustomer.address,
+        daily_quantity: selectedCustomer.daily_quantity,
+        milk_type: selectedCustomer.milk_type
+      });
+    }
+    setIsEditing(!isEditing);
+  };
+
+  const handleSaveEdit = async () => {
+    setSaving(true);
+    try {
+      const res = await staffAPI.updateStaff(selectedCustomer.id, editForm);
+      setSelectedCustomer(res.data);
+      setIsEditing(false);
+      fetchCustomers(true);
+    } catch (err) {
+      console.error('Update failed:', err);
+      alert(t('Update failed. Please check your inputs.', 'اپ ڈیٹ ناکام ہو گئی۔ براہ کرم اپنی معلومات چیک کریں۔'));
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -139,9 +173,14 @@ const CustomerList = () => {
             </select>
           </div>
         </div>
-        <button className="premium-btn-green" onClick={() => setIsModalOpen(true)}>
-          <span>+</span> {t('Add Customer', 'نیا گاہک')}
-        </button>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button className="premium-btn-green" onClick={() => setIsManualModalOpen(true)}>
+            <span>+</span> {t('Add Customer', 'نیا گاہک')}
+          </button>
+          <button className="btn-secondary" onClick={() => setIsInviteModalOpen(true)} style={{ whiteSpace: 'nowrap' }}>
+            {t('Invite via Link', 'لنک سے بلاؤ')}
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -201,9 +240,15 @@ const CustomerList = () => {
         </div>
       )}
 
+      <ManualCustomerModal
+        isOpen={isManualModalOpen}
+        onClose={() => setIsManualModalOpen(false)}
+        onSuccess={() => fetchCustomers(true)}
+      />
+
       <InvitationModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isInviteModalOpen}
+        onClose={() => setIsInviteModalOpen(false)}
         role="customer"
         onInviteSuccess={() => fetchCustomers(true)}
       />
@@ -214,21 +259,54 @@ const CustomerList = () => {
           <div className="modal-content glass-card" style={{ maxWidth: '700px', width: '95%', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h2>{t('Customer Profile', 'گاہک کا پروفائل')}</h2>
-              <button className="btn-s" style={{ padding: '0.4rem 0.8rem', height: '36px' }} onClick={() => setSelectedCustomer(null)}>{t('Close', 'بند کریں')}</button>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                {!isEditing ? (
+                  <button className="btn-secondary" onClick={handleEditToggle} style={{ padding: '0.4rem 0.8rem', height: '36px' }}>{t('Edit', 'ترمیم')}</button>
+                ) : (
+                  <button className="premium-btn-green" onClick={handleSaveEdit} disabled={saving} style={{ padding: '0.4rem 0.8rem', height: '36px', fontSize: '0.85rem' }}>
+                    {saving ? t('Saving...', 'محفوظ ہو رہا ہے...') : t('Save', 'محفوظ کریں')}
+                  </button>
+                )}
+                <button className="btn-s" style={{ padding: '0.4rem 0.8rem', height: '36px' }} onClick={() => setSelectedCustomer(null)}>{t('Close', 'بند کریں')}</button>
+              </div>
             </div>
 
             <div className="customer-profile-grid">
               <div style={{ flex: 1, minWidth: '0', background: '#f8fafc', padding: '1.25rem', borderRadius: '1rem', border: '1px solid #e2e8f0' }}>
-                <h3 style={{ margin: '0 0 0.75rem 0', color: '#1e293b', fontSize: '1.1rem' }}>{selectedCustomer.first_name || selectedCustomer.username}</h3>
-                <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>{t('Phone', 'فون')}:</strong> {selectedCustomer.phone_number || 'N/A'}</p>
-                <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>{t('Address', 'پتہ')}:</strong> {selectedCustomer.address || 'N/A'}</p>
-                <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>{t('Route', 'روٹ')}:</strong> {selectedCustomer.route_name || t('Unassigned', 'غیر مختص')}</p>
+                {isEditing ? (
+                  <div className="edit-fields-group" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <input className="form-input" style={{ fontSize: '0.9rem' }} value={editForm.first_name} onChange={e => setEditForm({...editForm, first_name: e.target.value})} placeholder={ts('Name', 'نام')} />
+                    <input className="form-input" style={{ fontSize: '0.9rem' }} value={editForm.phone_number} onChange={e => setEditForm({...editForm, phone_number: e.target.value})} placeholder={ts('Phone', 'فون')} />
+                    <input className="form-input" style={{ fontSize: '0.9rem' }} value={editForm.address} onChange={e => setEditForm({...editForm, address: e.target.value})} placeholder={ts('Address', 'پتہ')} />
+                  </div>
+                ) : (
+                  <>
+                    <h3 style={{ margin: '0 0 0.75rem 0', color: '#1e293b', fontSize: '1.1rem' }}>{selectedCustomer.first_name || selectedCustomer.username}</h3>
+                    <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>{t('Phone', 'فون')}:</strong> {selectedCustomer.phone_number || 'N/A'}</p>
+                    <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>{t('Address', 'پتہ')}:</strong> {selectedCustomer.address || 'N/A'}</p>
+                    <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>{t('Route', 'روٹ')}:</strong> {selectedCustomer.route_name || t('Unassigned', 'غیر مختص')}</p>
+                  </>
+                )}
               </div>
               <div style={{ flex: 1, minWidth: '0', background: '#f8fafc', padding: '1.25rem', borderRadius: '1rem', border: '1px solid #e2e8f0' }}>
                 <h3 style={{ margin: '0 0 0.75rem 0', color: '#1e293b', fontSize: '1.1rem' }}>{t('Account Specs', 'اکاؤنٹ کی تفصیلات')}</h3>
-                <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>{t('Daily Qty', 'روزانہ مقدار')}:</strong> {selectedCustomer.daily_quantity || '0'}L ({selectedCustomer.milk_type})</p>
-                <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>{t('Milk Rate', 'دودھ کا ریٹ')}:</strong> Rs {selectedCustomer.milk_type === 'cow' ? selectedCustomer.cow_price : selectedCustomer.buffalo_price}/L</p>
-                <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>{t('Balance Due', 'بقایا واجب الادا')}:</strong> {formatBalance(selectedCustomer.outstanding_balance)}</p>
+                {isEditing ? (
+                  <div className="edit-fields-group" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <input type="number" step="0.5" className="form-input" style={{ fontSize: '0.9rem' }} value={editForm.daily_quantity} onChange={e => setEditForm({...editForm, daily_quantity: e.target.value})} placeholder="Qty" />
+                      <select className="form-input" style={{ fontSize: '0.9rem' }} value={editForm.milk_type} onChange={e => setEditForm({...editForm, milk_type: e.target.value})}>
+                        <option value="buffalo">{t('Buffalo', 'بھینس')}</option>
+                        <option value="cow">{t('Cow', 'گائے')}</option>
+                      </select>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>{t('Daily Qty', 'روزانہ مقدار')}:</strong> {selectedCustomer.daily_quantity || '0'}L ({selectedCustomer.milk_type})</p>
+                    <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>{t('Milk Rate', 'دودھ کا ریٹ')}:</strong> Rs {selectedCustomer.milk_type === 'cow' ? selectedCustomer.cow_price : selectedCustomer.buffalo_price}/L</p>
+                    <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>{t('Balance Due', 'بقایا واجب الادا')}:</strong> {formatBalance(selectedCustomer.outstanding_balance)}</p>
+                  </>
+                )}
               </div>
             </div>
 

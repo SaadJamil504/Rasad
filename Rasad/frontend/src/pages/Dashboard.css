@@ -189,10 +189,11 @@
 /* Redesigned Customer Dashboard Styles */
 .customer-dashboard {
   max-width: 800px;
-  margin: 0 auto;
   background: white;
   color: #333;
-  border-radius: 0; /* Matching wireframe look */
+  border-radius: 0;
+  min-height: 100vh;
+  margin: 0 auto;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0,0,0,0.1);
 }
