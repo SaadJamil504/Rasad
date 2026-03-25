@@ -236,6 +236,13 @@ class StaffDetailView(APIView):
         except User.DoesNotExist:
             raise Http404
 
+    def get(self, request, pk):
+        if request.user.role != 'owner':
+            return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+        user = self.get_object(pk, request.user)
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
+
     def patch(self, request, pk):
         if request.user.role != 'owner':
             return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
@@ -283,8 +290,6 @@ class CollectionStatsView(APIView):
             'collected_this_month': float(collected_this_month),
             'last_month_diff': diff,
             'today_collection': float(today_collection),
-            'total_drivers': total_drivers,
-            'settled_drivers': settled_drivers
         })
 
 class RouteListCreateView(APIView):
@@ -472,15 +477,103 @@ class UpdateMilkPricesView(APIView):
         if request.user.role != 'owner':
             return Response({'error': 'Only owners can set prices.'}, status=status.HTTP_403_FORBIDDEN)
         
-        # Use partial=True so you don't have to send all user fields
-        serializer = UserSerializer(request.user, data=request.data, partial=True)
+        owner = request.user
+        from decimal import Decimal, InvalidOperation
+        buffalo_price = request.data.get('buffalo_price')
+        cow_price = request.data.get('cow_price')
         
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        
-        # If validation fails (e.g., negative price), this returns a 400 error
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # Manually update prices because UserSerializer might have them as read-only method fields
+        try:
+            if buffalo_price is not None:
+                owner.buffalo_price = round(Decimal(str(buffalo_price)))
+            if cow_price is not None:
+                owner.cow_price = round(Decimal(str(cow_price)))
+            owner.save()
+        except (InvalidOperation, ValueError, TypeError):
+            return Response({'error': 'Invalid price format.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Propagate changes to today's deliveries
+        today = timezone.now().date()
+        today_deliveries = Delivery.objects.filter(
+            customer__parent_owner=owner,
+            date=today
+        )
+
+        for delivery in today_deliveries:
+            customer = delivery.customer
+            old_total = delivery.total_amount
+            
+            # Determine new price for this specific delivery
+            new_price = 0
+            if customer.milk_type == 'cow':
+                new_price = owner.cow_price
+            elif customer.milk_type == 'buffalo':
+                new_price = owner.buffalo_price
+            else:
+                new_price = max(owner.cow_price, owner.buffalo_price)
+            
+            delivery.price_at_delivery = new_price
+            delivery.total_amount = delivery.quantity * new_price
+            delivery.save()
+
+            # If already delivered, adjust customer balance
+            if delivery.is_delivered:
+                diff = delivery.total_amount - old_total
+                customer.outstanding_balance += diff
+                customer.save()
+
+        return Response(UserSerializer(owner).data, status=status.HTTP_200_OK)
+
+class DeliveryUpdateView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    @extend_schema(
+        request=DeliverySerializer,
+        responses={200: DeliverySerializer},
+        description="Driver manually updates delivery quantity for a customer today."
+    )
+    def patch(self, request, pk):
+        if request.user.role != 'driver':
+            return Response({'error': 'Unauthorized. Only drivers can update quantities.'}, status=status.HTTP_403_FORBIDDEN)
+            
+        try:
+            delivery = Delivery.objects.get(pk=pk, route__driver=request.user)
+            
+            # Use Decimal for consistency
+            from decimal import Decimal
+            new_qty = request.data.get('quantity')
+            if new_qty is None:
+                return Response({'error': 'Quantity is required.'}, status=status.HTTP_400_BAD_REQUEST)
+                
+            try:
+                new_qty = Decimal(str(new_qty))
+            except:
+                return Response({'error': 'Invalid quantity format.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            if new_qty < 0:
+                return Response({'error': 'Quantity cannot be negative.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            old_total = delivery.total_amount
+            delivery.quantity = new_qty
+            delivery.total_amount = delivery.quantity * delivery.price_at_delivery
+            
+            # If it was paused, reactivate it if qty > 0
+            if delivery.status == 'paused' and new_qty > 0:
+                delivery.status = 'pending'
+            
+            delivery.save()
+            
+            # If already delivered, adjust customer balance
+            if delivery.is_delivered:
+                diff = delivery.total_amount - old_total
+                customer = delivery.customer
+                customer.outstanding_balance += diff
+                customer.save()
+                
+            return Response(DeliverySerializer(delivery).data)
+        except Delivery.DoesNotExist:
+            return Response({'error': 'Delivery record not found.'}, status=status.HTTP_404_NOT_FOUND)
+
 class DeliveryHistoryView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
@@ -593,15 +686,21 @@ class PaymentListView(APIView):
     )
     def get(self, request):
         customer_id = request.query_params.get('customer_id')
+        status_filter = request.query_params.get('status')
         if request.user.role == 'customer':
-            payments = Payment.objects.filter(customer=request.user).order_by('-created_at')
+            payments = Payment.objects.filter(customer=request.user)
         elif request.user.role == 'owner':
             if customer_id:
-                payments = Payment.objects.filter(customer__parent_owner=request.user, customer_id=customer_id).order_by('-created_at')
+                payments = Payment.objects.filter(customer__parent_owner=request.user, customer_id=customer_id)
             else:
-                payments = Payment.objects.filter(customer__parent_owner=request.user).order_by('-created_at')
+                payments = Payment.objects.filter(customer__parent_owner=request.user)
         else:
             return Response({'error': 'Unauthorized.'}, status=status.HTTP_403_FORBIDDEN)
+
+        if status_filter:
+            payments = payments.filter(status=status_filter)
+        
+        payments = payments.order_by('-created_at')
             
         serializer = PaymentSerializer(payments, many=True)
         return Response(serializer.data)
@@ -901,18 +1000,19 @@ class DashboardReportsView(APIView):
         if (total_collected + total_overdue) > 0:
             collection_percentage = (total_collected / (total_collected + total_overdue)) * 100
 
-        # 4. Graph data: Month on x axis and revenue on y axis (Strictly confirmed deliveries)
+        # 4. Graph data: Last 12 months or rolling 6 months (5 past + current)
         monthly_revenue_data = []
-        start_month = 3
-        start_year = 2026
         
-        for i in range(6):
-            target_month = start_month + i
-            target_year = start_year
-            if target_month > 12:
-                target_month -= 12
-                target_year += 1
-                
+        # We want to show the last 6 months (5 past + current)
+        for i in range(5, -1, -1):
+            # Calculate year and month for 'i' months ago
+            target_year = current_year
+            target_month = current_month - i
+            
+            while target_month <= 0:
+                target_month += 12
+                target_year -= 1
+            
             rev = Delivery.objects.filter(
                 route__owner=request.user,
                 date__month=target_month,

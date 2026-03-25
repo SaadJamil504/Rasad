@@ -23,7 +23,6 @@ const Payments = () => {
     customer: '',
     amount: '',
     method: 'Cash',
-    received_by: 'Owner (Self)',
     date: new Date().toISOString().split('T')[0]
   });
 
@@ -61,7 +60,6 @@ const Payments = () => {
         customer: '',
         amount: '',
         method: 'Cash',
-        received_by: 'Owner (Self)',
         date: new Date().toISOString().split('T')[0]
       });
       // Refresh
@@ -81,7 +79,9 @@ const Payments = () => {
     <div className="payments-page fade-in">
       <div className="pay-stats-grid">
         <div className="pay-stat-card border-red">
-          <div className="pay-stat-icon red-bg">💸</div>
+          <div className="pay-stat-icon red-bg">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: '20px' }}><path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+          </div>
           <div className="pay-stat-info">
             <span className="pay-stat-value">Rs {stats.total_outstanding?.toLocaleString() || stats.total_outstanding_balance?.toLocaleString()}</span>
             <span className="pay-stat-label">{t('Total Outstanding', 'کل واجب الادا')}</span>
@@ -90,7 +90,9 @@ const Payments = () => {
         </div>
 
         <div className="pay-stat-card border-green">
-          <div className="pay-stat-icon green-bg">✅</div>
+          <div className="pay-stat-icon green-bg">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: '20px' }}><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          </div>
           <div className="pay-stat-info">
             <span className="pay-stat-value">Rs {stats.collected_this_month?.toLocaleString() || stats.current_month_collections?.toLocaleString()}</span>
             <span className="pay-stat-label">{t('Collected This Month', 'اس مہینے کی وصولی')}</span>
@@ -101,31 +103,32 @@ const Payments = () => {
         </div>
 
         <div className="pay-stat-card border-yellow">
-          <div className="pay-stat-icon yellow-bg">📅</div>
+          <div className="pay-stat-icon yellow-bg">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: '20px' }}><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+          </div>
           <div className="pay-stat-info">
             <span className="pay-stat-value">Rs {stats.today_collection?.toLocaleString() || stats.today_collections?.toLocaleString()}</span>
             <span className="pay-stat-label">{t("Today's Collection", 'آج کی وصولی')}</span>
-            <span className="pay-stat-sub text-muted">{stats.total_drivers} drivers · {stats.settled_drivers} settled</span>
           </div>
         </div>
       </div>
 
       <div className="record-payment-section glass-card">
         <div className="section-header">
-          <h3 className="section-title-with-urdu">💰 {t('Record Payment', 'ادائیگی درج کریں')} <span className="urdu-title-small">ادائیگی درج کریں</span></h3>
+          <h3 className="section-title-with-urdu">{t('Record Payment', 'ادائیگی درج کریں')}</h3>
         </div>
         
         <form onSubmit={handleRecordPayment} className="record-form">
           <div className="form-grid-payments">
             <div className="form-group-clean">
-              <label>{t('CUSTOMER', 'گاہک')} <span className="urdu-label-small">گاہک</span></label>
+              <label>{t('CUSTOMER', 'گاہک')}</label>
               <select 
                 value={formData.customer} 
                 onChange={e => setFormData({...formData, customer: e.target.value})}
                 required
                 className="payment-input"
               >
-                <option value="">{t('Select customer...', 'گاہک منتخب کریں...')}</option>
+                <option value="">{ts('Select customer...', 'گاہک منتخب کریں...')}</option>
                 {customers.map(c => (
                   <option key={c.id} value={c.id}>{c.first_name || c.username} (#{c.id})</option>
                 ))}
@@ -133,7 +136,7 @@ const Payments = () => {
             </div>
 
             <div className="form-group-clean">
-              <label>{t('AMOUNT', 'رقم')} <span className="urdu-label-small">رقم</span></label>
+              <label>{t('AMOUNT', 'رقم')}</label>
               <div className="amount-input-wrapper">
                 <span className="currency-prefix">Rs</span>
                 <input 
@@ -148,13 +151,13 @@ const Payments = () => {
             </div>
 
             <div className="form-group-clean">
-              <label>{t('METHOD', 'طریقہ')} <span className="urdu-label-small">طریقہ</span></label>
+              <label>{t('METHOD', 'طریقہ')}</label>
               <select 
                 value={formData.method} 
                 className="payment-input"
                 onChange={e => setFormData({...formData, method: e.target.value})}
               >
-                <option value="Cash">{t('Cash', 'نقد')} — نقد</option>
+                <option value="Cash">{ts('Cash', 'نقد')}</option>
                 <option value="JazzCash">JazzCash</option>
                 <option value="EasyPaisa">EasyPaisa</option>
                 <option value="Bank Transfer">Bank Transfer</option>
@@ -162,22 +165,27 @@ const Payments = () => {
             </div>
 
             <div className="form-group-clean">
-              <label>{t('RECEIVED BY', 'وصول کنندہ')} <span className="urdu-label-small">وصول کنندہ</span></label>
-              <input type="text" value={formData.received_by} readOnly className="payment-input read-only" />
+              <label>{t('PENDING AMOUNT', 'باقی رقم')}</label>
+              <div className="payment-input read-only" style={{ display: 'flex', alignItems: 'center', fontWeight: 'bold' }}>
+                Rs {(() => {
+                  const selected = customers.find(c => c.id.toString() === formData.customer.toString());
+                  return selected ? parseFloat(selected.outstanding_balance).toLocaleString() : '0';
+                })()}
+              </div>
             </div>
           </div>
 
           <button type="submit" className="premium-btn-green" disabled={recording} style={{ width: 'auto', padding: '0.9rem 2.5rem', marginTop: '1.5rem', alignSelf: 'flex-start' }}>
-             ✅ {recording ? t('Recording...', 'درج ہو رہا ہے...') : t('Record Payment', 'ادائیگی درج کریں')}
+             {recording ? t('Recording...', 'درج ہو رہا ہے...') : t('Record Payment', 'ادائیگی درج کریں')}
           </button>
         </form>
       </div>
 
       <div className="transactions-section glass-card">
         <div className="section-header">
-          <h3>📋 {t('Recent Transactions', 'حالیہ لین دین')}</h3>
+          <h3>{t('Recent Transactions', 'حالیہ لین دین')}</h3>
         </div>
-        <div className="transactions-list">
+        <div className="transactions-list" style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '0.5rem' }}>
           {payments.length === 0 ? (
             <p className="no-data">{t('No recent transactions', 'کوئی حالیہ لین دین نہیں ہے')}</p>
           ) : (

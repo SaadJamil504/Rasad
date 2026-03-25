@@ -117,26 +117,30 @@ const Reports = () => {
       <div className="glass-card" style={{ padding: isMobile ? '1rem' : '2.5rem', background: 'white' }}>
         <h3 style={{ margin: '0 0 1.5rem 0', color: '#1e293b', fontSize: isMobile ? '1.1rem' : '1.3rem' }}>{t('Revenue Trends', 'آمدنی کے رجحانات')}</h3>
 
-        <div style={{ width: '100%', height: isMobile ? '300px' : '400px', position: 'relative', marginTop: '2rem', padding: '0 0 2rem 3rem' }}>
-          {/* Y-Axis Labels (HTML) */}
-          <div style={{ position: 'absolute', left: 0, top: 0, bottom: '2rem', width: '3rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', paddingRight: '0.5rem', pointerEvents: 'none' }}>
-            {yAxisSteps.map(val => (
-              <div key={val} style={{ fontSize: isMobile ? '0.7rem' : '0.85rem', color: '#94a3b8', textAlign: 'right', fontWeight: 700 }}>
-                {val >= 1000 ? (val/1000).toFixed(0)+'k' : val}
-              </div>
-            ))}
-          </div>
-
+        <div style={{ 
+          width: '100%', 
+          height: isMobile ? '300px' : '400px', 
+          position: 'relative', 
+          marginTop: '1rem',
+          padding: '1rem 0'
+        }}>
           {/* SVG Area Chart */}
-          <svg width="100%" height="calc(100% - 2rem)" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ overflow: 'visible' }}>
-            {/* Horizontal Grid Lines */}
+          <svg 
+            width="100%" 
+            height="100%" 
+            viewBox="0 -10 100 110" 
+            preserveAspectRatio="none" 
+            style={{ overflow: 'visible' }}
+          >
+            {/* Horizontal Grid Lines - Subtle */}
             {yAxisSteps.map((val, i) => {
               const y = (i * (100 / (yAxisSteps.length - 1)));
               return (
-                <line key={val} x1="0" y1={y} x2="100" y2={y} stroke="#f1f5f9" strokeWidth="0.5" />
+                <line key={val} x1="0" y1={y} x2="100" y2={y} stroke="#f1f5f9" strokeWidth="0.3" strokeDasharray="2,2" />
               );
             })}
             
+            {/* Area Path */}
             <path
               d={`
                 M 0 100
@@ -151,7 +155,7 @@ const Reports = () => {
               fill="url(#areaGradient)"
             />
 
-            {/* Line Path */}
+            {/* Line Path - Refined */}
             <path
               d={`
                 M ${0} ${100 - (reportData.monthly_revenue[0].revenue / maxRev) * 100}
@@ -163,7 +167,7 @@ const Reports = () => {
               `}
               fill="none"
               stroke="#10b981"
-              strokeWidth={isMobile ? "1.5" : "0.5"}
+              strokeWidth="0.8"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
@@ -171,55 +175,48 @@ const Reports = () => {
             {/* Gradient Definition */}
             <defs>
               <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
-                <stop offset="100%" stopColor="#10b981" stopOpacity="0.01" />
+                <stop offset="0%" stopColor="#10b981" stopOpacity="0.15" />
+                <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
               </linearGradient>
             </defs>
 
+            {/* Data Points and Labels */}
             {reportData.monthly_revenue.map((d, i) => {
               const x = (i / (reportData.monthly_revenue.length - 1)) * 100;
               const y = 100 - (d.revenue / maxRev) * 100;
               return (
                 <g key={i}>
-                  <circle cx={x} cy={y} r={isMobile ? "1.5" : "0.5"} fill="white" stroke="#10b981" strokeWidth={isMobile ? "0.8" : "0.3"} />
+                  <circle cx={x} cy={y} r="0.8" fill="white" stroke="#10b981" strokeWidth="0.5" />
                   {d.revenue > 0 && (
                     <text 
                       x={x} 
-                      y={y - (isMobile ? 5 : 4)} 
-                      fontSize={isMobile ? "3.5" : "2"} 
-                      fill="#334155" 
+                      y={y - 4} 
+                      fontSize="2.5" 
+                      fill="#94a3b8" 
                       textAnchor="middle" 
-                      fontWeight="800"
+                      fontWeight="600"
                     >
                       {(d.revenue >= 1000 ? (d.revenue / 1000).toFixed(0) + 'k' : d.revenue)}
                     </text>
                   )}
+                  
+                  {/* X-Axis Label - Smaller & Finer */}
+                  <text
+                    x={x}
+                    y={112}
+                    fontSize="2.8"
+                    fill="#94a3b8"
+                    textAnchor="middle"
+                    fontWeight="600"
+                    className={language === 'ur' ? 'urdu-text' : ''}
+                    style={{ fontFamily: language === 'ur' ? 'Noto Nastaliq Urdu' : 'Inter, sans-serif' }}
+                  >
+                    {language === 'ur' ? (monthNames[d.month.substring(0, 3)] || d.month.substring(0, 3)) : d.month.substring(0, 3)}
+                  </text>
                 </g>
               );
             })}
           </svg>
-
-          {/* X-Axis Labels (HTML) */}
-          <div style={{ position: 'absolute', left: '3rem', right: 0, bottom: 0, height: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', pointerEvents: 'none' }}>
-            {reportData.monthly_revenue.map((d, i) => (
-              <div 
-                key={i} 
-                className={language === 'ur' ? 'urdu-text' : ''}
-                style={{ 
-                  fontSize: isMobile ? '0.75rem' : '0.9rem', 
-                  color: '#64748b', 
-                  fontWeight: 700,
-                  transform: 'translateX(-50%)',
-                  position: 'absolute',
-                  left: `${(i / (reportData.monthly_revenue.length - 1)) * 100}%`,
-                  bottom: 0,
-                  fontFamily: language === 'ur' ? 'Noto Nastaliq Urdu' : 'Inter, sans-serif'
-                }}
-              >
-                {language === 'ur' ? (monthNames[d.month.substring(0, 3)] || d.month.substring(0, 3)) : d.month.substring(0, 3)}
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </div>

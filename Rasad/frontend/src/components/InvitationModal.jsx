@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import { invitationAPI } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
+import { useClickOutside } from '../hooks/useClickOutside';
 import './InvitationModal.css';
 
 const InvitationModal = ({ isOpen, onClose, role, onInviteSuccess }) => {
   const { t, ts } = useLanguage();
+  const modalRef = React.useRef(null);
+  useClickOutside(modalRef, onClose);
+
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -69,8 +73,8 @@ const InvitationModal = ({ isOpen, onClose, role, onInviteSuccess }) => {
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content glass">
+    <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="modal-content glass-card" ref={modalRef} style={{ maxWidth: '480px', width: '90%' }}>
         <div className="modal-header">
           <h2>{t(`Invite New ${role === 'driver' ? 'Driver' : 'Customer'}`, `نیا ${role === 'driver' ? 'ڈرائیور' : 'گاہک'} مدعو کریں`)}</h2>
           <button className="close-btn" onClick={onClose}>&times;</button>

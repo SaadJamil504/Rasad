@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { routeAPI } from '../services/api';
 import RouteModal from '../components/RouteModal';
+import CustomerProfileModal from '../components/CustomerProfileModal';
 import { useLanguage } from '../context/LanguageContext';
 import './Table.css';
 
@@ -11,6 +12,7 @@ const RouteList = () => {
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRoute, setSelectedRoute] = useState(null);
+  const [selectedCustomerForProfile, setSelectedCustomerForProfile] = useState(null);
 
   const fetchRoutes = async (skipLoading = false) => {
     try {
@@ -82,8 +84,15 @@ const RouteList = () => {
 
               <div className="route-stats-badges">
                 {route.customer_details?.slice(0, 5).map(cust => (
-                  <span key={cust.id} className="customer-small-pill">
-                    #{cust.id} {cust.first_name || cust.username}
+                  <span 
+                    key={cust.id} 
+                    className="customer-small-pill"
+                    style={{ transition: 'all 0.2s', cursor: 'pointer' }}
+                    onClick={() => setSelectedCustomerForProfile(cust)}
+                    onMouseOver={(e) => e.currentTarget.style.borderColor = '#27ae60'}
+                    onMouseOut={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}
+                  >
+                    {cust.first_name || cust.username}
                   </span>
                 ))}
                 {route.customer_count > 5 && (
@@ -112,9 +121,15 @@ const RouteList = () => {
         onRouteCreated={() => fetchRoutes(true)}
         editRoute={selectedRoute}
       />
+
+      <CustomerProfileModal
+        isOpen={!!selectedCustomerForProfile}
+        customer={selectedCustomerForProfile}
+        onClose={() => setSelectedCustomerForProfile(null)}
+        onUpdateSuccess={() => fetchRoutes(true)}
+      />
     </div>
   );
-
 };
 
 export default RouteList;

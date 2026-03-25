@@ -1,13 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { staffAPI, deliveryAPI, authAPI } from '../services/api';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useClickOutside } from '../hooks/useClickOutside';
 import './Dashboard.css';
 import './DashboardExtra.css';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const { t, ts, language, toggleLanguage } = useLanguage();
+
+  const handleLogout = () => {
+    if (window.confirm(t('Are you sure you want to log out?', 'کیا آپ لاگ آؤٹ کرنا چاہتے ہیں؟'))) {
+      logout();
+      navigate('/login');
+    }
+  };
   const [currentUser, setCurrentUser] = useState(null);
   const [counts, setCounts] = useState({ drivers: 0, customers: 0 });
   const [deliveries, setDeliveries] = useState([]);
@@ -34,6 +44,7 @@ const Dashboard = () => {
   const [filterYear, setFilterYear] = useState(new Date().getFullYear());
   const [filteredHistory, setFilteredHistory] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [editingDeliveryId, setEditingDeliveryId] = useState(null);
   const [ownerStats, setOwnerStats] = useState({
     deliveries: { total: 0, done: 0, pending: 0 },
     revenue: { amount: 0, change_pct: 0 },
@@ -41,6 +52,19 @@ const Dashboard = () => {
     customers: { total: 0, paused_today: 0 }
   });
   const [alerts, setAlerts] = useState({ overdue: [], paused: [] });
+
+  // Modal Refs
+  const pauseModalRef = React.useRef(null);
+  const qtyModalRef = React.useRef(null);
+  const complaintModalRef = React.useRef(null);
+  const historyModalRef = React.useRef(null);
+  const paymentModalRef = React.useRef(null);
+
+  useClickOutside(pauseModalRef, () => setShowPauseModal(false));
+  useClickOutside(qtyModalRef, () => setShowQtyModal(false));
+  useClickOutside(complaintModalRef, () => setShowComplaintModal(false));
+  useClickOutside(historyModalRef, () => setShowHistoryModal(false));
+  useClickOutside(paymentModalRef, () => setShowPaymentModal(false));
 
   useEffect(() => {
     if (!user) return;
@@ -63,7 +87,7 @@ const Dashboard = () => {
             buffalo_price: user.buffalo_price || 0
           });
           const [paymentsRes, adjustmentsRes, statsRes, alertsRes] = await Promise.all([
-            deliveryAPI.getPayments(),
+            deliveryAPI.getPayments({ status: 'pending' }),
             deliveryAPI.getAdjustments(),
             deliveryAPI.getDashboardStats(),
             deliveryAPI.getDashboardAlerts()
@@ -108,6 +132,18 @@ const Dashboard = () => {
       handleFetchFilteredHistory();
     }
   }, [showHistoryModal, filterMonth, filterYear]);
+
+  const handleUpdateQty = async (deliveryId, newQty) => {
+    if (newQty < 0) return;
+    
+    try {
+      const res = await deliveryAPI.updateDeliveryQuantity(deliveryId, newQty);
+      setDeliveries(deliveries.map(d => d.id === deliveryId ? res.data : d));
+    } catch (err) {
+      console.error('Failed to update quantity:', err);
+      alert(t('Error updating quantity.', 'مقدار اپ ڈیٹ کرنے میں غلطی۔'));
+    }
+  };
 
   const handleToggleDelivery = async (deliveryId) => {
     try {
@@ -272,8 +308,18 @@ const Dashboard = () => {
   const renderModals = () => (
     <>
       {showPauseModal && (
-        <div className="modal-overlay">
-          <div className="glass-card modal-content" style={{ maxWidth: '400px', width: '90%' }}>
+        <div className="modal-overlay" onClick={() => setShowPauseModal(false)}>
+          <div className="glass-card modal-content" ref={pauseModalRef} style={{ maxWidth: '400px', width: '90%', position: 'relative' }}>
+            <button 
+              className="close-btn" 
+              onClick={() => setShowPauseModal(false)}
+              style={{
+                position: 'absolute', top: '1rem', right: '1rem', background: '#f8fafc', border: '1px solid #e2e8f0',
+                width: '32px', height: '32px', borderRadius: '50%', color: '#64748b', fontSize: '1rem', cursor: 'pointer'
+              }}
+            >
+              &times;
+            </button>
             <h3>Pause Delivery</h3>
             <p style={{ margin: '1rem 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
               Pause delivery for today. Your driver will need to accept this request.
@@ -296,8 +342,18 @@ const Dashboard = () => {
       )}
 
       {showQtyModal && (
-        <div className="modal-overlay">
-          <div className="glass-card modal-content" style={{ maxWidth: '400px', width: '90%' }}>
+        <div className="modal-overlay" onClick={() => setShowQtyModal(false)}>
+          <div className="glass-card modal-content" ref={qtyModalRef} style={{ maxWidth: '400px', width: '90%', position: 'relative' }}>
+            <button 
+              className="close-btn" 
+              onClick={() => setShowQtyModal(false)}
+              style={{
+                position: 'absolute', top: '1rem', right: '1rem', background: '#f8fafc', border: '1px solid #e2e8f0',
+                width: '32px', height: '32px', borderRadius: '50%', color: '#64748b', fontSize: '1rem', cursor: 'pointer'
+              }}
+            >
+              &times;
+            </button>
             <h3>Change Quantity</h3>
             <p style={{ margin: '1rem 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
               Request a different quantity for today.
@@ -330,8 +386,18 @@ const Dashboard = () => {
       )}
 
       {showComplaintModal && (
-        <div className="modal-overlay">
-          <div className="glass-card modal-content" style={{ maxWidth: '400px', width: '90%' }}>
+        <div className="modal-overlay" onClick={() => setShowComplaintModal(false)}>
+          <div className="glass-card modal-content" ref={complaintModalRef} style={{ maxWidth: '400px', width: '90%', position: 'relative' }}>
+            <button 
+              className="close-btn" 
+              onClick={() => setShowComplaintModal(false)}
+              style={{
+                position: 'absolute', top: '1rem', right: '1rem', background: '#f8fafc', border: '1px solid #e2e8f0',
+                width: '32px', height: '32px', borderRadius: '50%', color: '#64748b', fontSize: '1rem', cursor: 'pointer'
+              }}
+            >
+              &times;
+            </button>
             <h3>File a Complaint</h3>
             <p style={{ margin: '1rem 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
               Send a message to your driver regarding any issues (e.g. spoiled milk).
@@ -354,11 +420,20 @@ const Dashboard = () => {
       )}
 
       {showHistoryModal && (
-        <div className="modal-overlay">
-          <div className="glass-card modal-content" style={{ maxWidth: '600px', width: '95%', maxHeight: '80vh', overflowY: 'auto' }}>
+        <div className="modal-overlay" onClick={() => setShowHistoryModal(false)}>
+          <div className="glass-card modal-content" ref={historyModalRef} style={{ maxWidth: '600px', width: '95%', maxHeight: '80vh', overflowY: 'auto', position: 'relative' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h3>Past Bills & History</h3>
-              <button className="btn-secondary" style={{ padding: '0.4rem 0.8rem' }} onClick={() => setShowHistoryModal(false)}>Close</button>
+              <button 
+                className="close-btn" 
+                onClick={() => setShowHistoryModal(false)}
+                style={{
+                  background: '#f8fafc', border: '1px solid #e2e8f0',
+                  width: '32px', height: '32px', borderRadius: '50%', color: '#64748b', fontSize: '1rem', cursor: 'pointer'
+                }}
+              >
+                &times;
+              </button>
             </div>
 
             <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
@@ -405,8 +480,18 @@ const Dashboard = () => {
       )}
 
       {showPaymentModal && (
-        <div className="modal-overlay">
-          <div className="glass-card modal-content" style={{ maxWidth: '400px', width: '90%' }}>
+        <div className="modal-overlay" onClick={() => setShowPaymentModal(false)}>
+          <div className="glass-card modal-content" ref={paymentModalRef} style={{ maxWidth: '400px', width: '90%', position: 'relative' }}>
+            <button 
+              className="close-btn" 
+              onClick={() => setShowPaymentModal(false)}
+              style={{
+                position: 'absolute', top: '1rem', right: '1rem', background: '#f8fafc', border: '1px solid #e2e8f0',
+                width: '32px', height: '32px', borderRadius: '50%', color: '#64748b', fontSize: '1rem', cursor: 'pointer'
+              }}
+            >
+              &times;
+            </button>
             <h3>Report Past Payment</h3>
             <p style={{ margin: '1rem 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
               Report the amount you have paid to the owner for confirmation.
@@ -463,6 +548,14 @@ const Dashboard = () => {
               <h2>{user.first_name || user.username}</h2>
               <div className="sub-header">#{user.id} - {user.address || 'Gulberg III'} - {user.owner_dairy_name || 'Dairy'}</div>
             </div>
+            <div className="customer-header-actions">
+              <button onClick={toggleLanguage} className="btn-action">
+                {language === 'en' ? 'اردو' : 'English'}
+              </button>
+              <button onClick={handleLogout} className="btn-action btn-logout">
+                {t('Logout', 'لاگ آؤٹ')}
+              </button>
+            </div>
           </div>
 
           <div className="customer-stats-row">
@@ -501,7 +594,7 @@ const Dashboard = () => {
                 <div className="bill-item total-row">
                   <span className="bill-day" style={{ visibility: 'hidden' }}>0</span>
                   <span className="bill-qty">{t('Total', 'کل')} {monthlyQty} Liter</span>
-                  <span className="bill-price">Rs {monthlyTotalAmount}</span>
+                  <span className="bill-price">Rs {monthlyTotalAmount.toFixed(2)}</span>
                 </div>
               )}
             </div>
@@ -538,11 +631,6 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="payment-report-section" style={{ paddingBottom: '2rem' }}>
-            <button className="btn-primary-large" onClick={() => setShowPaymentModal(true)}>
-              {t('Report Payment to Owner', 'مالک کو ادائیگی بتائیں')}
-            </button>
-          </div>
 
         </div>
         {/* Modals for Quick Actions */}
@@ -581,7 +669,17 @@ const Dashboard = () => {
                 <span className="banner-date">{new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
               </div>
             </div>
-            <h2>{user.first_name || user.username}</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
+              <h2>{user.first_name || user.username}</h2>
+              <div className="customer-header-actions" style={{ marginTop: '-40px' }}>
+                <button onClick={toggleLanguage} className="btn-action">
+                  {language === 'en' ? 'اردو' : 'English'}
+                </button>
+                <button onClick={handleLogout} className="btn-action btn-logout">
+                  {t('Logout', 'لاگ آؤٹ')}
+                </button>
+              </div>
+            </div>
           </div>
 
           <div className="driver-stats-row">
@@ -671,7 +769,35 @@ const Dashboard = () => {
                           </div>
                         ) : (
                           <div className="delivery-details">
-                            {delivery.quantity}L {delivery.customer_milk_type} · Rs {delivery.total_amount}
+                            {delivery.is_delivered ? (
+                              `${delivery.quantity}L ${delivery.customer_milk_type} · Rs ${delivery.total_amount}`
+                            ) : (
+                              editingDeliveryId === delivery.id ? (
+                                <div className="qty-selector-inline">
+                                  <button className="qty-adj-btn" onClick={() => handleUpdateQty(delivery.id, parseFloat(delivery.quantity) - 0.5)}>-</button>
+                                  <span className="qty-label-val">{delivery.quantity}L</span>
+                                  <button className="qty-adj-btn" onClick={() => handleUpdateQty(delivery.id, parseFloat(delivery.quantity) + 0.5)}>+</button>
+                                  <button 
+                                    className="btn-text-only" 
+                                    onClick={() => setEditingDeliveryId(null)}
+                                    style={{ marginLeft: '10px', color: '#27ae60', fontSize: '0.9rem' }}
+                                  >
+                                    OK
+                                  </button>
+                                </div>
+                              ) : (
+                                <>
+                                  {delivery.quantity}L {delivery.customer_milk_type} · Rs {delivery.total_amount}
+                                  <button 
+                                    className="btn-text-only" 
+                                    onClick={() => setEditingDeliveryId(delivery.id)}
+                                    style={{ marginLeft: '10px', color: 'var(--primary)', fontSize: '0.8rem', fontWeight: 600 }}
+                                  >
+                                    {t('Change', 'بدلیں')}
+                                  </button>
+                                </>
+                              )
+                            )}
                           </div>
                         )}
                       </div>
@@ -721,15 +847,14 @@ const Dashboard = () => {
   return (
     <div className="dashboard fade-in owner-dashboard-wrapper">
       <div className="owner-stats-row stats-grid-owner">
-        <div className="stat-card owner-card green-top" onClick={() => window.location.href = '/customers'}>
+        <div className="stat-card owner-card green-top" style={{ cursor: 'default' }}>
           <div className="stat-value">{ownerStats.deliveries.total}</div>
           <div className="stat-label">
             {t("Today's Deliveries", 'آج کی سپلائی')}
           </div>
           <div className="stat-sub">
             <span className="sc-done">{ownerStats.deliveries.done} {t('done', 'مکمل')}</span>
-            <span className="sc-dot">·</span>
-            <span className="sc-pending">{ownerStats.deliveries.pending} {t('pending', 'باقی')}</span>
+            <span className="sc-pending" style={{ marginLeft: '10px' }}>{ownerStats.deliveries.pending} {t('pending', 'باقی')}</span>
           </div>
         </div>
 
@@ -740,7 +865,7 @@ const Dashboard = () => {
           </div>
           <div className="stat-sub">
             <span className={`sc-change ${ownerStats.revenue.change_pct >= 0 ? 'pos' : 'neg'}`}>
-              {ownerStats.revenue.change_pct >= 0 ? '↑' : '↓'} {Math.abs(ownerStats.revenue.change_pct).toFixed(1)}% {t('vs yesterday', 'کل سے')}
+              {Math.abs(ownerStats.revenue.change_pct).toFixed(1)}% {t('vs yesterday', 'کل سے')}
             </span>
           </div>
         </div>
@@ -755,7 +880,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="stat-card owner-card purple-top" onClick={() => window.location.href = '/customers'}>
+        <div className="stat-card owner-card purple-top" style={{ cursor: 'default' }}>
           <div className="stat-value">{ownerStats.customers.total}</div>
           <div className="stat-label">
             {t('Active Customers', 'فعال گاہک')}
@@ -764,12 +889,12 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
+      <div className="alerts-grid-owner">
         {/* Overdue Alerts Section */}
         <div className="glass-card" style={{ padding: '2rem', position: 'relative' }}>
           <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-            <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
-              {t('Overdue Alerts', 'بقایا الرٹس')}
+            <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0, fontSize: '1rem', color: '#1e293b' }}>
+              {t('Overdue Alerts', 'بقایا الرٹس (واجب الادا)')}
             </h3>
           </div>
           <button 
@@ -789,7 +914,7 @@ const Dashboard = () => {
             {t('View All', 'سب دیکھیں')}
           </button>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '420px', overflowY: 'auto', paddingRight: '0.5rem' }}>
             {Array.isArray(alerts?.overdue) && alerts.overdue.length > 0 ? (
               alerts.overdue.map((customer, index) => {
                 const bgColors = ['rgba(254, 226, 226, 0.5)', 'rgba(254, 243, 199, 0.5)', 'rgba(254, 243, 199, 0.5)'];
@@ -802,21 +927,22 @@ const Dashboard = () => {
                   <div key={customer.id} style={{ 
                     background: bgColors[styleIdx], 
                     borderLeft: `4px solid ${borderColors[styleIdx]}`,
-                    padding: '1.25rem',
-                    borderRadius: '1rem',
+                    padding: '1rem 1.25rem',
+                    borderRadius: '0.75rem',
                     display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: '1rem'
+                    alignItems: 'center',
+                    gap: '1rem',
+                    flexShrink: 0
                   }}>
                     <div style={{ 
-                      width: '16px', height: '16px', borderRadius: '50%', background: dotColors[styleIdx], 
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)', flexShrink: 0, marginTop: '0.2rem'
+                      width: '12px', height: '12px', borderRadius: '50%', background: dotColors[styleIdx], 
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)', flexShrink: 0
                     }}></div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ color: '#1e293b', marginBottom: '0.25rem', fontSize: '0.95rem' }}>
-                        <span style={{ fontWeight: 800 }}>{customer.name}</span> — Rs {customer.amount} {t('overdue', 'بقایا')}
+                      <div style={{ color: '#1e293b', marginBottom: '0.1rem', fontSize: '0.9rem' }}>
+                        <span style={{ fontWeight: 800 }}>{customer.name}</span> — Rs {customer.amount.toLocaleString()} {t('overdue', 'بقایا')}
                       </div>
-                      <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
+                      <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 500 }}>
                         {customer.address}, {customer.route}
                       </div>
                     </div>
@@ -835,23 +961,23 @@ const Dashboard = () => {
         {/* Today's Paused Deliveries Section */}
         <div className="glass-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column' }}>
           <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem'}}>
-            <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#0f172a' }}>
+            <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#1e293b', fontSize: '1rem' }}>
               {t("Today's Paused Deliveries", 'رکی ہوئی سپلائی')}
             </h3>
           </div>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, maxHeight: '380px', overflowY: 'auto', paddingRight: '0.5rem' }}>
             {Array.isArray(alerts?.paused) && alerts.paused.length > 0 ? (
               alerts.paused.map(delivery => (
-                <div key={delivery.id} style={{ background: '#edfdf0', borderLeft: '4px solid #16a34a', padding: '1.25rem', borderRadius: '1rem', display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
-                  <div style={{ background: '#3b82f6', width: '24px', height: '24px', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '0.1rem' }}>
+                <div key={delivery.id} style={{ background: '#f0fdf4', border: '1px solid #dcfce7', padding: '0.75rem 1rem', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', gap: '1rem', flexShrink: 0 }}>
+                  <div style={{ background: '#3b82f6', width: '28px', height: '28px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <span style={{ color: 'white', fontSize: '0.7rem', fontWeight: 800 }}>II</span>
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ color: '#1e293b', marginBottom: '0.25rem', fontSize: '0.95rem' }}>
+                    <div style={{ color: '#1e293b', marginBottom: '0.1rem', fontSize: '0.9rem' }}>
                       <span style={{ fontWeight: 800 }}>{delivery.customer_name}</span> — <span>{delivery.route}</span>
                     </div>
-                    <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
+                    <div style={{ fontSize: '0.8rem', color: '#64748b', fontStyle: 'italic' }}>
                       "{delivery.reason}"
                     </div>
                   </div>
@@ -865,38 +991,18 @@ const Dashboard = () => {
             )}
           </div>
           
-          <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid #e2e8f0' }}>
+          <div style={{ marginTop: 'auto', paddingTop: '1.5rem', borderTop: '1px solid #e2e8f0' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-              <span style={{ fontSize: '0.9rem', color: '#64748b' }}>{t("Today's quantity changes", 'آج کی مقدار میں تبدیلی')}</span>
-              <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#16a34a' }}>0 {t('requests', 'درخواستیں')}</span>
+              <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>{t("Today's quantity changes", 'آج کی مقدار میں تبدیلی')}</span>
+              <span style={{ fontSize: '1rem', fontWeight: 800, color: '#16a34a' }}>0 {t('requests', 'درخواستیں')}</span>
             </div>
-            <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
+            <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
               {t('No quantity modifications scheduled for today.', 'آج مقدار میں تبدیلی کی کوئی درخواست نہیں ہے۔')}
             </div>
           </div>
         </div>
       </div>
 
-      {pendingPayments.length > 0 && (
-        <div className="recent-activity glass-card" style={{ padding: '2.5rem', marginBottom: '2rem' }}>
-          <h3>{t('Pending Payment Requests', 'ادائیگی کی نئی درخواستیں')}</h3>
-          <div className="history-list" style={{ marginTop: '1.5rem' }}>
-            {pendingPayments.map(payment => (
-              <div key={payment.id} className="history-item glass-card" style={{ padding: '1.5rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <div style={{ fontWeight: 800 }}>{payment.customer_name || payment.customer_username}</div>
-                  <div style={{ fontSize: '1.1rem', color: 'var(--accent)', fontWeight: 700 }}>Rs. {payment.amount}</div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{new Date(payment.created_at).toLocaleDateString()}</div>
-                </div>
-                <div style={{ display: 'flex', gap: '0.75rem', width: '200px' }}>
-                  <button className="btn-p" style={{ flex: 1, height: '44px', fontSize: '0.85rem' }} onClick={() => handleConfirmPayment(payment.id, 'confirm')}>{t('Confirm', 'تصدیق')}</button>
-                  <button className="btn-d" style={{ flex: 1, height: '44px', fontSize: '0.85rem' }} onClick={() => handleConfirmPayment(payment.id, 'reject')}>{t('Reject', 'مسترد')}</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
 
 

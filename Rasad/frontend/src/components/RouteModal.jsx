@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { staffAPI, routeAPI } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
+import { useClickOutside } from '../hooks/useClickOutside';
 import './RouteModal.css';
 
 const RouteModal = ({ isOpen, onClose, onRouteCreated, editRoute }) => {
   const { t, ts } = useLanguage();
+  const modalRef = React.useRef(null);
+  useClickOutside(modalRef, onClose);
   const [formData, setFormData] = useState({
     name: '',
     driver: '',
@@ -84,8 +87,8 @@ const RouteModal = ({ isOpen, onClose, onRouteCreated, editRoute }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content route-modal glass fade-in">
+    <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="modal-content route-modal glass fade-in" ref={modalRef}>
         <div className="modal-header">
           <div className="header-title">
             <h2>{editRoute ? t('Update Delivery Route', 'ڈیلیوری روٹ بدلیں') : t('Create Delivery Route', 'نیا ڈیلیوری روٹ بنائیں')}</h2>
@@ -164,7 +167,7 @@ const RouteModal = ({ isOpen, onClose, onRouteCreated, editRoute }) => {
                         <span className="member-name">
                           {customer.first_name || customer.username}
                           {isSelected && <span style={{ color: '#22c55e', fontSize: '0.8rem', marginLeft: '0.5rem' }}>({t('Selected', 'منتخب')})</span>}
-                          {isAssignedElsewhere && <span style={{ color: '#ef4444', fontSize: '0.7rem', marginLeft: '0.5rem' }}>({t('In Route', 'روٹ میں ہے')} #{customer.route})</span>}
+                          {isAssignedElsewhere && <span style={{ color: '#ef4444', fontSize: '0.7rem', marginLeft: '0.5rem' }}>({t('In Route', 'روٹ میں ہے')})</span>}
                         </span>
                         <span className="member-detail">{customer.address?.substring(0, 40)}...</span>
                       </div>

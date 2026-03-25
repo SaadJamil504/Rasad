@@ -1,0 +1,125 @@
+.monthly-bills-toolbar {
+  display: flex !important;
+  gap: 1.5rem !important;
+  flex-wrap: wrap !important;
+  padding: 1.5rem !important;
+  background: white;
+  border-radius: 1.5rem;
+  margin-bottom: 2rem;
+  border: 1px solid #e2e8f0;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+.monthly-bills-toolbar .filter-item {
+  flex: 1 1 300px;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.monthly-bills-toolbar .month-year-item {
+  flex: 0 1 250px;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.bills-summary-card {
+  padding: 1.5rem !important;
+  display: flex !important;
+  gap: 1.5rem !important;
+  flex-wrap: wrap !important;
+  align-items: flex-start !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.summary-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1.5rem;
+  flex: 2;
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+.summary-detail-item {
+  border-left: 3px solid #e2e8f0;
+  padding-left: 1rem;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 768px) {
+  .monthly-bills-toolbar {
+    flex-direction: column !important;
+    gap: 1rem !important;
+    padding: 0.75rem !important;
+    border-radius: 12px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  
+  .monthly-bills-toolbar .filter-item,
+  .monthly-bills-toolbar .month-year-item {
+    flex: 1 1 auto !important; /* Changed from 100% to auto to allow shrinking */
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Reset appearance to native for mobile to avoid native menu offset bugs */
+  .premium-select {
+    appearance: auto !important;
+    -webkit-appearance: menulist !important;
+    background-image: none !important;
+    padding: 8px !important; /* Standardized small padding */
+    height: 48px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    font-size: 16px !important; /* Prevent iOS zoom */
+  }
+
+  /* Ensure options are handled simply */
+  .premium-select option {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .bills-summary-card {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 1rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .summary-details-grid {
+    grid-template-columns: 1fr 1fr;
+    min-width: 0 !important;
+    width: 100% !important;
+    gap: 1rem !important;
+  }
+  
+  .summary-detail-item {
+    border-left: none;
+    border-top: 1px dashed #e2e8f0;
+    padding-left: 0;
+    padding-top: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .summary-details-grid {
+    grid-template-columns: 1fr;
+  }
+}

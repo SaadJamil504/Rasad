@@ -2,7 +2,7 @@ from django.urls import path
 from .views import (
     LoginView, SignupView, PasswordResetRequestView, PasswordResetConfirmView,
     InvitationListCreateView, InvitationValidateView, InvitationSignupView, StaffListView, StaffDetailView,
-    RouteListCreateView, RouteDetailView, DailyDeliveryView, DeliveryToggleView,
+    RouteListCreateView, RouteDetailView, DailyDeliveryView, DeliveryToggleView, DeliveryUpdateView,
     CustomerDeliveryStatusView, UpdateMilkPricesView, DeliveryHistoryView,
     PaymentRequestView, PaymentListView, ConfirmPaymentView,
     DeliveryAdjustmentCreateView, DeliveryAdjustmentListView, DeliveryAdjustmentActionView,
@@ -25,6 +25,7 @@ urlpatterns = [
     path('routes/<int:pk>/', RouteDetailView.as_view(), name='route_detail'),
     path('deliveries/daily/', DailyDeliveryView.as_view(), name='daily_deliveries'),
     path('deliveries/toggle/<int:pk>/', DeliveryToggleView.as_view(), name='delivery_toggle'),
+    path('deliveries/update/<int:pk>/', DeliveryUpdateView.as_view(), name='delivery_update'),
     path('deliveries/status/', CustomerDeliveryStatusView.as_view(), name='customer_delivery_status'),
     path('deliveries/history/', DeliveryHistoryView.as_view(), name='delivery_history'),
     path('prices/update/', UpdateMilkPricesView.as_view(), name='update_prices'),
@@ -42,4 +43,5 @@ urlpatterns = [
     path('stats/', DashboardStatsView.as_view(), name='stats'),
     path('alerts/', DashboardAlertsView.as_view(), name='alerts'),
     path('reports/', DashboardReportsView.as_view(), name='reports'),
+    path('collection-stats/', CollectionStatsView.as_view(), name='collection_stats'),
 ]

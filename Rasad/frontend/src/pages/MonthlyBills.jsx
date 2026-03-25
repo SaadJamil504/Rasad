@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { staffAPI, deliveryAPI } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
+import './MonthlyBills.css';
 
 const MonthlyBills = () => {
-  const { t } = useLanguage();
+  const { language, t, ts } = useLanguage();
   const [customers, setCustomers] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState('');
   const [viewMonth, setViewMonth] = useState(new Date().getMonth() + 1);
@@ -48,38 +49,80 @@ const MonthlyBills = () => {
   // Find selected customer details to show specs
   const customerDetails = customers.find(c => c.id.toString() === selectedCustomer);
 
-  return (
-    <div className="page-container fade-in">
-      
+  // Calculate month/year options based on customer join date
+  const getAvailableYears = () => {
+    if (!customerDetails?.date_joined) return [2024, 2025, 2026];
+    const joinYear = new Date(customerDetails.date_joined).getFullYear();
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let y = joinYear; y <= currentYear; y++) {
+      years.push(y);
+    }
+    return years.length > 0 ? years : [currentYear];
+  };
 
-      <div className="premium-toolbar" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-        <div style={{ flex: 1, minWidth: '200px' }}>
+  const getAvailableMonths = () => {
+    if (!customerDetails?.date_joined) return Array.from({ length: 12 }, (_, i) => i + 1);
+    const joinDate = new Date(customerDetails.date_joined);
+    const joinMonth = joinDate.getMonth() + 1;
+    const joinYear = joinDate.getFullYear();
+    
+    const months = [];
+    const startMonth = parseInt(viewYear) === joinYear ? joinMonth : 1;
+    const endMonth = parseInt(viewYear) === new Date().getFullYear() ? new Date().getMonth() + 1 : 12;
+
+    for (let m = startMonth; m <= 12; m++) {
+      months.push(m);
+    }
+    return months;
+  };
+
+  useEffect(() => {
+    // Reset month/year if selected month/year is no longer available for new customer
+    if (customerDetails?.date_joined) {
+      const joinDate = new Date(customerDetails.date_joined);
+      const joinYear = joinDate.getFullYear();
+      const joinMonth = joinDate.getMonth() + 1;
+
+      if (parseInt(viewYear) < joinYear) {
+        setViewYear(joinYear);
+      }
+      if (parseInt(viewYear) === joinYear && parseInt(viewMonth) < joinMonth) {
+        setViewMonth(joinMonth);
+      }
+    }
+  }, [selectedCustomer, customerDetails]);
+
+  return (
+    <div className="page-container fade-in" style={{ maxWidth: '100vw', overflowX: 'hidden' }} dir={language === 'ur' ? 'rtl' : 'ltr'}>
+      <div className="monthly-bills-toolbar" style={{ maxWidth: '100%', boxSizing: 'border-box' }}>
+        <div className="filter-item" style={{ maxWidth: '100%', boxSizing: 'border-box' }}>
           <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#64748b', marginBottom: '0.5rem' }}>{t('Select Customer', 'گاہک منتخب کریں')}</label>
           <select 
             className="premium-select" 
-            style={{ width: '100%' }}
+            style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box', height: '45px' }}
             value={selectedCustomer}
             onChange={(e) => setSelectedCustomer(e.target.value)}
           >
-            <option value="">{t('-- Choose a Customer --', '-- گاہک کا انتخاب کریں --')}</option>
+            <option value="">{ts('-- Choose a Customer --', '-- گاہک کا انتخاب کریں --')}</option>
             {customers.map(c => (
-              <option key={c.id} value={c.id}>{c.first_name || c.username} - {c.address || 'No Address'}</option>
+              <option key={c.id} value={c.id}>{c.first_name || c.username}</option>
             ))}
           </select>
         </div>
 
-        <div style={{ minWidth: '150px' }}>
+        <div className="month-year-item">
           <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#64748b', marginBottom: '0.5rem' }}>{t('Select Month', 'مہینہ منتخب کریں')}</label>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <select className="premium-select" value={viewMonth} onChange={(e) => setViewMonth(e.target.value)}>
-              {Array.from({ length: 12 }, (_, i) => (
-                <option key={i + 1} value={i + 1}>
-                  {new Date(0, i).toLocaleString('default', { month: 'long' })}
+            <select className="premium-select" style={{ flex: 1, height: '45px' }} value={viewMonth} onChange={(e) => setViewMonth(e.target.value)} disabled={!selectedCustomer}>
+              {getAvailableMonths().map(m => (
+                <option key={m} value={m}>
+                  {new Date(0, m - 1).toLocaleString('default', { month: 'long' })}
                 </option>
               ))}
             </select>
-            <select className="premium-select" value={viewYear} onChange={(e) => setViewYear(e.target.value)}>
-              {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
+            <select className="premium-select" style={{ width: '100px', height: '45px' }} value={viewYear} onChange={(e) => setViewYear(e.target.value)} disabled={!selectedCustomer}>
+              {getAvailableYears().map(y => <option key={y} value={y}>{y}</option>)}
             </select>
           </div>
         </div>
@@ -95,21 +138,33 @@ const MonthlyBills = () => {
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem', marginTop: '2rem' }}>
           {customerDetails && (
-            <div className="glass-card" style={{ padding: '2rem', display: 'flex', gap: '2rem', flexWrap: 'wrap', alignItems: 'center' }}>
-              <div>
-                <h2 style={{ margin: '0 0 0.5rem 0' }}>{customerDetails.first_name || customerDetails.username}</h2>
-                <div style={{ color: '#64748b', fontSize: '0.9rem' }}>
-                  {customerDetails.address || t('N/A', 'نامعلوم')} • {customerDetails.route_name || t('Unassigned', 'غیر مختص')}
+            <div className="glass-card bills-summary-card">
+              <div style={{ minWidth: '200px', flex: '1' }}>
+                <h2 style={{ margin: '0 0 0.25rem 0', fontSize: '1.5rem' }}>{customerDetails.first_name || customerDetails.username}</h2>
+                <div style={{ color: '#64748b', fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <span>📍 {customerDetails.address || t('N/A', 'نامعلوم')}</span>
+                  <span>🛣️ {customerDetails.route_name || t('Unassigned', 'غیر مختص')}</span>
                 </div>
               </div>
-              <div style={{ borderLeft: '1px solid #e2e8f0', paddingLeft: '2rem' }}>
-                <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>{t('DAILY QTY', 'روزانہ مقدار')}</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: 800 }}>{customerDetails.daily_quantity || '0'}L ({customerDetails.milk_type})</div>
-              </div>
-              <div style={{ borderLeft: '1px solid #e2e8f0', paddingLeft: '2rem' }}>
-                <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>{t('CURRENT BALANCE', 'موجودہ بیلنس')}</div>
-                <div style={{ fontSize: '1.25rem', fontWeight: 800, color: parseFloat(customerDetails.outstanding_balance) > 0 ? '#ef4444' : '#27ae60' }}>
-                  {parseFloat(customerDetails.outstanding_balance) > 0 ? 'Rs ' + customerDetails.outstanding_balance : t('Advance', 'ایڈوانس') + ' Rs ' + Math.abs(customerDetails.outstanding_balance)}
+              
+              <div className="summary-details-grid">
+                <div className="summary-detail-item">
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('DAILY QTY', 'روزانہ مقدار')}</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 800 }}>{customerDetails.daily_quantity || '0'}L <small style={{ fontWeight: 600, color: '#64748b' }}>({customerDetails.milk_type})</small></div>
+                </div>
+                
+                <div className="summary-detail-item">
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('CURRENT BALANCE', 'موجودہ بیلنس')}</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: parseFloat(customerDetails.outstanding_balance) > 0 ? '#ef4444' : '#27ae60' }}>
+                    {parseFloat(customerDetails.outstanding_balance) > 0 ? 'Rs ' + customerDetails.outstanding_balance : t('Advance', 'ایڈوانس') + ' Rs ' + Math.abs(customerDetails.outstanding_balance)}
+                  </div>
+                </div>
+                
+                <div className="summary-detail-item">
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('JOIN DATE', 'شمولیت کی تاریخ')}</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 800 }}>
+                    {customerDetails.date_joined ? new Date(customerDetails.date_joined).toLocaleDateString() : t('N/A', 'نامعلوم')}
+                  </div>
                 </div>
               </div>
             </div>
@@ -119,8 +174,8 @@ const MonthlyBills = () => {
             <h3 style={{ margin: '0 0 1.5rem 0' }}>{t('Deliveries & Bill for', 'ڈیلیوری اور بل برائے')} {new Date(viewYear, viewMonth - 1).toLocaleString('default', { month: 'long', year: 'numeric' })}</h3>
             
             {customerHistory.length > 0 ? (
-              <div style={{ border: '1px solid #e2e8f0', borderRadius: '1rem', overflow: 'hidden' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+             <div style={{ border: '1px solid #e2e8f0', borderRadius: '1rem', overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '500px' }}>
                   <thead style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                     <tr>
                       <th style={{ padding: '1rem', fontWeight: 700, color: '#475569', fontSize: '0.85rem' }}>{t('DATE', 'تاریخ')}</th>

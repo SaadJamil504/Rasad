@@ -37,7 +37,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'role', 'phone_number', 'first_name', 'license_number', 'milk_type', 'daily_quantity', 'address', 'dairy_name', 'owner_dairy_name', 'route', 'route_name', 'buffalo_price', 'cow_price', 'outstanding_balance', 'total_paid')
+        fields = ('id', 'username', 'email', 'role', 'phone_number', 'first_name', 'license_number', 'milk_type', 'daily_quantity', 'address', 'dairy_name', 'owner_dairy_name', 'route', 'route_name', 'buffalo_price', 'cow_price', 'outstanding_balance', 'total_paid', 'date_joined')
         extra_kwargs = {
             'first_name': {'required': False, 'allow_blank': True},
             'license_number': {'required': False, 'allow_blank': True},
@@ -135,12 +135,12 @@ class SignupSerializer(serializers.ModelSerializer):
     def validate_cow_price(self, value):
         if value < 0:
             raise serializers.ValidationError('Cow price cannot be negative.')
-        return value
+        return round(value)
 
     def validate_buffalo_price(self, value):
         if value < 0:
             raise serializers.ValidationError('Buffalo price cannot be negative.')
-        return value
+        return round(value)
 
     def validate_email(self, value):
         email = value.lower()
@@ -418,11 +418,17 @@ class DeliveryAdjustmentSerializer(serializers.ModelSerializer):
 class PaymentSerializer(serializers.ModelSerializer):
     customer_name = serializers.CharField(source='customer.first_name', read_only=True)
     customer_username = serializers.CharField(source='customer.username', read_only=True)
+    received_by_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Payment
-        fields = ('id', 'customer', 'customer_name', 'customer_username', 'amount', 'method', 'status', 'created_at', 'confirmed_at', 'date')
+        fields = ('id', 'customer', 'customer_name', 'customer_username', 'amount', 'method', 'status', 'created_at', 'confirmed_at', 'date', 'note', 'received_by_name')
         read_only_fields = ('status', 'created_at', 'confirmed_at')
+
+    def get_received_by_name(self, obj):
+        if obj.received_by:
+            return obj.received_by.first_name or obj.received_by.username
+        return "System/User"
 
     def validate_amount(self, value):
         if value < 0:

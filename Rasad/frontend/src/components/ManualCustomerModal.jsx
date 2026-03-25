@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { staffAPI, routeAPI } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
+import { useClickOutside } from '../hooks/useClickOutside';
 
 const ManualCustomerModal = ({ isOpen, onClose, onSuccess }) => {
   const { t, ts } = useLanguage();
+  const modalRef = React.useRef(null);
+  useClickOutside(modalRef, onClose);
+
   const [routes, setRoutes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -69,13 +73,32 @@ const ManualCustomerModal = ({ isOpen, onClose, onSuccess }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content glass-card" style={{ maxWidth: '500px', width: '90%' }}>
+    <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="modal-content glass-card" ref={modalRef} style={{ maxWidth: '500px', width: '90%' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1e293b' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1e293b', margin: 0 }}>
             {success ? t('Customer Added Successfully!', 'گاہک کامیابی سے شامل ہو گیا!') : t('Add New Customer', 'نیا گاہک شامل کریں')}
           </h2>
-          <button className="btn-close" onClick={onClose}>&times;</button>
+          <button 
+            className="close-btn" 
+            onClick={onClose}
+            style={{
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              width: '36px',
+              height: '36px',
+              borderRadius: '50%',
+              color: '#64748b',
+              fontSize: '1.25rem',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            &times;
+          </button>
         </div>
 
         {success ? (

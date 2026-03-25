@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { staffAPI, deliveryAPI } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
 import InvitationModal from '../components/InvitationModal';
 import ManualCustomerModal from '../components/ManualCustomerModal';
+import CustomerProfileModal from '../components/CustomerProfileModal';
 import './Table.css';
 
 const CustomerList = () => {
@@ -12,72 +14,28 @@ const CustomerList = () => {
   const [error, setError] = useState(null);
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState({});
-  const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [routeFilter, setRouteFilter] = useState('All Routes');
   const [statusFilter, setStatusFilter] = useState('All Status');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const customerIdFromUrl = searchParams.get('id');
 
   // View Customer states
   const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [customerHistory, setCustomerHistory] = useState([]);
-  const [customerPayments, setCustomerPayments] = useState([]);
-  const [loadingDetails, setLoadingDetails] = useState(false);
-  const [viewMonth, setViewMonth] = useState(new Date().getMonth() + 1);
-  const [viewYear, setViewYear] = useState(new Date().getFullYear());
 
-  const handleViewCustomer = async (customer) => {
+  const handleViewCustomer = (customer) => {
     setSelectedCustomer(customer);
-    setIsEditing(false); // Reset edit mode when opening new customer
-    setLoadingDetails(true);
-    try {
-      const [historyRes, paymentsRes] = await Promise.all([
-        deliveryAPI.getDeliveryHistory(viewMonth, viewYear, customer.id),
-        deliveryAPI.getPayments(customer.id)
-      ]);
-      setCustomerHistory(historyRes.data);
-      setCustomerPayments(paymentsRes.data);
-    } catch (err) {
-      console.error('Failed to fetch customer details:', err);
-    } finally {
-      setLoadingDetails(false);
-    }
-  };
-
-  const handleEditToggle = () => {
-    if (!isEditing) {
-      setEditForm({
-        first_name: selectedCustomer.first_name,
-        phone_number: selectedCustomer.phone_number,
-        address: selectedCustomer.address,
-        daily_quantity: selectedCustomer.daily_quantity,
-        milk_type: selectedCustomer.milk_type
-      });
-    }
-    setIsEditing(!isEditing);
-  };
-
-  const handleSaveEdit = async () => {
-    setSaving(true);
-    try {
-      const res = await staffAPI.updateStaff(selectedCustomer.id, editForm);
-      setSelectedCustomer(res.data);
-      setIsEditing(false);
-      fetchCustomers(true);
-    } catch (err) {
-      console.error('Update failed:', err);
-      alert(t('Update failed. Please check your inputs.', 'اپ ڈیٹ ناکام ہو گئی۔ براہ کرم اپنی معلومات چیک کریں۔'));
-    } finally {
-      setSaving(false);
-    }
   };
 
   useEffect(() => {
-    if (selectedCustomer) {
-      handleViewCustomer(selectedCustomer);
+    if (customerIdFromUrl && customers.length > 0) {
+      const targetCustomer = customers.find(c => c.id.toString() === customerIdFromUrl);
+      if (targetCustomer) {
+        handleViewCustomer(targetCustomer);
+        setSearchParams({}, { replace: true });
+      }
     }
-  }, [viewMonth, viewYear]);
+  }, [customerIdFromUrl, customers]);
 
   const fetchCustomers = async (skipLoading = false) => {
     try {
@@ -150,6 +108,8 @@ const CustomerList = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+        </div>
+        <div className="toolbar-right">
           <div className="filter-dropdowns">
             <select
               className="premium-select"
@@ -172,13 +132,11 @@ const CustomerList = () => {
               <option value="Paused">{t('Paused', 'رکا ہوا')}</option>
             </select>
           </div>
-        </div>
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button className="btn-secondary" onClick={() => setIsInviteModalOpen(true)}>
+            {t('Invite via Link', 'لنک سے بلاؤ')}
+          </button>
           <button className="premium-btn-green" onClick={() => setIsManualModalOpen(true)}>
             <span>+</span> {t('Add Customer', 'نیا گاہک')}
-          </button>
-          <button className="btn-secondary" onClick={() => setIsInviteModalOpen(true)} style={{ whiteSpace: 'nowrap' }}>
-            {t('Invite via Link', 'لنک سے بلاؤ')}
           </button>
         </div>
       </div>
@@ -188,7 +146,7 @@ const CustomerList = () => {
       ) : error ? (
         <div className="error">{error}</div>
       ) : (
-        <div className="premium-table-wrapper">
+        <div className="premium-table-wrapper" style={{ maxHeight: '650px', overflowY: 'auto' }}>
           <table className="premium-table">
             <thead>
               <tr>
@@ -205,28 +163,29 @@ const CustomerList = () => {
             </thead>
             <tbody>
               {filteredCustomers.map(customer => (
-                <tr key={customer.id}>
-                  <td data-label="NO."><span className="id-hash">#{customer.id}</span></td>
+                <tr key={customer.id} onClick={() => handleViewCustomer(customer, false)} style={{ cursor: 'pointer' }}>
+                  <td data-label="NO."><span className="id-hash" style={{ color: '#94a3b8', fontSize: '0.85rem' }}>#{customer.id}</span></td>
                   <td data-label="CUSTOMER">
                     <div className="customer-cell">
                       <span className="customer-name-main">{customer.first_name || customer.username}</span>
-                      <span className="customer-sub-info">
-                        {customer.phone_number || t('No Number', 'کوئی نمبر نہیں')}
+                      <span className="customer-sub-info" style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                        <span style={{ fontFamily: 'Noto Nastaliq Urdu' }}>{customer.first_name_urdu || ''}</span>
+                        <span>{customer.phone_number || t('No Number', 'کوئی نمبر نہیں')}</span>
                       </span>
                     </div>
                   </td>
-                  <td data-label="AREA"><span className="area-text">{customer.address || 'General'}</span></td>
+                  <td data-label="AREA"><span className="area-text" style={{ fontSize: '0.9rem', color: '#475569' }}>{customer.address || 'General'}</span></td>
                   <td data-label="ROUTE">
-                    <span className={`route-badge ${customer.route_name === 'Route B' ? 'route-b' : customer.route_name === 'Route C' ? 'route-c' : 'route-a'}`}>
+                    <span className={`route-badge ${customer.route_name === 'Route B' ? 'route-b' : customer.route_name === 'Route C' ? 'route-c' : 'route-a'}`} style={{ fontSize: '0.75rem', padding: '0.3rem 0.8rem' }}>
                       {customer.route_name || t('Unassigned', 'غیر مختص')}
                     </span>
                   </td>
-                  <td data-label="DAILY QTY"><strong>{customer.daily_quantity || '0'}L</strong></td>
-                  <td data-label="RATE">Rs {customer.milk_type === 'cow' ? customer.cow_price : (customer.milk_type === 'buffalo' ? customer.buffalo_price : Math.max(customer.cow_price || 0, customer.buffalo_price || 0))}/L</td>
+                  <td data-label="DAILY QTY"><strong style={{ fontSize: '0.95rem' }}>{parseFloat(customer.daily_quantity).toFixed(0)}L</strong></td>
+                  <td data-label="RATE"><span style={{ color: '#475569', fontSize: '0.9rem' }}>Rs {customer.milk_type === 'cow' ? customer.cow_price : (customer.milk_type === 'buffalo' ? customer.buffalo_price : Math.max(customer.cow_price || 0, customer.buffalo_price || 0))}/L</span></td>
                   <td data-label="BALANCE">{formatBalance(customer.outstanding_balance)}</td>
                   <td data-label="STATUS">{getStatusBadge(customer.outstanding_balance)}</td>
-                  <td className="action-cell">
-                    <button className="view-btn" onClick={() => handleViewCustomer(customer)}>{t('View', 'دیکھیں')}</button>
+                  <td className="action-cell" onClick={(e) => e.stopPropagation()}>
+                    <button className="view-btn" onClick={() => handleViewCustomer(customer, true)}>{t('Edit', 'تبدیل')}</button>
                   </td>
                 </tr>
               ))}
@@ -253,144 +212,14 @@ const CustomerList = () => {
         onInviteSuccess={() => fetchCustomers(true)}
       />
 
-      {/* View Customer Modal */}
-      {selectedCustomer && (
-        <div className="modal-overlay">
-          <div className="modal-content glass-card" style={{ maxWidth: '700px', width: '95%', maxHeight: '90vh', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h2>{t('Customer Profile', 'گاہک کا پروفائل')}</h2>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                {!isEditing ? (
-                  <button className="btn-secondary" onClick={handleEditToggle} style={{ padding: '0.4rem 0.8rem', height: '36px' }}>{t('Edit', 'ترمیم')}</button>
-                ) : (
-                  <button className="premium-btn-green" onClick={handleSaveEdit} disabled={saving} style={{ padding: '0.4rem 0.8rem', height: '36px', fontSize: '0.85rem' }}>
-                    {saving ? t('Saving...', 'محفوظ ہو رہا ہے...') : t('Save', 'محفوظ کریں')}
-                  </button>
-                )}
-                <button className="btn-s" style={{ padding: '0.4rem 0.8rem', height: '36px' }} onClick={() => setSelectedCustomer(null)}>{t('Close', 'بند کریں')}</button>
-              </div>
-            </div>
-
-            <div className="customer-profile-grid">
-              <div style={{ flex: 1, minWidth: '0', background: '#f8fafc', padding: '1.25rem', borderRadius: '1rem', border: '1px solid #e2e8f0' }}>
-                {isEditing ? (
-                  <div className="edit-fields-group" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    <input className="form-input" style={{ fontSize: '0.9rem' }} value={editForm.first_name} onChange={e => setEditForm({...editForm, first_name: e.target.value})} placeholder={ts('Name', 'نام')} />
-                    <input className="form-input" style={{ fontSize: '0.9rem' }} value={editForm.phone_number} onChange={e => setEditForm({...editForm, phone_number: e.target.value})} placeholder={ts('Phone', 'فون')} />
-                    <input className="form-input" style={{ fontSize: '0.9rem' }} value={editForm.address} onChange={e => setEditForm({...editForm, address: e.target.value})} placeholder={ts('Address', 'پتہ')} />
-                  </div>
-                ) : (
-                  <>
-                    <h3 style={{ margin: '0 0 0.75rem 0', color: '#1e293b', fontSize: '1.1rem' }}>{selectedCustomer.first_name || selectedCustomer.username}</h3>
-                    <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>{t('Phone', 'فون')}:</strong> {selectedCustomer.phone_number || 'N/A'}</p>
-                    <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>{t('Address', 'پتہ')}:</strong> {selectedCustomer.address || 'N/A'}</p>
-                    <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>{t('Route', 'روٹ')}:</strong> {selectedCustomer.route_name || t('Unassigned', 'غیر مختص')}</p>
-                  </>
-                )}
-              </div>
-              <div style={{ flex: 1, minWidth: '0', background: '#f8fafc', padding: '1.25rem', borderRadius: '1rem', border: '1px solid #e2e8f0' }}>
-                <h3 style={{ margin: '0 0 0.75rem 0', color: '#1e293b', fontSize: '1.1rem' }}>{t('Account Specs', 'اکاؤنٹ کی تفصیلات')}</h3>
-                {isEditing ? (
-                  <div className="edit-fields-group" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <input type="number" step="0.5" className="form-input" style={{ fontSize: '0.9rem' }} value={editForm.daily_quantity} onChange={e => setEditForm({...editForm, daily_quantity: e.target.value})} placeholder="Qty" />
-                      <select className="form-input" style={{ fontSize: '0.9rem' }} value={editForm.milk_type} onChange={e => setEditForm({...editForm, milk_type: e.target.value})}>
-                        <option value="buffalo">{t('Buffalo', 'بھینس')}</option>
-                        <option value="cow">{t('Cow', 'گائے')}</option>
-                      </select>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>{t('Daily Qty', 'روزانہ مقدار')}:</strong> {selectedCustomer.daily_quantity || '0'}L ({selectedCustomer.milk_type})</p>
-                    <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>{t('Milk Rate', 'دودھ کا ریٹ')}:</strong> Rs {selectedCustomer.milk_type === 'cow' ? selectedCustomer.cow_price : selectedCustomer.buffalo_price}/L</p>
-                    <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem' }}><strong>{t('Balance Due', 'بقایا واجب الادا')}:</strong> {formatBalance(selectedCustomer.outstanding_balance)}</p>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {loadingDetails ? (
-              <p>{t('Loading details...', 'تفصیل لوڈ ہو رہی ہے')}</p>
-            ) : (
-              <div className="customer-details-grid">
-                {/* Monthly Bill Section */}
-                <div style={{ flex: 1, minWidth: '0' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{t('Monthly Bill', 'ماہانہ بل')}</h3>
-                    <div style={{ display: 'flex', gap: '0.4rem' }}>
-                      <select className="form-input" style={{ padding: '0.3rem', fontSize: '0.8rem' }} value={viewMonth} onChange={(e) => setViewMonth(e.target.value)}>
-                        {Array.from({ length: 12 }, (_, i) => (
-                          <option key={i + 1} value={i + 1}>
-                            {new Date(0, i).toLocaleString('default', { month: 'short' })}
-                          </option>
-                        ))}
-                      </select>
-                      <select className="form-input" style={{ padding: '0.3rem', fontSize: '0.8rem' }} value={viewYear} onChange={(e) => setViewYear(e.target.value)}>
-                        {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div style={{ background: '#f8fafc', borderRadius: '1rem', border: '1px solid #e2e8f0', padding: '1rem', maxHeight: '300px', overflowY: 'auto' }}>
-                    {customerHistory.length > 0 ? (
-                      <>
-                        {customerHistory.map(item => (
-                          <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px dashed #cbd5e1', fontSize: '0.9rem' }}>
-                            <span style={{ color: '#64748b', width: '30px' }}>{new Date(item.date).getDate()}</span>
-                            <span style={{ flex: 1, fontWeight: 600 }}>{item.status === 'paused' ? t('Paused', 'رکا ہوا') : `${item.quantity} ${t('Liter', 'لیٹر')}`}</span>
-                            <span style={{ color: '#27ae60', fontWeight: 600 }}>Rs {item.status === 'paused' ? '0' : item.total_amount}</span>
-                          </div>
-                        ))}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem 0 0 0', marginTop: '0.5rem', borderTop: '2px solid #cbd5e1', fontWeight: 800, fontSize: '1rem' }}>
-                          <span style={{ visibility: 'hidden', width: '30px' }}>0</span>
-                          <span style={{ flex: 1 }}>{t('Total', 'کل')} {customerHistory.reduce((s, i) => s + parseFloat(i.quantity || 0), 0)}{t('L', 'لیٹر')}</span>
-                          <span style={{ color: '#27ae60' }}>Rs {customerHistory.reduce((s, i) => s + parseFloat(i.total_amount || 0), 0)}</span>
-                        </div>
-                      </>
-                    ) : (
-                      <p style={{ textAlign: 'center', color: '#94a3b8', margin: '2rem 0' }}>{t('No deliveries for this month.', 'اس مہینے کی کوئی ڈیلیوری نہیں ہے۔')}</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Payment History Section */}
-                <div style={{ flex: 1, minWidth: '0' }}>
-                  <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem' }}>{t('Payment History', 'ادائیگی کی ہسٹری')}</h3>
-                  <div style={{ background: '#f8fafc', borderRadius: '1rem', border: '1px solid #e2e8f0', padding: '1rem', maxHeight: '300px', overflowY: 'auto' }}>
-                    {customerPayments.length > 0 ? (
-                      customerPayments.map(payment => (
-                        <div key={payment.id} style={{ padding: '0.75rem 0', borderBottom: '1px solid #e2e8f0' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                            <strong style={{ color: '#1e293b' }}>Rs {payment.amount}</strong>
-                            <span style={{
-                              fontSize: '0.75rem', fontWeight: 700, padding: '0.2rem 0.5rem', borderRadius: '10px',
-                              background: payment.status === 'confirmed' ? '#dcfce7' : payment.status === 'rejected' ? '#fee2e2' : '#fef3c7',
-                              color: payment.status === 'confirmed' ? '#166534' : payment.status === 'rejected' ? '#991b1b' : '#92400e'
-                            }}>
-                              {t(payment.status.toUpperCase(), 
-                                payment.status === 'confirmed' ? 'تصدیق شدہ' : 
-                                payment.status === 'rejected' ? 'مسترد شدہ' : 'پینڈنگ')}
-                            </span>
-                          </div>
-                          <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                            {t('Reported', 'رپورٹ شدہ')}: {new Date(payment.created_at).toLocaleDateString()}
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p style={{ textAlign: 'center', color: '#94a3b8', margin: '2rem 0' }}>{t('No payment history found.', 'ادائیگی کی کوئی ہسٹری نہیں ملی۔')}</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      <CustomerProfileModal
+        isOpen={!!selectedCustomer}
+        customer={selectedCustomer}
+        onClose={() => setSelectedCustomer(null)}
+        onUpdateSuccess={() => fetchCustomers(true)}
+      />
     </div>
   );
-
 };
 
 export default CustomerList;

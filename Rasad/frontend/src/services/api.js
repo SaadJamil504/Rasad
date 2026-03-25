@@ -128,6 +128,7 @@ export const invitationAPI = {
 
 export const staffAPI = {
   getStaff: (role) => api.get('accounts/staff/', { params: { role } }),
+  getStaffDetail: (id) => api.get(`accounts/staff/${id}/`),
   createStaff: (data) => api.post('accounts/staff/', data),
   updateStaff: (id, data) => api.patch(`accounts/staff/${id}/`, data),
   deleteStaff: (id) => api.delete(`accounts/staff/${id}/`),
@@ -147,8 +148,9 @@ export const deliveryAPI = {
   getHistory: () => api.get('accounts/deliveries/history/'),
   getDeliveryHistory: (month, year, customer_id) => api.get('accounts/deliveries/history/', { params: { month, year, customer_id } }),
   updatePrices: (prices) => api.post('accounts/prices/update/', prices),
+  updateDeliveryQuantity: (id, quantity) => api.patch(`accounts/deliveries/update/${id}/`, { quantity }),
   reportPayment: (data) => api.post('accounts/payments/report/', data),
-  getPayments: (customer_id) => api.get('accounts/payments/list/', { params: { customer_id } }),
+  getPayments: (params) => api.get('accounts/payments/list/', { params }),
   confirmPayment: (id, action = 'confirm') => api.post(`accounts/payments/confirm/${id}/`, { action }),
   createAdjustment: (data) => api.post('accounts/adjustments/create/', data),
   getAdjustments: () => api.get('accounts/adjustments/list/'),

@@ -22,15 +22,20 @@ const MainLayout = () => {
   const handleUpdatePrices = async (e) => {
     e.preventDefault();
     
+    const roundedPrices = {
+      cow_price: Math.round(parseFloat(prices.cow_price)),
+      buffalo_price: Math.round(parseFloat(prices.buffalo_price))
+    };
+
     // Validate prices are positive
-    if (parseFloat(prices.cow_price) <= 0 || parseFloat(prices.buffalo_price) <= 0) {
+    if (roundedPrices.cow_price <= 0 || roundedPrices.buffalo_price <= 0) {
       alert('Prices must be greater than 0.');
       return;
     }
     
     setUpdatingPrices(true);
     try {
-      await deliveryAPI.updatePrices(prices);
+      await deliveryAPI.updatePrices(roundedPrices);
       alert('Milk prices updated successfully!');
       setShowPriceModal(false);
     } catch (err) {
@@ -66,37 +71,86 @@ const MainLayout = () => {
       {showSidebar && (
         <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
           <div className="sidebar-header">
-            <div className="logo-icon">R</div>
-            <h2>Rasad</h2>
+            <div className="logo-container">
+              <div className="logo-icon">
+                <img src="/logo-rasad.png" alt="Rasad" style={{ width: '32px', height: '32px', objectFit: 'contain' }} onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+                <div style={{ display: 'none', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', fontWeight: 800 }}>R</div>
+              </div>
+              <div className="logo-text">
+                <h2>Rasad</h2>
+                <span className="logo-subtext">{t('SUPPLIES MANAGER', 'سپلائیز منیجر')}</span>
+              </div>
+            </div>
           </div>
           <nav className="sidebar-nav">
+            <div className="nav-group-label">{t('MAIN', 'مین')}</div>
             <Link to="/" className={`nav-item ${window.location.pathname === '/' ? 'active' : ''}`} onClick={closeSidebar}>
+              <span className="nav-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+              </span>
               {t('Dashboard', 'ڈیش بورڈ')}
             </Link>
-            <Link to="/routes" className={`nav-item ${window.location.pathname === '/routes' ? 'active' : ''}`} onClick={closeSidebar}>
-              {t('Routes', 'روٹس')}
-            </Link>
-            <Link to="/drivers" className={`nav-item ${window.location.pathname === '/drivers' ? 'active' : ''}`} onClick={closeSidebar}>
-              {t('Drivers', 'ڈرائیورز')}
-            </Link>
+            
+            <div className="nav-group-label">{t('CUSTOMERS', 'گاہک')}</div>
             <Link to="/customers" className={`nav-item ${window.location.pathname === '/customers' ? 'active' : ''}`} onClick={closeSidebar}>
-              {t('Customers', 'گاہک')}
+              <span className="nav-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+              </span>
+              {t('All Customers', 'گاہکوں کی فہرست')}
             </Link>
+            
             {user.role === 'owner' && (
               <>
                 <Link to="/bills" className={`nav-item ${window.location.pathname === '/bills' ? 'active' : ''}`} onClick={closeSidebar}>
-                  {t('Monthly Bills', 'ماہانہ بل')}
+                  <span className="nav-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                  </span>
+                  {t('Monthly Bill', 'ماہانہ بل')}
                 </Link>
+                
+                <div className="nav-group-label">{t('FINANCE', 'مالیات')}</div>
                 <Link to="/payments" className={`nav-item ${window.location.pathname === '/payments' ? 'active' : ''}`} onClick={closeSidebar}>
+                  <span className="nav-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                  </span>
                   {t('Payments', 'ادائیگیاں')}
+                  {/* Mock badge if needed */}
+                </Link>
+
+                <div className="nav-group-label">{t('OPERATIONS', 'آپریشنز')}</div>
+                <Link to="/routes" className={`nav-item ${window.location.pathname === '/routes' ? 'active' : ''}`} onClick={closeSidebar}>
+                  <span className="nav-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 7m0 10V7" /></svg>
+                  </span>
+                  {t('Routes', 'روٹس')}
+                </Link>
+                <Link to="/drivers" className={`nav-item ${window.location.pathname === '/drivers' ? 'active' : ''}`} onClick={closeSidebar}>
+                  <span className="nav-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                  </span>
+                  {t('Drivers', 'ڈرائیورز')}
                 </Link>
                 <Link to="/reports" className={`nav-item ${window.location.pathname === '/reports' ? 'active' : ''}`} onClick={closeSidebar}>
+                  <span className="nav-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                  </span>
                   {t('Reports', 'رپورٹس')}
                 </Link>
-                <div className="nav-item" style={{ cursor: 'pointer' }} onClick={() => { setShowPriceModal(true); closeSidebar(); }}>
+                <div className="nav-item price-adjust-item" onClick={() => { setShowPriceModal(true); closeSidebar(); }}>
+                  <span className="nav-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  </span>
                   {t('Adjust Price', 'نرخ بدلیں')}
                 </div>
               </>
+            )}
+            {user.role === 'driver' && (
+              <Link to="/drivers" className={`nav-item ${window.location.pathname === '/drivers' ? 'active' : ''}`} onClick={closeSidebar}>
+                <span className="nav-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                </span>
+                {t('My Profile', 'میری پروفائل')}
+              </Link>
             )}
           </nav>
           <div className="sidebar-footer">
@@ -111,7 +165,8 @@ const MainLayout = () => {
         </aside>
       )}
       <main className="main-content">
-        <header className={showSidebar ? "owner-header-compact" : "customer-driver-header-transparent"}>
+        {user.role === 'owner' && (
+          <header className={showSidebar ? "owner-header-compact" : "customer-driver-header-transparent"}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 {showSidebar && (
@@ -151,22 +206,33 @@ const MainLayout = () => {
               </div>
             </div>
           </header>
+        )}
         <section className={`page-body ${!showSidebar ? 'full-width' : ''}`}>
           <Outlet />
         </section>
       </main>
 
       {showPriceModal && (
-        <div className="modal-overlay-layout" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: 'white', padding: '2.5rem', borderRadius: '1.5rem', width: '90%', maxWidth: '400px', boxShadow: '0 20px 50px rgba(0,0,0,0.3)' }}>
+        <div className="modal-overlay-layout" onClick={(e) => { if (e.target === e.currentTarget) setShowPriceModal(false); }} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: 'white', padding: '2.5rem', borderRadius: '1.5rem', width: '90%', maxWidth: '400px', boxShadow: '0 20px 50px rgba(0,0,0,0.3)', position: 'relative' }}>
+            <button 
+              onClick={() => setShowPriceModal(false)}
+              style={{
+                position: 'absolute', top: '1.5rem', right: '1.5rem', background: '#f8fafc', border: '1px solid #e2e8f0',
+                width: '32px', height: '32px', borderRadius: '50%', color: '#64748b', fontSize: '1.25rem', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s'
+              }}
+            >
+              &times;
+            </button>
             <h3 style={{ marginTop: 0, marginBottom: '1.5rem', color: '#1e293b' }}>{t('Adjust Daily Milk Prices', 'دودھ کے روزانہ نرخ بدلیں')}</h3>
             <form onSubmit={handleUpdatePrices}>
               <div style={{ marginBottom: '1.25rem' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#64748b', fontSize: '0.9rem' }}>{t('Cow Milk Price (per Liter)', 'گائے کے دودھ کا ریٹ (فی لیٹر)')}</label>
                 <input
                   type="number"
-                  step="0.01"
-                  min="0.01"
+                  step="1"
+                  min="1"
                   value={prices.cow_price}
                   onChange={(e) => setPrices({ ...prices, cow_price: e.target.value })}
                   required
@@ -177,8 +243,8 @@ const MainLayout = () => {
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#64748b', fontSize: '0.9rem' }}>{t('Buffalo Milk Price (per Liter)', 'بھینس کے دودھ کا ریٹ (فی لیٹر)')}</label>
                 <input
                   type="number"
-                  step="0.01"
-                  min="0.01"
+                  step="1"
+                  min="1"
                   value={prices.buffalo_price}
                   onChange={(e) => setPrices({ ...prices, buffalo_price: e.target.value })}
                   required

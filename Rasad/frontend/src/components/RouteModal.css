@@ -254,4 +254,10 @@
 .role-owner .close-btn {
   background: #f1f5f9;
   color: #64748b;
+  border-radius: 50% !important;
+  width: 32px !important;
+  height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }

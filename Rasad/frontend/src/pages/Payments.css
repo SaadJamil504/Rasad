@@ -1,7 +1,8 @@
 .payments-page {
   padding: 1.5rem;
-  max-width: 1200px;
+  max-width: 1600px;
   margin: 0 auto;
+  font-family: 'Outfit', sans-serif;
 }
 
 .pay-stats-grid {
@@ -48,20 +49,25 @@
 }
 
 .pay-stat-value {
-  font-size: 2rem;
-  font-weight: 850;
-  color: #1a202c;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1e293b;
   line-height: 1.2;
 }
 
 .pay-stat-label {
-  font-size: 0.9rem;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.85rem;
   font-weight: 600;
   color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   margin-bottom: 0.25rem;
 }
 
 .pay-stat-sub {
+  font-family: 'Outfit', sans-serif;
   font-size: 0.8rem;
   font-weight: 700;
 }
@@ -77,9 +83,10 @@
   align-items: center;
   gap: 1rem;
   margin-bottom: 2rem;
-  color: #1a202c;
-  font-size: 1.4rem;
-  font-weight: 800;
+  color: #1e293b;
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
 }
 
 .urdu-title-small {
@@ -107,9 +114,10 @@
   border-radius: 0.75rem;
   border: 1px solid #e2e8f0;
   background: white;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #1a202c;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #334155;
+  font-family: 'Outfit', sans-serif;
   transition: all 0.2s;
 }
 
@@ -141,8 +149,8 @@
 .currency-prefix {
   position: absolute;
   left: 1rem;
-  color: #1a202c;
-  font-weight: 800;
+  color: #64748b;
+  font-weight: 600;
   pointer-events: none;
 }
 
@@ -185,15 +193,16 @@
 }
 
 .tx-user-name {
-  font-weight: 800;
-  color: #1a202c;
-  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 1rem;
+  font-family: 'Outfit', sans-serif;
 }
 
 .tx-amount-value {
-  font-weight: 800;
-  color: #27ae60;
-  font-size: 1.1rem;
+  font-weight: 700;
+  color: #16a34a;
+  font-size: 1rem;
 }
 
 .tx-bottom-row {
@@ -203,6 +212,7 @@
 }
 
 .tx-meta-info {
+  font-family: 'Outfit', sans-serif;
   font-size: 0.85rem;
   color: #64748b;
   font-weight: 600;
@@ -223,5 +233,14 @@
   padding: 3rem;
   color: #94a3b8;
   font-weight: 600;
-  font-style: italic;
+  font-family: 'Outfit', sans-serif;
+}
+
+.premium-btn-green {
+  background: #065f46 !important;
+  color: white !important;
+}
+
+.premium-btn-green:hover {
+  background: #064e3b !important;
 }
