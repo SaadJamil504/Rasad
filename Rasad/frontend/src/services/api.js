@@ -1,8 +1,16 @@
 import axios from 'axios';
 
+// Helper to ensure URL ends with a slash and includes 'api/'
+const getBaseURL = () => {
+  let url = import.meta.env.VITE_API_URL || 'https://rasad-production.up.railway.app/';
+  if (!url.endsWith('/')) url += '/';
+  if (!url.toLowerCase().endsWith('/api/')) url += 'api/';
+  return url;
+};
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://rasad-production.up.railway.app/api',
-  timeout: 15000, // 15 seconds timeout for slow Railway instances
+  baseURL: getBaseURL(),
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -77,7 +85,7 @@ api.interceptors.response.use(
         const refreshToken = localStorage.getItem('refresh_token');
         if (!refreshToken) throw new Error('No refresh token available');
 
-        const response = await axios.post(`${import.meta.env.VITE_API_URL || 'https://rasad-production.up.railway.app/api/'}accounts/login/refresh/`, {
+        const response = await axios.post(`${getBaseURL()}accounts/login/refresh/`, {
           refresh: refreshToken,
         }, { timeout: 10000 });
 
