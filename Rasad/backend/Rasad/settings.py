@@ -14,14 +14,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 environ.Env.read_env(BASE_DIR / '.env')
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('SECRET_KEY')
+SECRET_KEY = 'django-insecure-#7ei!^x5=kwmq2(wdlvb$)=1v7c(x=!=o07hnpfwfrgelf_6#2'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env('DEBUG')
+DEBUG = True
 
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['rasad-production.up.railway.app', 'localhost', '127.0.0.1'])
+ALLOWED_HOSTS = ['rasad-production.up.railway.app', 'localhost', '127.0.0.1']
 
-FRONTEND_URL = env('FRONTEND_URL', default='http://localhost:5173')
+FRONTEND_URL = 'http://localhost:5173'
 
 
 # Application definition
@@ -152,18 +152,17 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:5173",
     "https://rasad-ten.vercel.app",
 ]
-if env('FRONTEND_URL', default=None):
-    CSRF_TRUSTED_ORIGINS.append(env('FRONTEND_URL').rstrip('/'))
+CSRF_TRUSTED_ORIGINS.append(FRONTEND_URL.rstrip('/'))
 CSRF_TRUSTED_ORIGINS.append("https://rasad-production.up.railway.app")
 
 # SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
-# Email Settings
-EMAIL_BACKEND = env('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
-EMAIL_HOST = env('EMAIL_HOST')
-EMAIL_PORT = env.int('EMAIL_PORT', default=587)
-EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
-EMAIL_HOST_USER = env('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+# Email Settings (Credentials removed as requested)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_HOST = ''
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
