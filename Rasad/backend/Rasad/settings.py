@@ -53,11 +53,9 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "https://rasad-ten.vercel.app",
+    FRONTEND_URL.rstrip('/'),
+    "https://rasad-production.up.railway.app",
 ]
-if env('FRONTEND_URL', default=None):
-    CORS_ALLOWED_ORIGINS.append(env('FRONTEND_URL').rstrip('/'))
-# Add production backend if needed for Swagger/Internal
-CORS_ALLOWED_ORIGINS.append("https://rasad-production.up.railway.app")
 
 ROOT_URLCONF = 'Rasad.urls'
 
@@ -143,9 +141,9 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "https://rasad-ten.vercel.app",
+    FRONTEND_URL.rstrip('/'),
+    "https://rasad-production.up.railway.app",
 ]
-CSRF_TRUSTED_ORIGINS.append(FRONTEND_URL.rstrip('/'))
-CSRF_TRUSTED_ORIGINS.append("https://rasad-production.up.railway.app")
 
 # SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SESSION_COOKIE_SECURE = not DEBUG

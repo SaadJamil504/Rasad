@@ -3,7 +3,7 @@ import { API_URL } from '../config';
 
 // Helper to ensure URL ends with a slash and includes 'api/'
 const getBaseURL = () => {
-  let url = API_URL || 'https://rasad-production.up.railway.app/api/';
+  let url = API_URL;
   if (!url.endsWith('/')) url += '/';
   if (!url.toLowerCase().endsWith('/api/')) url += 'api/';
   return url;
