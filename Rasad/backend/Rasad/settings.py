@@ -17,11 +17,11 @@ environ.Env.read_env(BASE_DIR / '.env')
 SECRET_KEY = 'django-insecure-#7ei!^x5=kwmq2(wdlvb$)=1v7c(x=!=o07hnpfwfrgelf_6#2'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['rasad-production.up.railway.app', 'localhost', '127.0.0.1']
 
-FRONTEND_URL = 'http://localhost:5173'
+FRONTEND_URL = 'https://rasad-ten.vercel.app'
 
 
 # Application definition
