@@ -35,13 +35,8 @@ const RouteList = () => {
 
   return (
     <div className="page-container">
-      <div className="page-header" style={{ marginBottom: '1.5rem', justifyContent: 'flex-end' }}>
-        <button className="premium-btn-green" onClick={() => {
-          setSelectedRoute(null);
-          setIsModalOpen(true);
-        }}>
-          <span>+</span> {t('Add Route', 'نیا روٹ')}
-        </button>
+      <div className="page-header" style={{ marginBottom: '1.5rem' }}>
+        <h1 className="page-title">{t('Current Routes', 'موجودہ روٹس')}</h1>
       </div>
 
       {loading ? (
@@ -101,6 +96,18 @@ const RouteList = () => {
                 {route.customer_count === 0 && (
                   <span className="text-muted" style={{ fontSize: '0.8rem' }}>No customers assigned</span>
                 )}
+                
+                {/* Add More Customer Pill */}
+                <span 
+                  className="add-more-customer-pill"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedRoute(route);
+                    setIsModalOpen(true);
+                  }}
+                >
+                  <span>+</span> {t('Add More', 'مزید شامل کریں')}
+                </span>
               </div>
             </div>
           ))}
@@ -109,6 +116,20 @@ const RouteList = () => {
               {t('No routes found. Create your first delivery route!', 'کوئی روٹ نہیں ملا- اپنا پہلا روٹ بنائیں')}
             </div>
           )}
+
+          {/* Add New Route Card */}
+          <div 
+            className="route-card-add-new" 
+            onClick={() => {
+              setSelectedRoute(null);
+              setIsModalOpen(true);
+            }}
+          >
+            <div className="add-new-icon-circle">
+              <span>+</span>
+            </div>
+            <span className="add-new-text">{t('Add Route', 'نیا روٹ')}</span>
+          </div>
         </div>
       )}
 

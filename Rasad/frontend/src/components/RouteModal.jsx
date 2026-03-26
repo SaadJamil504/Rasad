@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { staffAPI, routeAPI } from '../services/api';
+import CustomerProfileModal from '../components/CustomerProfileModal';
+import ManualCustomerModal from '../components/ManualCustomerModal';
 import { useLanguage } from '../context/LanguageContext';
 import { useClickOutside } from '../hooks/useClickOutside';
 import {
@@ -68,6 +70,7 @@ const RouteModal = ({ isOpen, onClose, onRouteCreated, editRoute }) => {
   const [error, setError] = useState('');
   const [isSequencing, setIsSequencing] = useState(false);
   const [orderedCustomers, setOrderedCustomers] = useState([]);
+  const [isManualCustomerModalOpen, setIsManualCustomerModalOpen] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -321,6 +324,19 @@ const RouteModal = ({ isOpen, onClose, onRouteCreated, editRoute }) => {
                     );
                     })
                 )}
+                
+                {/* Add New Customer Card - Always at the end */}
+                {!searchTerm && (
+                  <div 
+                    className="add-customer-card-dotted"
+                    onClick={() => setIsManualCustomerModalOpen(true)}
+                  >
+                    <div className="add-icon-small">
+                      <span>+</span>
+                    </div>
+                    <span className="add-text-small">{t('Add New Customer', 'نیا گاہک شامل کریں')}</span>
+                  </div>
+                )}
                 </div>
             )}
           </div>
@@ -334,6 +350,15 @@ const RouteModal = ({ isOpen, onClose, onRouteCreated, editRoute }) => {
             </button>
           </div>
         </form>
+
+        <ManualCustomerModal
+          isOpen={isManualCustomerModalOpen}
+          onClose={() => setIsManualCustomerModalOpen(false)}
+          onSuccess={() => {
+            fetchAssignmentData();
+            setIsManualCustomerModalOpen(false);
+          }}
+        />
       </div>
     </div>
   );
