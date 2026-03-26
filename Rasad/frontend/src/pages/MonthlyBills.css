@@ -67,27 +67,24 @@
   
   .monthly-bills-toolbar .filter-item,
   .monthly-bills-toolbar .month-year-item {
-    flex: 1 1 auto !important; /* Changed from 100% to auto to allow shrinking */
+    flex: 1 1 auto !important;
     width: 100% !important;
     min-width: 0 !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
   }
 
-  /* Reset appearance to native for mobile to avoid native menu offset bugs */
   .premium-select {
     appearance: auto !important;
     -webkit-appearance: menulist !important;
     background-image: none !important;
-    padding: 8px !important; /* Standardized small padding */
+    padding: 8px !important;
     height: 48px !important;
-    width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
-    font-size: 16px !important; /* Prevent iOS zoom */
+    font-size: 16px !important;
   }
 
-  /* Ensure options are handled simply */
   .premium-select option {
     width: 100% !important;
     max-width: 100% !important;
@@ -122,4 +119,64 @@
   .summary-details-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* History Table Styling */
+.history-table-container {
+  max-height: 500px;
+  overflow: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  background: white;
+  position: relative;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: left;
+  min-width: 500px;
+}
+
+.history-table thead th {
+  position: sticky;
+  top: 0;
+  background: #f8fafc;
+  z-index: 2;
+  border-bottom: 2px solid #e2e8f0;
+  padding: 1rem;
+  font-weight: 700;
+  color: #475569;
+  font-size: 0.85rem;
+}
+
+.history-table tfoot td {
+  position: sticky;
+  bottom: 0;
+  background: #f8fafc;
+  z-index: 2;
+  border-top: 2px solid #cbd5e1;
+  padding: 1rem;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.history-table td {
+  padding: 1rem;
+}
+
+/* Scrollbar styling */
+.history-table-container::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.history-table-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.history-table-container::-webkit-scrollbar-track {
+  background: transparent;
 }

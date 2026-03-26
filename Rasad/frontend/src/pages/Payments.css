@@ -121,6 +121,18 @@
   transition: all 0.2s;
 }
 
+/* Remove arrows from number inputs */
+.payment-input[type=number]::-webkit-inner-spin-button, 
+.payment-input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
+}
+
+.payment-input[type=number] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
 .payment-input:focus {
   border-color: #27ae60;
   box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.1);

@@ -3,7 +3,7 @@ import { staffAPI, deliveryAPI } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
 import { useClickOutside } from '../hooks/useClickOutside';
 
-const CustomerProfileModal = ({ customer, isOpen, onClose, onUpdateSuccess }) => {
+const CustomerProfileModal = ({ customer, isOpen, onClose, onUpdateSuccess, initialEditMode }) => {
   const { t, ts } = useLanguage();
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({});
@@ -21,14 +21,30 @@ const CustomerProfileModal = ({ customer, isOpen, onClose, onUpdateSuccess }) =>
   });
 
   useEffect(() => {
-    if (customer && (!currentCustomer || customer.id !== currentCustomer.id)) {
-      // If we're switching customers, reset everything
+    if (customer && isOpen) {
+      // If we're opening or switching customers
       setCurrentCustomer(customer);
       setCustomerHistory([]);
       setCustomerPayments([]);
-      setIsEditing(false);
+      
+      // Handle initial edit mode
+      setIsEditing(initialEditMode || false);
+      if (initialEditMode) {
+        setEditForm({
+          first_name: customer.first_name,
+          phone_number: customer.phone_number,
+          house_no: customer.house_no,
+          street: customer.street,
+          area: customer.area,
+          city: customer.city,
+          daily_quantity: customer.daily_quantity,
+          milk_type: customer.milk_type
+        });
+      } else {
+        setEditForm({});
+      }
     }
-  }, [customer, isOpen]);
+  }, [customer, isOpen, initialEditMode]);
 
   const fetchDetails = async () => {
     if (!currentCustomer?.id) return;
@@ -65,7 +81,10 @@ const CustomerProfileModal = ({ customer, isOpen, onClose, onUpdateSuccess }) =>
       setEditForm({
         first_name: currentCustomer.first_name,
         phone_number: currentCustomer.phone_number,
-        address: currentCustomer.address,
+        house_no: currentCustomer.house_no,
+        street: currentCustomer.street,
+        area: currentCustomer.area,
+        city: currentCustomer.city,
         daily_quantity: currentCustomer.daily_quantity,
         milk_type: currentCustomer.milk_type
       });
@@ -109,41 +128,11 @@ const CustomerProfileModal = ({ customer, isOpen, onClose, onUpdateSuccess }) =>
         margin: '10px auto',
         borderRadius: '1.5rem'
       }}>
-        <button 
-          className="close-btn" 
-          onClick={onClose}
-          style={{
-            position: 'absolute', 
-            top: '0.75rem', 
-            right: '0.75rem', 
-            background: '#f1f5f9', 
-            border: 'none',
-            width: '28px', 
-            height: '28px', 
-            borderRadius: '50%', 
-            color: '#64748b', 
-            fontSize: '1.2rem', 
-            cursor: 'pointer',
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            zIndex: 100,
-            transition: 'background 0.2s',
-            lineHeight: 0,
-            paddingBottom: '2px'
-          }}
-          onMouseOver={e => e.currentTarget.style.background = '#e2e8f0'}
-          onMouseOut={e => e.currentTarget.style.background = '#f1f5f9'}
-        >
-          &times;
-        </button>
-
         <div className="modal-header-actions" style={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'flex-start', 
-          marginBottom: '1rem', 
-          paddingRight: '2.5rem' // Create space for the absolute 'X'
+          marginBottom: '1rem'
         }}>
           <div style={{ flex: 1 }}>
             <h2 style={{ margin: 0, fontSize: window.innerWidth < 600 ? '1.1rem' : '1.4rem', color: '#0f172a', lineHeight: 1.2 }}>
@@ -158,6 +147,7 @@ const CustomerProfileModal = ({ customer, isOpen, onClose, onUpdateSuccess }) =>
                 {saving ? t('Saving...', 'محفوظ ہو رہا ہے...') : t('Save', 'محفوظ کریں')}
               </button>
             )}
+            <button className="btn-s" onClick={onClose} style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem' }}>{t('Close', 'بند کریں')}</button>
           </div>
         </div>
 
@@ -167,7 +157,14 @@ const CustomerProfileModal = ({ customer, isOpen, onClose, onUpdateSuccess }) =>
               <div className="edit-fields-group" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 <input className="form-input" style={{ fontSize: '0.9rem' }} value={editForm.first_name} onChange={e => setEditForm({...editForm, first_name: e.target.value})} placeholder={ts('Name', 'نام')} title={ts('Name', 'نام')} />
                 <input className="form-input" style={{ fontSize: '0.9rem' }} value={editForm.phone_number} onChange={e => setEditForm({...editForm, phone_number: e.target.value})} placeholder={ts('Phone', 'فون')} title={ts('Phone', 'فون')} />
-                <input className="form-input" style={{ fontSize: '0.9rem' }} value={editForm.address} onChange={e => setEditForm({...editForm, address: e.target.value})} placeholder={ts('Address', 'پتہ')} title={ts('Address', 'پتہ')} />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                  <input className="form-input" style={{ fontSize: '0.9rem' }} value={editForm.house_no} onChange={e => setEditForm({...editForm, house_no: e.target.value})} placeholder={ts('House No', 'گھر نمبر')} title={ts('House No', 'گھر نمبر')} />
+                  <input className="form-input" style={{ fontSize: '0.9rem' }} value={editForm.street} onChange={e => setEditForm({...editForm, street: e.target.value})} placeholder={ts('Street', 'گلی')} title={ts('Street', 'گلی')} />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                  <input className="form-input" style={{ fontSize: '0.9rem' }} value={editForm.area} onChange={e => setEditForm({...editForm, area: e.target.value})} placeholder={ts('Area', 'علاقہ')} title={ts('Area', 'علاقہ')} />
+                  <input className="form-input" style={{ fontSize: '0.9rem' }} value={editForm.city} onChange={e => setEditForm({...editForm, city: e.target.value})} placeholder={ts('City', 'شہر')} title={ts('City', 'شہر')} />
+                </div>
               </div>
             ) : (
               <>
@@ -176,7 +173,7 @@ const CustomerProfileModal = ({ customer, isOpen, onClose, onUpdateSuccess }) =>
                     <strong>{t('Phone', 'فون')}:</strong> {currentCustomer.phone_number || (loadingDetails ? '...' : 'N/A')}
                 </p>
                 <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem', minHeight: '1.2rem' }}>
-                    <strong>{t('Address', 'پتہ')}:</strong> {currentCustomer.address || (loadingDetails ? '...' : 'N/A')}
+                    <strong>{t('Address', 'پتہ')}:</strong> {currentCustomer.house_no ? `${currentCustomer.house_no}, ${currentCustomer.street}, ${currentCustomer.area}` : (loadingDetails ? '...' : (currentCustomer.address || 'N/A'))}
                 </p>
                 <p style={{ margin: '0.4rem 0', color: '#64748b', fontSize: '0.9rem', minHeight: '1.2rem' }}>
                     <strong>{t('Route', 'روٹ')}:</strong> {currentCustomer.route_name || t('Unassigned', 'غیر مختص')}

@@ -156,9 +156,9 @@ if env('FRONTEND_URL', default=None):
     CSRF_TRUSTED_ORIGINS.append(env('FRONTEND_URL').rstrip('/'))
 CSRF_TRUSTED_ORIGINS.append("https://rasad-production.up.railway.app")
 
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
 # Email Settings
 EMAIL_BACKEND = env('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = env('EMAIL_HOST')

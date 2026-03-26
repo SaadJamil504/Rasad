@@ -37,11 +37,14 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'role', 'phone_number', 'first_name', 'license_number', 'milk_type', 'daily_quantity', 'address', 'dairy_name', 'owner_dairy_name', 'route', 'route_name', 'buffalo_price', 'cow_price', 'outstanding_balance', 'total_paid', 'date_joined')
+        fields = ('id', 'username', 'email', 'role', 'phone_number', 'first_name', 'license_number', 'milk_type', 'daily_quantity', 'house_no', 'street', 'area', 'city', 'address', 'latitude', 'longitude', 'dairy_name', 'owner_dairy_name', 'route', 'route_name', 'buffalo_price', 'cow_price', 'outstanding_balance', 'total_paid', 'date_joined', 'sequence_order')
         extra_kwargs = {
             'first_name': {'required': False, 'allow_blank': True},
             'license_number': {'required': False, 'allow_blank': True},
-            'address': {'required': False, 'allow_blank': True},
+            'house_no': {'required': False, 'allow_blank': True},
+            'street': {'required': False, 'allow_blank': True},
+            'area': {'required': False, 'allow_blank': True},
+            'city': {'required': False, 'allow_blank': True},
             'dairy_name': {'required': False, 'allow_blank': True},
         }
 
@@ -69,10 +72,21 @@ class UserSerializer(serializers.ModelSerializer):
             return 0
         return value
 
-    def validate_address(self, value):
+    def validate_house_no(self, value):
         from django.utils.html import strip_tags
-        cleaned = strip_tags(value)
-        return cleaned.strip()
+        return strip_tags(value).strip()
+
+    def validate_street(self, value):
+        from django.utils.html import strip_tags
+        return strip_tags(value).strip()
+
+    def validate_area(self, value):
+        from django.utils.html import strip_tags
+        return strip_tags(value).strip()
+
+    def validate_city(self, value):
+        from django.utils.html import strip_tags
+        return strip_tags(value).strip()
 
     def validate_dairy_name(self, value):
         if value and not all(x.isalpha() or x.isspace() for x in value):
@@ -112,7 +126,7 @@ class SignupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('password', 'full_name', 'phone_number', 'email', 'role', 'address', 'dairy_name', 'cow_price', 'buffalo_price')
+        fields = ('password', 'full_name', 'phone_number', 'email', 'role', 'house_no', 'street', 'area', 'city', 'address', 'latitude', 'longitude', 'dairy_name', 'cow_price', 'buffalo_price')
         extra_kwargs = {
             'phone_number': {'required': True, 'validators': []},
             'email': {'required': True, 'validators': []},
@@ -124,7 +138,19 @@ class SignupSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Name must contain only letters and spaces.')
         return value.strip()
 
-    def validate_address(self, value):
+    def validate_house_no(self, value):
+        from django.utils.html import strip_tags
+        return strip_tags(value).strip()
+    
+    def validate_street(self, value):
+        from django.utils.html import strip_tags
+        return strip_tags(value).strip()
+    
+    def validate_area(self, value):
+        from django.utils.html import strip_tags
+        return strip_tags(value).strip()
+    
+    def validate_city(self, value):
         from django.utils.html import strip_tags
         return strip_tags(value).strip()
 
@@ -237,12 +263,15 @@ class InvitationSignupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('token', 'email', 'password', 'full_name', 'phone_number', 'license_number', 'milk_type', 'daily_quantity', 'address')
+        fields = ('token', 'email', 'password', 'full_name', 'phone_number', 'license_number', 'milk_type', 'daily_quantity', 'house_no', 'street', 'area', 'city', 'address', 'latitude', 'longitude')
         extra_kwargs = {
             'license_number': {'required': False, 'allow_blank': True, 'allow_null': True},
             'milk_type': {'required': False, 'allow_blank': True, 'allow_null': True},
             'daily_quantity': {'required': False, 'allow_null': True},
-            'address': {'required': False, 'allow_blank': True, 'allow_null': True},
+            'house_no': {'required': False, 'allow_blank': True, 'allow_null': True},
+            'street': {'required': False, 'allow_blank': True, 'allow_null': True},
+            'area': {'required': False, 'allow_blank': True, 'allow_null': True},
+            'city': {'required': False, 'allow_blank': True, 'allow_null': True},
             'phone_number': {'required': True, 'validators': []},
             'email': {'required': True, 'validators': []},
         }
@@ -376,13 +405,18 @@ class RouteSerializer(serializers.ModelSerializer):
 class DeliverySerializer(serializers.ModelSerializer):
     customer_name = serializers.CharField(source='customer.first_name', read_only=True)
     customer_username = serializers.CharField(source='customer.username', read_only=True)
-    customer_address = serializers.CharField(source='customer.address', read_only=True)
+    customer_house_no = serializers.CharField(source='customer.house_no', read_only=True)
+    customer_street = serializers.CharField(source='customer.street', read_only=True)
+    customer_area = serializers.CharField(source='customer.area', read_only=True)
+    customer_city = serializers.CharField(source='customer.city', read_only=True)
+    customer_latitude = serializers.DecimalField(source='customer.latitude', max_digits=22, decimal_places=16, read_only=True)
+    customer_longitude = serializers.DecimalField(source='customer.longitude', max_digits=22, decimal_places=16, read_only=True)
     customer_milk_type = serializers.CharField(source='customer.milk_type', read_only=True)
     customer_quantity = serializers.CharField(source='customer.daily_quantity', read_only=True)
 
     class Meta:
         model = Delivery
-        fields = ('id', 'customer', 'customer_name', 'customer_username', 'customer_address', 'customer_milk_type', 'customer_quantity', 'route', 'date', 'is_delivered', 'status', 'delivered_at', 'quantity', 'price_at_delivery', 'total_amount')
+        fields = ('id', 'customer', 'customer_name', 'customer_username', 'customer_house_no', 'customer_street', 'customer_area', 'customer_city', 'customer_latitude', 'customer_longitude', 'customer_milk_type', 'customer_quantity', 'route', 'date', 'is_delivered', 'status', 'delivered_at', 'quantity', 'price_at_delivery', 'total_amount')
         read_only_fields = ('delivered_at', 'total_amount')
 
     def validate_quantity(self, value):
@@ -439,7 +473,7 @@ class PaymentSerializer(serializers.ModelSerializer):
 class ManualCustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('first_name', 'phone_number', 'address', 'milk_type', 'daily_quantity', 'route')
+        fields = ('first_name', 'phone_number', 'house_no', 'street', 'area', 'city', 'address', 'latitude', 'longitude', 'milk_type', 'daily_quantity', 'route')
 
     def validate_phone_number(self, value):
         if User.objects.filter(phone_number=value).exists():

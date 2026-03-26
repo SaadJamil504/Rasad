@@ -125,17 +125,6 @@ const DriverList = () => {
       {selectedDriver && (
         <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setSelectedDriver(null); }}>
           <div className="modal-content glass-card premium-modal" ref={viewModalRef} style={{ maxWidth: '480px', width: '90%', position: 'relative' }}>
-            <button 
-              className="close-btn" 
-              onClick={() => setSelectedDriver(null)}
-              style={{
-                position: 'absolute', top: '1.5rem', right: '1.5rem', background: '#f8fafc', border: '1px solid #e2e8f0',
-                width: '32px', height: '32px', borderRadius: '50%', color: '#64748b', fontSize: '1rem', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10
-              }}
-            >
-              &times;
-            </button>
             <div className="modal-header-actions" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
               <h2 style={{ margin: 0 }}>{t('Driver Profile', 'ڈرائیور کا پروفائل')}</h2>
               <div className="header-btn-group" style={{ display: 'flex', gap: '0.75rem' }}>

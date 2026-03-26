@@ -22,8 +22,10 @@ const CustomerList = () => {
 
   // View Customer states
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [shoulEditInitial, setShouldEditInitial] = useState(false);
 
-  const handleViewCustomer = (customer) => {
+  const handleViewCustomer = (customer, editMode = false) => {
+    setShouldEditInitial(editMode);
     setSelectedCustomer(customer);
   };
 
@@ -74,7 +76,9 @@ const CustomerList = () => {
       (customer.first_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (customer.username || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (customer.phone_number || '').includes(searchTerm) ||
-      (customer.address || '').toLowerCase().includes(searchTerm.toLowerCase())
+      (customer.area || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (customer.city || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (customer.street || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const routeMatch = routeFilter === 'All Routes' || customer.route_name === routeFilter;
@@ -215,6 +219,7 @@ const CustomerList = () => {
       <CustomerProfileModal
         isOpen={!!selectedCustomer}
         customer={selectedCustomer}
+        initialEditMode={shoulEditInitial}
         onClose={() => setSelectedCustomer(null)}
         onUpdateSuccess={() => fetchCustomers(true)}
       />

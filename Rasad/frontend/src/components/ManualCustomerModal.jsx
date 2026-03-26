@@ -17,7 +17,10 @@ const ManualCustomerModal = ({ isOpen, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
     first_name: '',
     phone_number: '',
-    address: '',
+    house_no: '',
+    street: '',
+    area: '',
+    city: 'Peshawar',
     milk_type: 'buffalo',
     daily_quantity: '',
     route: ''
@@ -32,7 +35,10 @@ const ManualCustomerModal = ({ isOpen, onClose, onSuccess }) => {
       setFormData({
         first_name: '',
         phone_number: '',
-        address: '',
+        house_no: '',
+        street: '',
+        area: '',
+        city: 'Peshawar',
         milk_type: 'buffalo',
         daily_quantity: '',
         route: ''
@@ -147,15 +153,50 @@ const ManualCustomerModal = ({ isOpen, onClose, onSuccess }) => {
               />
             </div>
 
-            <div className="form-group">
-              <label>{t('Address', 'پتہ')}</label>
-              <input 
-                type="text" 
-                className="form-input"
-                placeholder={ts('Area or specific address', 'علاقہ یا مخصوص پتہ')}
-                value={formData.address}
-                onChange={(e) => setFormData({...formData, address: e.target.value})}
-              />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="form-group">
+                <label>{t('House No #', 'گھر کا نمبر')}</label>
+                <input 
+                  type="text" 
+                  className="form-input"
+                  placeholder="e.g. 123-A"
+                  value={formData.house_no}
+                  onChange={(e) => setFormData({...formData, house_no: e.target.value})}
+                />
+              </div>
+              <div className="form-group">
+                <label>{t('Street', 'گلی')}</label>
+                <input 
+                  type="text" 
+                  className="form-input"
+                  placeholder={ts('Street Name', 'گلی کا نام')}
+                  value={formData.street}
+                  onChange={(e) => setFormData({...formData, street: e.target.value})}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="form-group">
+                <label>{t('Area', 'علاقہ')}</label>
+                <input 
+                  type="text" 
+                  className="form-input"
+                  placeholder={ts('Area Name', 'علاقہ کا نام')}
+                  value={formData.area}
+                  onChange={(e) => setFormData({...formData, area: e.target.value})}
+                />
+              </div>
+              <div className="form-group">
+                <label>{t('City', 'شہر')}</label>
+                <input 
+                  type="text" 
+                  className="form-input"
+                  placeholder={ts('City Name', 'شہر کا نام')}
+                  value={formData.city}
+                  onChange={(e) => setFormData({...formData, city: e.target.value})}
+                />
+              </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>

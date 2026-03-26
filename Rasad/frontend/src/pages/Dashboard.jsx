@@ -45,6 +45,12 @@ const Dashboard = () => {
   const [filteredHistory, setFilteredHistory] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [editingDeliveryId, setEditingDeliveryId] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [adjDate, setAdjDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().split('T')[0];
+  });
   const [ownerStats, setOwnerStats] = useState({
     deliveries: { total: 0, done: 0, pending: 0 },
     revenue: { amount: 0, change_pct: 0 },
@@ -97,14 +103,20 @@ const Dashboard = () => {
           setOwnerStats(statsRes.data);
           setAlerts(alertsRes.data);
         } else if (user.role === 'driver') {
-          const [dailyRes, historyRes, adjustmentsRes] = await Promise.all([
-            deliveryAPI.getDailyDeliveries(),
-            deliveryAPI.getHistory(),
-            deliveryAPI.getAdjustments()
-          ]);
-          setDeliveries(dailyRes.data);
-          setHistory(historyRes.data);
-          setAdjustments(adjustmentsRes.data);
+          const isFuture = selectedDate > new Date().toISOString().split('T')[0];
+          
+          if (isFuture) {
+            const adjRes = await deliveryAPI.getAdjustments({ date: selectedDate });
+            setAdjustments(adjRes.data);
+            setDeliveries([]);
+          } else {
+            const [dailyRes, adjRes] = await Promise.all([
+              deliveryAPI.getDailyDeliveries(selectedDate),
+              deliveryAPI.getAdjustments({ date: selectedDate })
+            ]);
+            setDeliveries(dailyRes.data);
+            setAdjustments(adjRes.data);
+          }
         } else if (user.role === 'customer') {
           const [statusRes, historyRes, profileRes] = await Promise.all([
             deliveryAPI.getCustomerStatus(),
@@ -125,7 +137,7 @@ const Dashboard = () => {
     };
 
     fetchData();
-  }, [user]);
+  }, [user, selectedDate]);
 
   useEffect(() => {
     if (showHistoryModal) {
@@ -225,9 +237,8 @@ const Dashboard = () => {
     }
     setIsSubmittingAdj(true);
     try {
-      const today = new Date().toISOString().split('T')[0];
       const data = {
-        date: today,
+        date: adjDate,
         adjustment_type: type,
         new_quantity: type === 'quantity' ? adjQty : null,
         message: adjMessage
@@ -293,23 +304,53 @@ const Dashboard = () => {
       await deliveryAPI.actionAdjustment(id, { action, driver_comment: adjComment });
       setAdjComment('');
       alert(ts(`Request ${action === 'accept' ? 'accepted' : 'rejected'}.`, `درخواست ${action === 'accept' ? 'منظور' : 'مسترد'} کر دی گئی ہے۔`));
-      // Refresh data
-      const [dailyRes, adjRes] = await Promise.all([
-        deliveryAPI.getDailyDeliveries(),
-        deliveryAPI.getAdjustments()
-      ]);
-      setDeliveries(dailyRes.data);
-      setAdjustments(adjRes.data);
+      
+      // Refresh data for the CURRENT selected date
+      const isFuture = selectedDate > new Date().toISOString().split('T')[0];
+      if (isFuture) {
+        const adjRes = await deliveryAPI.getAdjustments({ date: selectedDate });
+        setAdjustments(adjRes.data);
+      } else {
+        const [dailyRes, adjRes] = await Promise.all([
+          deliveryAPI.getDailyDeliveries(selectedDate),
+          deliveryAPI.getAdjustments({ date: selectedDate })
+        ]);
+        setDeliveries(dailyRes.data);
+        setAdjustments(adjRes.data);
+      }
     } catch (err) {
       console.error('Failed to action adjustment:', err);
       alert('Error updating request.');
     }
   };
+  const handleStartNavigation = () => {
+    const remainingDeliveries = deliveries.filter(d => !d.is_delivered && d.status !== 'paused');
+    if (remainingDeliveries.length === 0) {
+      alert(t('No pending deliveries to navigate to.', 'نیویگیٹ کرنے کے لیے کوئی ڈیلیوری باقی نہیں ہے۔'));
+      return;
+    }
+
+    const stops = remainingDeliveries
+      .filter(d => d.customer_latitude && d.customer_longitude)
+      .map(d => `${d.customer_latitude},${d.customer_longitude}`);
+
+    if (stops.length === 0) {
+      alert(t('No coordinates found for customers.', 'گاہکوں کے لوکیشن کوآرڈینیٹس نہیں ملے۔'));
+      return;
+    }
+
+    const destination = stops[stops.length - 1];
+    const waypoints = stops.slice(0, -1).join('|');
+
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${destination}${waypoints ? `&waypoints=${waypoints}` : ''}&travelmode=driving`;
+    window.open(url, '_blank');
+  };
+
   const renderModals = () => (
     <>
       {showPauseModal && (
         <div className="modal-overlay" onClick={() => setShowPauseModal(false)}>
-          <div className="glass-card modal-content" ref={pauseModalRef} style={{ maxWidth: '400px', width: '90%', position: 'relative' }}>
+          <div className="glass-card modal-content" ref={pauseModalRef} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '400px', width: '90%', position: 'relative' }}>
             <button 
               className="close-btn" 
               onClick={() => setShowPauseModal(false)}
@@ -321,8 +362,18 @@ const Dashboard = () => {
               &times;
             </button>
             <h3>Pause Delivery</h3>
-            <p style={{ margin: '1rem 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-              Pause delivery for today. Your driver will need to accept this request.
+            <div className="input-group" style={{ margin: '1rem 0' }}>
+              <label>{t('Request Date', 'درخواست کی تاریخ')}</label>
+              <input 
+                type="date" 
+                className="form-input"
+                value={adjDate}
+                onChange={(e) => setAdjDate(e.target.value)}
+                min={new Date().toISOString().split('T')[0]}
+              />
+            </div>
+            <p style={{ margin: '0 0 1rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+              Pause delivery for the selected date. Your driver will need to accept this request.
             </p>
             <textarea
               className="form-input"
@@ -343,7 +394,7 @@ const Dashboard = () => {
 
       {showQtyModal && (
         <div className="modal-overlay" onClick={() => setShowQtyModal(false)}>
-          <div className="glass-card modal-content" ref={qtyModalRef} style={{ maxWidth: '400px', width: '90%', position: 'relative' }}>
+          <div className="glass-card modal-content" ref={qtyModalRef} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '400px', width: '90%', position: 'relative' }}>
             <button 
               className="close-btn" 
               onClick={() => setShowQtyModal(false)}
@@ -355,8 +406,18 @@ const Dashboard = () => {
               &times;
             </button>
             <h3>Change Quantity</h3>
-            <p style={{ margin: '1rem 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-              Request a different quantity for today.
+            <div className="input-group" style={{ margin: '1rem 0' }}>
+              <label>{t('Request Date', 'درخواست کی تاریخ')}</label>
+              <input 
+                type="date" 
+                className="form-input"
+                value={adjDate}
+                onChange={(e) => setAdjDate(e.target.value)}
+                min={new Date().toISOString().split('T')[0]}
+              />
+            </div>
+            <p style={{ margin: '0 0 1rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+              Request a different quantity for the selected date.
             </p>
             <div className="input-group" style={{ marginBottom: '1.5rem' }}>
               <label>New Quantity (Liters)</label>
@@ -387,7 +448,7 @@ const Dashboard = () => {
 
       {showComplaintModal && (
         <div className="modal-overlay" onClick={() => setShowComplaintModal(false)}>
-          <div className="glass-card modal-content" ref={complaintModalRef} style={{ maxWidth: '400px', width: '90%', position: 'relative' }}>
+          <div className="glass-card modal-content" ref={complaintModalRef} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '400px', width: '90%', position: 'relative' }}>
             <button 
               className="close-btn" 
               onClick={() => setShowComplaintModal(false)}
@@ -421,7 +482,7 @@ const Dashboard = () => {
 
       {showHistoryModal && (
         <div className="modal-overlay" onClick={() => setShowHistoryModal(false)}>
-          <div className="glass-card modal-content" ref={historyModalRef} style={{ maxWidth: '600px', width: '95%', maxHeight: '80vh', overflowY: 'auto', position: 'relative' }}>
+          <div className="glass-card modal-content" ref={historyModalRef} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px', width: '95%', maxHeight: '80vh', overflowY: 'auto', position: 'relative' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h3>Past Bills & History</h3>
               <button 
@@ -481,7 +542,7 @@ const Dashboard = () => {
 
       {showPaymentModal && (
         <div className="modal-overlay" onClick={() => setShowPaymentModal(false)}>
-          <div className="glass-card modal-content" ref={paymentModalRef} style={{ maxWidth: '400px', width: '90%', position: 'relative' }}>
+          <div className="glass-card modal-content" ref={paymentModalRef} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '400px', width: '90%', position: 'relative' }}>
             <button 
               className="close-btn" 
               onClick={() => setShowPaymentModal(false)}
@@ -573,33 +634,6 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="bill-section">
-            <h3 style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-              <span>{currentMonthName} {currentYear} — {t('Bill', 'بل')}</span>
-            </h3>
-            <div className="bill-list">
-              {currentMonthHistory.length > 0 ? (
-                currentMonthHistory.slice(0, 10).map(item => (
-                  <div key={item.id} className="bill-item">
-                    <span className="bill-day">{new Date(item.date).getDate()}</span>
-                    <span className="bill-qty">{item.status === 'paused' ? 'Paused' : `${item.quantity} Liter`}</span>
-                    <span className="bill-price">Rs. {item.status === 'paused' ? '0' : item.total_amount}</span>
-                  </div>
-                ))
-              ) : (
-                <p style={{ textAlign: 'center', color: '#888', padding: '1rem' }}>No deliveries recorded for this month.</p>
-              )}
-
-              {currentMonthHistory.length > 0 && (
-                <div className="bill-item total-row">
-                  <span className="bill-day" style={{ visibility: 'hidden' }}>0</span>
-                  <span className="bill-qty">{t('Total', 'کل')} {monthlyQty} Liter</span>
-                  <span className="bill-price">Rs {monthlyTotalAmount.toFixed(2)}</span>
-                </div>
-              )}
-            </div>
-          </div>
-
           <div className="quick-actions-section">
             <h3 style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
               <span>{t('Quick Actions', 'فوری کارروائی')}</span>
@@ -628,6 +662,33 @@ const Dashboard = () => {
                   <span className="btn-text-main">{t('Complaint', 'شکایت')}</span>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <div className="bill-section">
+            <h3 style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+              <span>{currentMonthName} {currentYear} — {t('Bill', 'بل')}</span>
+            </h3>
+            <div className="bill-list">
+              {currentMonthHistory.length > 0 ? (
+                currentMonthHistory.slice(0, 10).map(item => (
+                  <div key={item.id} className="bill-item">
+                    <span className="bill-day">{new Date(item.date).getDate()}</span>
+                    <span className="bill-qty">{item.status === 'paused' ? 'Paused' : `${item.quantity} Liter`}</span>
+                    <span className="bill-price">Rs. {item.status === 'paused' ? '0' : item.total_amount}</span>
+                  </div>
+                ))
+              ) : (
+                <p style={{ textAlign: 'center', color: '#888', padding: '1rem' }}>No deliveries recorded for this month.</p>
+              )}
+
+              {currentMonthHistory.length > 0 && (
+                <div className="bill-item total-row">
+                  <span className="bill-day" style={{ visibility: 'hidden' }}>0</span>
+                  <span className="bill-qty">{t('Total', 'کل')} {monthlyQty} Liter</span>
+                  <span className="bill-price">Rs {monthlyTotalAmount.toFixed(2)}</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -666,12 +727,28 @@ const Dashboard = () => {
             <div className="banner-top">
               <span>{t('Driver Dashboard', 'ڈرائیور ڈیش بورڈ')}</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <span className="banner-date">{new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                <input 
+                  type="date" 
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="dashboard-date-picker"
+                  style={{
+                    padding: '0.4rem 0.8rem',
+                    borderRadius: '0.5rem',
+                    border: '1px solid rgba(255,255,255,0.3)',
+                    background: 'rgba(255,255,255,0.1)',
+                    color: 'white',
+                    fontSize: '0.9rem',
+                    fontWeight: 600,
+                    outline: 'none',
+                    cursor: 'pointer'
+                  }}
+                />
               </div>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
-              <h2>{user.first_name || user.username}</h2>
-              <div className="customer-header-actions" style={{ marginTop: '-40px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginTop: '0.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+              <h2 style={{ margin: 0 }}>{user.first_name || user.username}</h2>
+              <div className="customer-header-actions" style={{ marginTop: '0' }}>
                 <button onClick={toggleLanguage} className="btn-action">
                   {language === 'en' ? 'اردو' : 'English'}
                 </button>
@@ -723,11 +800,49 @@ const Dashboard = () => {
           <div className="today-list-section">
             <div className="section-title">
               <h3 style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%'}}>
-                <span>{t("TODAY'S LIST", 'آج کی فہرست')}</span>
+                <span>{selectedDate === todayStr ? t("TODAY'S LIST", 'آج کی فہرست') : (selectedDate > todayStr ? t("UPCOMING REQUESTS", 'آنے والی درخواستیں') : t("PAST DELIVERIES", 'گزشتہ ڈیلیوری'))}</span>
+                {selectedDate === todayStr && deliveries.length > 0 && (
+                  <button 
+                    className="premium-btn-green" 
+                    onClick={handleStartNavigation}
+                    style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+                  >
+                    🚀 {t('Start Navigation', 'نیویگیشن شروع کریں')}
+                  </button>
+                )}
               </h3>
             </div>
             <div className="today-list">
-              {enrichedDeliveries.length > 0 ? (
+              {selectedDate > todayStr ? (
+                // Future view: Show Adjustment requests for this day
+                adjustments.filter(a => a.date === selectedDate).length > 0 ? (
+                  adjustments.filter(a => a.date === selectedDate).map(adj => (
+                    <div key={adj.id} className="today-list-item changed">
+                      <div className="item-status-icon">
+                        <div className="icon-circle warn">!</div>
+                      </div>
+                      <div className="item-info">
+                        <div className="customer-name">{adj.customer_name}</div>
+                        <div className="adjustment-note">
+                          {adj.adjustment_type === 'pause' ? 'Request: Pause delivery' : `Request: Change to ${adj.new_quantity}L`}
+                        </div>
+                        <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.3rem' }}>
+                           "{adj.message || 'No message'}"
+                        </div>
+                      </div>
+                      <div className="item-actions">
+                        <button className="btn-deliver" onClick={() => handleActionAdjustment(adj.id, 'accept')}>
+                          {t('Accept', 'منظور')}
+                        </button>
+                        <button className="btn-skip" onClick={() => handleActionAdjustment(adj.id, 'reject')}>
+                          {t('Reject', 'مسترد')}
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : <p style={{ textAlign: 'center', color: '#888', padding: '2rem' }}>No requests for this date.</p>
+              ) : enrichedDeliveries.length > 0 ? (
+                // Past or Today view
                 enrichedDeliveries.map((delivery) => {
                   let statusClass = 'pending';
                   let statusText = '';
@@ -746,6 +861,12 @@ const Dashboard = () => {
                     statusText = delivery.pendingAdj.adjustment_type === 'pause' ? 'Pause Request' : 'Change Request';
                   }
 
+                  const address = delivery.customer_house_no 
+                    ? `${delivery.customer_house_no}, ${delivery.customer_street}, ${delivery.customer_area}`
+                    : (delivery.customer_address || 'N/A');
+
+                  const isToday = selectedDate === todayStr;
+
                   return (
                     <div key={delivery.id} className={`today-list-item ${statusClass}`}>
                       <div className="item-status-icon">
@@ -757,7 +878,7 @@ const Dashboard = () => {
 
                       <div className="item-info">
                         <div className="customer-name">{delivery.customer_name || delivery.customer_username}</div>
-                        <div className="customer-addr">{delivery.customer_address}</div>
+                        <div className="customer-addr">{address}</div>
 
                         {statusClass === 'changed' ? (
                           <div className="adjustment-note">
@@ -788,13 +909,15 @@ const Dashboard = () => {
                               ) : (
                                 <>
                                   {delivery.quantity}L {delivery.customer_milk_type} · Rs {delivery.total_amount}
-                                  <button 
-                                    className="btn-text-only" 
-                                    onClick={() => setEditingDeliveryId(delivery.id)}
-                                    style={{ marginLeft: '10px', color: 'var(--primary)', fontSize: '0.8rem', fontWeight: 600 }}
-                                  >
-                                    {t('Change', 'بدلیں')}
-                                  </button>
+                                  {isToday && (
+                                    <button 
+                                      className="btn-text-only" 
+                                      onClick={() => setEditingDeliveryId(delivery.id)}
+                                      style={{ marginLeft: '10px', color: 'var(--primary)', fontSize: '0.8rem', fontWeight: 600 }}
+                                    >
+                                      {t('Change', 'بدلیں')}
+                                    </button>
+                                  )}
                                 </>
                               )
                             )}
@@ -806,7 +929,7 @@ const Dashboard = () => {
                         {statusClass === 'done' && <span className="status-label green">Done</span>}
                         {statusClass === 'paused' && <span className="status-label gray">Paused</span>}
 
-                        {statusClass === 'changed' && (
+                        {statusClass === 'changed' && isToday && (
                           <>
                             <button className="btn-deliver" onClick={() => handleActionAdjustment(delivery.pendingAdj.id, 'accept')}>
                               {t('Accept', 'منظور')}
@@ -817,7 +940,7 @@ const Dashboard = () => {
                           </>
                         )}
 
-                        {statusClass === 'pending' && (
+                        {statusClass === 'pending' && isToday && (
                           <>
                             <button className="btn-deliver" onClick={() => handleToggleDelivery(delivery.id)}>
                               {t('Deliver', 'پہنچائیں')}
@@ -827,12 +950,16 @@ const Dashboard = () => {
                             </button>
                           </>
                         )}
+                        
+                        {!isToday && statusClass === 'pending' && (
+                          <span className="status-label gray">Pending</span>
+                        )}
                       </div>
                     </div>
                   );
                 })
               ) : (
-                <p style={{ textAlign: 'center', color: '#888', padding: '2rem' }}>No customers assigned for today.</p>
+                <p style={{ textAlign: 'center', color: '#888', padding: '2rem' }}>{t('No customers assigned for this date.', 'اس تاریخ کے لیے کوئی گاہک مقرر نہیں ہے۔')}</p>
               )}
             </div>
           </div>

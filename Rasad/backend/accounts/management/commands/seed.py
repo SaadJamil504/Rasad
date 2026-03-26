@@ -106,7 +106,12 @@ class Command(BaseCommand):
         owner.phone_number = phone
         owner.buffalo_price = Decimal(str(random.randint(180, 250)))
         owner.cow_price = Decimal(str(random.randint(140, 200)))
-        owner.address = fake.address().replace("\n", ", ")
+        owner.house_no = fake.building_number()
+        owner.street = fake.street_name()
+        owner.area = fake.neighborhood()
+        owner.city = "Peshawar"
+        owner.latitude = Decimal("34.0151")
+        owner.longitude = Decimal("71.5249")
         owner.total_paid = Decimal("0.00")
         owner.outstanding_balance = Decimal("0.00")
         owner.save()

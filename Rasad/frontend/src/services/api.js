@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Helper to ensure URL ends with a slash and includes 'api/'
 const getBaseURL = () => {
-  let url = import.meta.env.VITE_API_URL || 'https://rasad-production.up.railway.app/';
+  let url = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/';
   if (!url.endsWith('/')) url += '/';
   if (!url.toLowerCase().endsWith('/api/')) url += 'api/';
   return url;
@@ -146,22 +146,24 @@ export const staffAPI = {
 export const routeAPI = {
   getRoutes: () => api.get('accounts/routes/'),
   createRoute: (data) => api.post('accounts/routes/', data),
+  updateRoute: (id, data) => api.put(`accounts/routes/${id}/`, data),
   deleteRoute: (id) => api.delete(`accounts/routes/${id}/`),
+  reorderCustomers: (id, orderedIds) => api.post(`accounts/routes/${id}/reorder/`, { ordered_ids: orderedIds }),
 };
 
 export const deliveryAPI = {
-  getDailyDeliveries: () => api.get('accounts/deliveries/daily/'),
+  getDailyDeliveries: (date) => api.get('accounts/deliveries/daily/', { params: { date } }),
   toggleDelivery: (id) => api.post(`accounts/deliveries/toggle/${id}/`),
   getCustomerStatus: () => api.get('accounts/deliveries/status/'),
   getHistory: () => api.get('accounts/deliveries/history/'),
-  getDeliveryHistory: (month, year, customer_id) => api.get('accounts/deliveries/history/', { params: { month, year, customer_id } }),
+  getDeliveryHistory: (month, year, customer_id, extraParams = {}) => api.get('accounts/deliveries/history/', { params: { month, year, customer_id, ...extraParams } }),
   updatePrices: (prices) => api.post('accounts/prices/update/', prices),
   updateDeliveryQuantity: (id, quantity) => api.patch(`accounts/deliveries/update/${id}/`, { quantity }),
   reportPayment: (data) => api.post('accounts/payments/report/', data),
   getPayments: (params) => api.get('accounts/payments/list/', { params }),
   confirmPayment: (id, action = 'confirm') => api.post(`accounts/payments/confirm/${id}/`, { action }),
   createAdjustment: (data) => api.post('accounts/adjustments/create/', data),
-  getAdjustments: () => api.get('accounts/adjustments/list/'),
+  getAdjustments: (params) => api.get('accounts/adjustments/list/', { params }),
   actionAdjustment: (id, data) => api.post(`accounts/adjustments/action/${id}/`, data),
   getDashboardStats: () => api.get('accounts/dashboard/stats/'),
   getDashboardAlerts: () => api.get('accounts/dashboard/alerts/'),

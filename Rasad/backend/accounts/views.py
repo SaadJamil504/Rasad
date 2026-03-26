@@ -13,7 +13,7 @@ from .serializers import (
     DeliverySerializer, PaymentSerializer, DeliveryAdjustmentSerializer
 )
 from .models import User, Invitation, Route, Delivery, Payment, DeliveryAdjustment
-from django.db import models
+from django.db import models, transaction
 from django.http import Http404
 from django.core.mail import send_mail
 from django.conf import settings
@@ -359,21 +359,29 @@ class DailyDeliveryView(APIView):
         except Route.DoesNotExist:
             return Response({'error': 'No route assigned to this driver.'}, status=status.HTTP_404_NOT_FOUND)
             
-        today = timezone.now().date()
+        date_str = request.query_params.get('date')
+        if date_str:
+            try:
+                target_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            except ValueError:
+                return Response({'error': 'Invalid date format. Use YYYY-MM-DD.'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            target_date = timezone.now().date()
+            
         customers = User.objects.filter(route=route, role='customer')
         
-        # Ensure delivery entries exist for today
+        # Ensure delivery entries exist for the target date
         for customer in customers:
             # Check for approved adjustments
             adjustment = DeliveryAdjustment.objects.filter(
                 customer=customer, 
-                date=today, 
+                date=target_date, 
                 status='accepted'
             ).first()
 
             delivery, created = Delivery.objects.get_or_create(
                 customer=customer,
-                date=today,
+                date=target_date,
                 defaults={
                     'route': route,
                     'quantity': customer.daily_quantity or 0,
@@ -381,8 +389,8 @@ class DailyDeliveryView(APIView):
                 }
             )
             
-            if created or (not delivery.is_delivered and delivery.status != 'paused'):
-                # Capture current price from owner
+            if created or (not delivery.is_delivered and delivery.status != 'paused' and (target_date >= timezone.now().date() or delivery.price_at_delivery == 0)):
+                # Capture current price from owner (only for today/future or if not already set)
                 owner = route.owner
                 price = 0
                 if customer.milk_type == 'cow':
@@ -406,7 +414,7 @@ class DailyDeliveryView(APIView):
                 delivery.total_amount = delivery.quantity * price
                 delivery.save()
             
-        deliveries = Delivery.objects.filter(route=route, date=today)
+        deliveries = Delivery.objects.filter(route=route, date=target_date).order_by('customer__sequence_order')
         serializer = DeliverySerializer(deliveries, many=True)
         return Response(serializer.data)
 
@@ -609,6 +617,14 @@ class DeliveryHistoryView(APIView):
         else:
             return Response({'error': 'Unauthorized.'}, status=status.HTTP_403_FORBIDDEN)
 
+        # Special case: return unique months for a given year
+        if request.query_params.get('get_months') == 'true' and year:
+            # For the year, find all months with delivered or paused records
+            months = queryset.filter(date__year=year).filter(
+                models.Q(is_delivered=True) | models.Q(status='paused')
+            ).values_list('date__month', flat=True).distinct()
+            return Response(sorted(list(months)))
+
         # Apply period filters
         if period == 'daily':
             queryset = queryset.filter(date=today)
@@ -776,10 +792,14 @@ class DeliveryAdjustmentListView(APIView):
         description="List adjustment requests. Drivers see for their route, Owners see for all their customers."
     )
     def get(self, request):
+        date_str = request.query_params.get('date')
         if request.user.role == 'driver':
             try:
                 route = Route.objects.get(driver=request.user)
-                adjustments = DeliveryAdjustment.objects.filter(customer__route=route).order_by('-date')
+                adjustments = DeliveryAdjustment.objects.filter(customer__route=route)
+                if date_str:
+                    adjustments = adjustments.filter(date=date_str)
+                adjustments = adjustments.order_by('-date')
             except Route.DoesNotExist:
                 return Response({'error': 'No route assigned.'}, status=status.HTTP_404_NOT_FOUND)
         elif request.user.role == 'owner':
@@ -1034,3 +1054,26 @@ class DashboardReportsView(APIView):
             'collection_percentage': float(collection_percentage),
             'monthly_revenue': monthly_revenue_data
         })
+
+class RouteReorderView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    @extend_schema(
+        request=dict(ordered_ids=list),
+        responses={200: dict},
+        description="Reorder customers within a route."
+    )
+    def post(self, request, pk):
+        try:
+            route = Route.objects.get(pk=pk, owner=request.user)
+            ordered_ids = request.data.get('ordered_ids', [])
+            
+            with transaction.atomic():
+                for index, user_id in enumerate(ordered_ids):
+                    User.objects.filter(id=user_id, route=route).update(sequence_order=index)
+            
+            return Response({'status': 'success'}, status=status.HTTP_200_OK)
+        except Route.DoesNotExist:
+            return Response({'error': 'Route not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

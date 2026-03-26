@@ -20,7 +20,15 @@ class User(AbstractUser):
     phone_number = models.CharField(max_length=15, unique=True, null=True, blank=True)
     parent_owner = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='staff')
     license_number = models.CharField(max_length=50, null=True, blank=True)
+    
+    # Structured Address
+    house_no = models.CharField(max_length=50, null=True, blank=True)
+    street = models.CharField(max_length=100, null=True, blank=True)
+    area = models.CharField(max_length=100, null=True, blank=True)
+    city = models.CharField(max_length=100, null=True, blank=True)
     address = models.TextField(null=True, blank=True)
+    latitude = models.DecimalField(max_digits=22, decimal_places=16, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=22, decimal_places=16, null=True, blank=True)
     dairy_name = models.CharField(max_length=100, null=True, blank=True, help_text="For Owner users",validators=[alphabet_only])
     
     # Pricing fields
@@ -32,7 +40,8 @@ class User(AbstractUser):
     daily_quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, validators=[MinValueValidator(0)])
     route = models.ForeignKey('Route', on_delete=models.SET_NULL, null=True, blank=True, related_name='customers')
     
-    # Balance fields
+    # Sequence logic
+    sequence_order = models.PositiveIntegerField(default=0)
     total_paid = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     outstanding_balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
 

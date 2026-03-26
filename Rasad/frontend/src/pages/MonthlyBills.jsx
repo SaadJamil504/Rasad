@@ -11,6 +11,7 @@ const MonthlyBills = () => {
   const [viewYear, setViewYear] = useState(new Date().getFullYear());
   const [customerHistory, setCustomerHistory] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [availableMonths, setAvailableMonths] = useState([]);
 
   useEffect(() => {
     // Fetch all customers for the dropdown
@@ -46,6 +47,22 @@ const MonthlyBills = () => {
     fetchBill();
   }, [selectedCustomer, viewMonth, viewYear]);
 
+  useEffect(() => {
+    const fetchAvailableMonths = async () => {
+      if (!selectedCustomer) {
+        setAvailableMonths([]);
+        return;
+      }
+      try {
+        const res = await deliveryAPI.getDeliveryHistory(null, viewYear, selectedCustomer, { get_months: 'true' });
+        setAvailableMonths(res.data);
+      } catch (err) {
+        console.error('Failed to fetch available months:', err);
+      }
+    };
+    fetchAvailableMonths();
+  }, [selectedCustomer, viewYear]);
+
   // Find selected customer details to show specs
   const customerDetails = customers.find(c => c.id.toString() === selectedCustomer);
 
@@ -62,6 +79,14 @@ const MonthlyBills = () => {
   };
 
   const getAvailableMonths = () => {
+    // 2026 Hard limit: Jan, Feb, Mar
+    if (parseInt(viewYear) === 2026) return [1, 2, 3];
+    
+    // 2025: Show only months with records
+    if (parseInt(viewYear) === 2025) {
+      return availableMonths.length > 0 ? availableMonths : [];
+    }
+
     if (!customerDetails?.date_joined) return Array.from({ length: 12 }, (_, i) => i + 1);
     const joinDate = new Date(customerDetails.date_joined);
     const joinMonth = joinDate.getMonth() + 1;
@@ -69,9 +94,12 @@ const MonthlyBills = () => {
     
     const months = [];
     const startMonth = parseInt(viewYear) === joinYear ? joinMonth : 1;
-    const endMonth = parseInt(viewYear) === new Date().getFullYear() ? new Date().getMonth() + 1 : 12;
+    
+    // For current year (usually shouldn't hit if 2026 logic above is active, but for safety)
+    const isCurrentYear = parseInt(viewYear) === new Date().getFullYear();
+    const limitMonth = isCurrentYear ? new Date().getMonth() + 1 : 12;
 
-    for (let m = startMonth; m <= 12; m++) {
+    for (let m = startMonth; m <= limitMonth; m++) {
       months.push(m);
     }
     return months;
@@ -111,17 +139,29 @@ const MonthlyBills = () => {
           </select>
         </div>
 
-        <div className="month-year-item">
+        <div className="month-year-item" style={{ maxWidth: '100%', boxSizing: 'border-box' }}>
           <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#64748b', marginBottom: '0.5rem' }}>{t('Select Month', 'مہینہ منتخب کریں')}</label>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <select className="premium-select" style={{ flex: 1, height: '45px' }} value={viewMonth} onChange={(e) => setViewMonth(e.target.value)} disabled={!selectedCustomer}>
+          <div style={{ display: 'flex', gap: '0.5rem', width: '100%', flexWrap: 'nowrap' }}>
+            <select 
+              className="premium-select" 
+              style={{ flex: '2', height: '45px', minWidth: '0', width: 'auto' }} 
+              value={viewMonth} 
+              onChange={(e) => setViewMonth(e.target.value)} 
+              disabled={!selectedCustomer}
+            >
               {getAvailableMonths().map(m => (
                 <option key={m} value={m}>
                   {new Date(0, m - 1).toLocaleString('default', { month: 'long' })}
                 </option>
               ))}
             </select>
-            <select className="premium-select" style={{ width: '100px', height: '45px' }} value={viewYear} onChange={(e) => setViewYear(e.target.value)} disabled={!selectedCustomer}>
+            <select 
+              className="premium-select" 
+              style={{ flex: '1', height: '45px', minWidth: '0', width: 'auto' }} 
+              value={viewYear} 
+              onChange={(e) => setViewYear(e.target.value)} 
+              disabled={!selectedCustomer}
+            >
               {getAvailableYears().map(y => <option key={y} value={y}>{y}</option>)}
             </select>
           </div>
@@ -174,9 +214,9 @@ const MonthlyBills = () => {
             <h3 style={{ margin: '0 0 1.5rem 0' }}>{t('Deliveries & Bill for', 'ڈیلیوری اور بل برائے')} {new Date(viewYear, viewMonth - 1).toLocaleString('default', { month: 'long', year: 'numeric' })}</h3>
             
             {customerHistory.length > 0 ? (
-             <div style={{ border: '1px solid #e2e8f0', borderRadius: '1rem', overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '500px' }}>
-                  <thead style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+             <div className="history-table-container">
+                <table className="history-table">
+                  <thead>
                     <tr>
                       <th style={{ padding: '1rem', fontWeight: 700, color: '#475569', fontSize: '0.85rem' }}>{t('DATE', 'تاریخ')}</th>
                       <th style={{ padding: '1rem', fontWeight: 700, color: '#475569', fontSize: '0.85rem' }}>{t('QUANTITY', 'مقدار')}</th>
@@ -208,7 +248,7 @@ const MonthlyBills = () => {
                       </tr>
                     ))}
                   </tbody>
-                  <tfoot style={{ background: '#f8fafc', borderTop: '2px solid #cbd5e1' }}>
+                  <tfoot>
                     <tr>
                       <td style={{ padding: '1rem', fontWeight: 800, color: '#1e293b' }}>{t('TOTAL', 'کل')}</td>
                       <td style={{ padding: '1rem', fontWeight: 800, color: '#1e293b' }}>

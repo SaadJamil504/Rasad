@@ -1,7 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { authAPI } from '../services/api';
-import './Auth.css';
+import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+// Fix for default marker icon in Leaflet + React
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+let DefaultIcon = L.icon({
+    iconUrl: markerIcon,
+    shadowUrl: markerShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41]
+});
+L.Marker.prototype.options.icon = DefaultIcon;
 
 const InvitationSignup = () => {
   const { token } = useParams();
@@ -16,10 +30,19 @@ const InvitationSignup = () => {
     password: '',
     phone_number: '',
     license_number: '',
+    house_no: '',
+    street: '',
+    area: '',
+    city: 'Peshawar',
     address: '',
+    latitude: 34.0151,
+    longitude: 71.5249,
     milk_type: 'cow',
     daily_quantity: '',
   });
+
+  const [mapCenter, setMapCenter] = useState([34.0151, 71.5249]);
+  const [searchTimeout, setSearchTimeout] = useState(null);
 
   useEffect(() => {
     const validateToken = async () => {
@@ -39,6 +62,34 @@ const InvitationSignup = () => {
     validateToken();
   }, [token]);
 
+  const handleMarkerDragEnd = (e) => {
+    const { lat, lng } = e.target.getLatLng();
+    setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }));
+  };
+
+  const geocodeAddress = useCallback(async (area, city, fullAddress) => {
+    if (!area && !city && !fullAddress) return;
+    try {
+      let query = '';
+      if (fullAddress) {
+        query = `${fullAddress}, Peshawar, Pakistan`;
+      } else {
+        query = `${area ? area + ', ' : ''}${city || 'Peshawar'}, Pakistan`;
+      }
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`);
+      const data = await response.json();
+      if (data && data.length > 0) {
+        const { lat, lon } = data[0];
+        const newLat = parseFloat(lat);
+        const newLon = parseFloat(lon);
+        setMapCenter([newLat, newLon]);
+        setFormData(prev => ({ ...prev, latitude: newLat, longitude: newLon }));
+      }
+    } catch (err) {
+      console.error('Geocoding error:', err);
+    }
+  }, []);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     
@@ -49,14 +100,47 @@ const InvitationSignup = () => {
       return;
     }
     
-    // Validation for license_number: only alphanumeric characters allowed (no special characters)
+    // Validation for license_number: only alphanumeric characters allowed
     if (name === 'license_number') {
       const filteredValue = value.replace(/[^a-zA-Z0-9]/g, '');
       setFormData({ ...formData, [name]: filteredValue });
       return;
     }
-    
-    setFormData({ ...formData, [name]: value });
+
+    const updatedData = { ...formData, [name]: value };
+    setFormData(updatedData);
+
+    // Auto-Geocode trigger
+    if (name === 'area' || name === 'city' || name === 'address') {
+      if (searchTimeout) clearTimeout(searchTimeout);
+      const timeout = setTimeout(() => {
+        geocodeAddress(updatedData.area, updatedData.city, updatedData.address);
+      }, 1000);
+      setSearchTimeout(timeout);
+    }
+  };
+
+  // Map helper components
+  const ChangeView = ({ center }) => {
+    const map = useMap();
+    map.setView(center, 15);
+    return null;
+  };
+
+  const LocationMarker = () => {
+    useMapEvents({
+      click(e) {
+        setFormData(prev => ({ ...prev, latitude: e.latlng.lat, longitude: e.latlng.lng }));
+      },
+    });
+
+    return (
+      <Marker 
+        position={[formData.latitude, formData.longitude]} 
+        draggable={true}
+        eventHandlers={{ dragend: handleMarkerDragEnd }}
+      />
+    );
   };
 
   const handleSubmit = async (e) => {
@@ -80,8 +164,8 @@ const InvitationSignup = () => {
       setLoading(false);
       return;
     }
-    if (invitation.role === 'customer' && !formData.address) {
-      setError('Permanent address is required for delivery.');
+    if (invitation.role === 'customer' && (!formData.house_no || !formData.street || !formData.area || !formData.city)) {
+      setError('Complete structured address is required for delivery.');
       setLoading(false);
       return;
     }
@@ -93,7 +177,12 @@ const InvitationSignup = () => {
 
     try {
       // Create a clean copy of the data based on the role
-      const submissionData = { ...formData, token };
+      const submissionData = { 
+        ...formData, 
+        token,
+        latitude: parseFloat(formData.latitude.toFixed(16)),
+        longitude: parseFloat(formData.longitude.toFixed(16))
+      };
       
       if (invitation.role === 'driver') {
         // Drivers don't need these
@@ -217,16 +306,87 @@ const InvitationSignup = () => {
             </div>
           </div>
 
-          <div className="form-group-clean">
-            <label>ADDRESS</label>
-            <input
-              name="address"
-              placeholder="House #, Street, Area"
-              required={invitation.role === 'customer'}
-              value={formData.address}
-              onChange={handleChange}
-            />
-          </div>
+          {invitation.role === 'customer' ? (
+            <>
+              <div className="auth-grid-responsive">
+                <div className="form-group-clean">
+                  <label>HOUSE NO #</label>
+                  <input
+                    name="house_no"
+                    placeholder="e.g. 123-A"
+                    required
+                    value={formData.house_no}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="form-group-clean">
+                  <label>STREET</label>
+                  <input
+                    name="street"
+                    placeholder="Street Name / Number"
+                    required
+                    value={formData.street}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+
+              <div className="auth-grid-responsive">
+                <div className="form-group-clean">
+                  <label>AREA</label>
+                  <input
+                    name="area"
+                    placeholder="e.g. Gulberg III"
+                    required
+                    value={formData.area}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="form-group-clean">
+                  <label>CITY</label>
+                  <input
+                    name="city"
+                    placeholder="e.g. Lahore"
+                    required
+                    value={formData.city}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="form-group-clean">
+              <label>ADDRESS</label>
+              <input
+                name="address"
+                placeholder="Enter your full address"
+                required
+                value={formData.address}
+                onChange={handleChange}
+              />
+            </div>
+          )}
+
+          {invitation.role === 'customer' && (
+            <div className="form-group-clean" style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'flex', justifyContent: 'space-between' }}>
+                DELIVERY LOCATION 
+                <span style={{ fontSize: '0.75rem', fontWeight: 'normal', color: '#64748b' }}>
+                  Drag marker to pinpoint exact location
+                </span>
+              </label>
+              <div style={{ height: '250px', width: '100%', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0', marginTop: '0.5rem' }}>
+                <MapContainer center={mapCenter} zoom={15} style={{ height: '100%', width: '100%' }}>
+                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                  <ChangeView center={mapCenter} />
+                  <LocationMarker />
+                </MapContainer>
+              </div>
+              <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.5rem' }}>
+                Coordinates: {formData.latitude.toFixed(6)}, {formData.longitude.toFixed(6)}
+              </p>
+            </div>
+          )}
 
           <div className="auth-grid-responsive">
             <div className="form-group-clean">

@@ -86,11 +86,11 @@ const RouteList = () => {
                 {route.customer_details?.slice(0, 5).map(cust => (
                   <span 
                     key={cust.id} 
-                    className="customer-small-pill"
-                    style={{ transition: 'all 0.2s', cursor: 'pointer' }}
-                    onClick={() => setSelectedCustomerForProfile(cust)}
-                    onMouseOver={(e) => e.currentTarget.style.borderColor = '#27ae60'}
-                    onMouseOut={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}
+                    className="customer-small-pill clickable"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedCustomerForProfile(cust);
+                    }}
                   >
                     {cust.first_name || cust.username}
                   </span>
@@ -125,6 +125,7 @@ const RouteList = () => {
       <CustomerProfileModal
         isOpen={!!selectedCustomerForProfile}
         customer={selectedCustomerForProfile}
+        initialEditMode={false}
         onClose={() => setSelectedCustomerForProfile(null)}
         onUpdateSuccess={() => fetchRoutes(true)}
       />
