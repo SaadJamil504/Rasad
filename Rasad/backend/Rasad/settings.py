@@ -13,15 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Reading .env file
 environ.Env.read_env(BASE_DIR / '.env')
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-#7ei!^x5=kwmq2(wdlvb$)=1v7c(x=!=o07hnpfwfrgelf_6#2'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
-
-ALLOWED_HOSTS = ['rasad-production.up.railway.app', 'localhost', '127.0.0.1']
-
-FRONTEND_URL = 'https://rasad-ten.vercel.app'
+from .config import DEBUG, SECRET_KEY, ALLOWED_HOSTS, FRONTEND_URL
 
 
 # Application definition
