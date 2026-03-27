@@ -650,7 +650,11 @@
     gap: 0.75rem;
   }
 
-  .premium-btn-green,
+  .premium-btn-green {
+    width: auto;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
   .btn-secondary {
     width: 100%;
     justify-content: center;

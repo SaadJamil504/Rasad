@@ -683,6 +683,13 @@
 .icon-circle.check { background: rgba(76, 175, 80, 0.1); color: #4caf50; }
 .icon-circle.warn { background: rgba(255, 152, 0, 0.1); color: #ff9800; }
 .icon-circle.pause { background: rgba(255, 255, 255, 0.05); color: #888; font-size: 1rem; }
+.icon-circle.pending-initials {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  font-size: 1.1rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
 
 .item-info {
   flex: 1;

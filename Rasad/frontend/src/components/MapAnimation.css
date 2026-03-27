@@ -1,0 +1,139 @@
+.map-animation-container.funky-theme {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); /* Darker background for glow */
+  border: none !important;
+  padding: 2.5rem 1.7rem;
+  border-radius: 2.5rem;
+  position: relative;
+  overflow: hidden; 
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+  margin-top: 1.5rem;
+  margin-bottom: 4rem;
+  outline: none !important;
+}
+
+.map-header h4 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #f8fafc;
+  text-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
+}
+
+.svg-wrapper {
+  overflow-x: hidden; /* Forcefully hide overflow to prevent scrollbars */
+  padding: 2.5rem 0;
+  border: none !important;
+  outline: none !important;
+}
+
+.map-svg-funky {
+  width: 100%;
+  height: 250px;
+  overflow: visible;
+  border: none !important;
+  outline: none !important;
+}
+
+.funky-trail {
+  stroke-dasharray: 15, 20;
+  stroke-dashoffset: 1000;
+  transition: stroke-dashoffset 2s ease-in-out;
+  opacity: 0;
+  /* Glow effect */
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
+}
+
+.funky-trail.visible {
+  stroke-dashoffset: 0;
+  opacity: 1;
+  animation: moveTrail 20s linear infinite;
+}
+
+@keyframes moveTrail {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -1000; }
+}
+
+.point-group {
+  opacity: 0;
+  transform: scale(0);
+  transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.point-group.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.label-container {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.5s ease-out 0.4s;
+}
+
+.point-group.visible .label-container {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.label-bg {
+  fill: #1e293b;
+  filter: drop-shadow(0 0 5px rgba(96, 165, 250, 0.3));
+}
+
+.label-text {
+  font-size: 12px;
+  font-weight: 800;
+  fill: #f8fafc;
+  text-transform: capitalize;
+}
+
+.p-tag {
+  font-size: 10px;
+  font-weight: 900;
+  fill: #94a3b8;
+  letter-spacing: 2px;
+}
+
+.p-tag.start { fill: #60a5fa; }
+.p-tag.end { fill: #fbbf24; }
+
+/* Bouncy Floating Milk Bottle */
+.point-group.visible g {
+  animation: bottleBounce 2s ease-in-out infinite alternate;
+}
+
+@keyframes bottleBounce {
+  from { transform: translate(-15px, -15px) rotate(-3deg); }
+  to { transform: translate(-15px, -30px) rotate(3deg); }
+}
+
+/* Background Atmosphere */
+.funky-theme::after {
+  content: '✨';
+  position: absolute;
+  top: 15%;
+  left: 5%;
+  font-size: 1.5rem;
+  opacity: 0.3;
+  animation: twinkle 3s infinite alternate;
+}
+
+@keyframes twinkle {
+  from { opacity: 0.1; transform: scale(1); }
+  to { opacity: 0.5; transform: scale(1.5); }
+}
+
+.milky-loader {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 0 10px white;
+  animation: drip 1.2s infinite;
+}
+
+@keyframes drip {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(20px) scale(0.5); opacity: 0; }
+}

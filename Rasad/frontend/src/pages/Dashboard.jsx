@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useClickOutside } from '../hooks/useClickOutside';
+import MapAnimation from '../components/MapAnimation';
 import './Dashboard.css';
 import './DashboardExtra.css';
 
@@ -774,6 +775,10 @@ const Dashboard = () => {
             </div>
           </div>
 
+          {selectedDate === todayStr && deliveries.length > 0 && (
+            <MapAnimation deliveries={deliveries} />
+          )}
+
           {pendingComplaints.length > 0 && (
             <div className="complaints-section">
               <div className="section-title">
@@ -872,8 +877,19 @@ const Dashboard = () => {
                       <div className="item-status-icon">
                         {statusClass === 'done' && <div className="icon-circle check">✓</div>}
                         {statusClass === 'changed' && <div className="icon-circle warn">!</div>}
-                        {statusClass === 'paused' && <div className="icon-circle pause">⏸</div>}
-                        {statusClass === 'pending' && <div className="icon-circle empty"></div>}
+                        {statusClass === 'paused' && <div className="icon-circle pause">{t('P', 'ر')}</div>}
+                        {statusClass === 'pending' && (
+                          <div className="icon-circle pending-initials">
+                            {(() => {
+                              const name = delivery.customer_name || delivery.customer_username || 'C';
+                              const parts = name.trim().split(' ');
+                              if (parts.length > 1) {
+                                return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+                              }
+                              return name.substring(0, 2).toUpperCase();
+                            })()}
+                          </div>
+                        )}
                       </div>
 
                       <div className="item-info">
