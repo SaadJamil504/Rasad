@@ -105,7 +105,7 @@ const Dashboard = () => {
           setAlerts(alertsRes.data);
         } else if (user.role === 'driver') {
           const isFuture = selectedDate > new Date().toISOString().split('T')[0];
-          
+
           if (isFuture) {
             const adjRes = await deliveryAPI.getAdjustments({ date: selectedDate });
             setAdjustments(adjRes.data);
@@ -148,7 +148,7 @@ const Dashboard = () => {
 
   const handleUpdateQty = async (deliveryId, newQty) => {
     if (newQty < 0) return;
-    
+
     try {
       const res = await deliveryAPI.updateDeliveryQuantity(deliveryId, newQty);
       setDeliveries(deliveries.map(d => d.id === deliveryId ? res.data : d));
@@ -305,7 +305,7 @@ const Dashboard = () => {
       await deliveryAPI.actionAdjustment(id, { action, driver_comment: adjComment });
       setAdjComment('');
       alert(ts(`Request ${action === 'accept' ? 'accepted' : 'rejected'}.`, `درخواست ${action === 'accept' ? 'منظور' : 'مسترد'} کر دی گئی ہے۔`));
-      
+
       // Refresh data for the CURRENT selected date
       const isFuture = selectedDate > new Date().toISOString().split('T')[0];
       if (isFuture) {
@@ -352,8 +352,8 @@ const Dashboard = () => {
       {showPauseModal && (
         <div className="modal-overlay" onClick={() => setShowPauseModal(false)}>
           <div className="glass-card modal-content" ref={pauseModalRef} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '400px', width: '90%', position: 'relative' }}>
-            <button 
-              className="close-btn" 
+            <button
+              className="close-btn"
               onClick={() => setShowPauseModal(false)}
               style={{
                 position: 'absolute', top: '1rem', right: '1rem', background: '#f8fafc', border: '1px solid #e2e8f0',
@@ -365,8 +365,8 @@ const Dashboard = () => {
             <h3>Pause Delivery</h3>
             <div className="input-group" style={{ margin: '1rem 0' }}>
               <label>{t('Request Date', 'درخواست کی تاریخ')}</label>
-              <input 
-                type="date" 
+              <input
+                type="date"
                 className="form-input"
                 value={adjDate}
                 onChange={(e) => setAdjDate(e.target.value)}
@@ -396,8 +396,8 @@ const Dashboard = () => {
       {showQtyModal && (
         <div className="modal-overlay" onClick={() => setShowQtyModal(false)}>
           <div className="glass-card modal-content" ref={qtyModalRef} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '400px', width: '90%', position: 'relative' }}>
-            <button 
-              className="close-btn" 
+            <button
+              className="close-btn"
               onClick={() => setShowQtyModal(false)}
               style={{
                 position: 'absolute', top: '1rem', right: '1rem', background: '#f8fafc', border: '1px solid #e2e8f0',
@@ -409,8 +409,8 @@ const Dashboard = () => {
             <h3>Change Quantity</h3>
             <div className="input-group" style={{ margin: '1rem 0' }}>
               <label>{t('Request Date', 'درخواست کی تاریخ')}</label>
-              <input 
-                type="date" 
+              <input
+                type="date"
                 className="form-input"
                 value={adjDate}
                 onChange={(e) => setAdjDate(e.target.value)}
@@ -450,8 +450,8 @@ const Dashboard = () => {
       {showComplaintModal && (
         <div className="modal-overlay" onClick={() => setShowComplaintModal(false)}>
           <div className="glass-card modal-content" ref={complaintModalRef} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '400px', width: '90%', position: 'relative' }}>
-            <button 
-              className="close-btn" 
+            <button
+              className="close-btn"
               onClick={() => setShowComplaintModal(false)}
               style={{
                 position: 'absolute', top: '1rem', right: '1rem', background: '#f8fafc', border: '1px solid #e2e8f0',
@@ -486,8 +486,8 @@ const Dashboard = () => {
           <div className="glass-card modal-content" ref={historyModalRef} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px', width: '95%', maxHeight: '80vh', overflowY: 'auto', position: 'relative' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h3>Past Bills & History</h3>
-              <button 
-                className="close-btn" 
+              <button
+                className="close-btn"
                 onClick={() => setShowHistoryModal(false)}
                 style={{
                   background: '#f8fafc', border: '1px solid #e2e8f0',
@@ -544,8 +544,8 @@ const Dashboard = () => {
       {showPaymentModal && (
         <div className="modal-overlay" onClick={() => setShowPaymentModal(false)}>
           <div className="glass-card modal-content" ref={paymentModalRef} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '400px', width: '90%', position: 'relative' }}>
-            <button 
-              className="close-btn" 
+            <button
+              className="close-btn"
               onClick={() => setShowPaymentModal(false)}
               style={{
                 position: 'absolute', top: '1rem', right: '1rem', background: '#f8fafc', border: '1px solid #e2e8f0',
@@ -636,7 +636,7 @@ const Dashboard = () => {
           </div>
 
           <div className="quick-actions-section">
-            <h3 style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+            <h3 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span>{t('Quick Actions', 'فوری کارروائی')}</span>
             </h3>
             <div className="actions-grid">
@@ -667,7 +667,7 @@ const Dashboard = () => {
           </div>
 
           <div className="bill-section">
-            <h3 style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+            <h3 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span>{currentMonthName} {currentYear} — {t('Bill', 'بل')}</span>
             </h3>
             <div className="bill-list">
@@ -728,8 +728,8 @@ const Dashboard = () => {
             <div className="banner-top">
               <span>{t('Driver Dashboard', 'ڈرائیور ڈیش بورڈ')}</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <input 
-                  type="date" 
+                <input
+                  type="date"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
                   className="dashboard-date-picker"
@@ -782,7 +782,7 @@ const Dashboard = () => {
           {pendingComplaints.length > 0 && (
             <div className="complaints-section">
               <div className="section-title">
-                <h3 style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%'}}>
+                <h3 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                   <span>{t('Customer Complaints', 'گاہکوں کی شکایات')}</span>
                 </h3>
               </div>
@@ -804,11 +804,11 @@ const Dashboard = () => {
 
           <div className="today-list-section">
             <div className="section-title">
-              <h3 style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%'}}>
+              <h3 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                 <span>{selectedDate === todayStr ? t("TODAY'S LIST", 'آج کی فہرست') : (selectedDate > todayStr ? t("UPCOMING REQUESTS", 'آنے والی درخواستیں') : t("PAST DELIVERIES", 'گزشتہ ڈیلیوری'))}</span>
                 {selectedDate === todayStr && deliveries.length > 0 && (
-                  <button 
-                    className="premium-btn-green" 
+                  <button
+                    className="premium-btn-green"
                     onClick={handleStartNavigation}
                     style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
                   >
@@ -832,7 +832,7 @@ const Dashboard = () => {
                           {adj.adjustment_type === 'pause' ? 'Request: Pause delivery' : `Request: Change to ${adj.new_quantity}L`}
                         </div>
                         <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.3rem' }}>
-                           "{adj.message || 'No message'}"
+                          "{adj.message || 'No message'}"
                         </div>
                       </div>
                       <div className="item-actions">
@@ -866,7 +866,7 @@ const Dashboard = () => {
                     statusText = delivery.pendingAdj.adjustment_type === 'pause' ? 'Pause Request' : 'Change Request';
                   }
 
-                  const address = delivery.customer_house_no 
+                  const address = delivery.customer_house_no
                     ? `${delivery.customer_house_no}, ${delivery.customer_street}, ${delivery.customer_area}`
                     : (delivery.customer_address || 'N/A');
 
@@ -914,8 +914,8 @@ const Dashboard = () => {
                                   <button className="qty-adj-btn" onClick={() => handleUpdateQty(delivery.id, parseFloat(delivery.quantity) - 0.5)}>-</button>
                                   <span className="qty-label-val">{delivery.quantity}L</span>
                                   <button className="qty-adj-btn" onClick={() => handleUpdateQty(delivery.id, parseFloat(delivery.quantity) + 0.5)}>+</button>
-                                  <button 
-                                    className="btn-text-only" 
+                                  <button
+                                    className="btn-text-only"
                                     onClick={() => setEditingDeliveryId(null)}
                                     style={{ marginLeft: '10px', color: '#27ae60', fontSize: '0.9rem' }}
                                   >
@@ -926,8 +926,8 @@ const Dashboard = () => {
                                 <>
                                   {delivery.quantity}L {delivery.customer_milk_type} · Rs {delivery.total_amount}
                                   {isToday && (
-                                    <button 
-                                      className="btn-text-only" 
+                                    <button
+                                      className="btn-text-only"
                                       onClick={() => setEditingDeliveryId(delivery.id)}
                                       style={{ marginLeft: '10px', color: 'var(--primary)', fontSize: '0.8rem', fontWeight: 600 }}
                                     >
@@ -966,7 +966,7 @@ const Dashboard = () => {
                             </button>
                           </>
                         )}
-                        
+
                         {!isToday && statusClass === 'pending' && (
                           <span className="status-label gray">Pending</span>
                         )}
@@ -1040,35 +1040,35 @@ const Dashboard = () => {
               {t('Overdue Alerts', 'بقایا الرٹس (واجب الادا)')}
             </h3>
           </div>
-          <button 
-            className="btn-s" 
-            style={{ 
+          <button
+            className="btn-s"
+            style={{
               position: 'absolute',
               top: '1.5rem',
               right: '1.5rem',
-              padding: '0.4rem 0.8rem', 
-              fontSize: '0.7rem', 
+              padding: '0.4rem 0.8rem',
+              fontSize: '0.7rem',
               height: 'auto',
               minWidth: 'auto',
               width: 'fit-content'
-            }} 
+            }}
             onClick={() => window.location.href = '/customers'}
           >
             {t('View All', 'سب دیکھیں')}
           </button>
-          
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '420px', overflowY: 'auto', paddingRight: '0.5rem' }}>
             {Array.isArray(alerts?.overdue) && alerts.overdue.length > 0 ? (
               alerts.overdue.map((customer, index) => {
                 const bgColors = ['rgba(254, 226, 226, 0.5)', 'rgba(254, 243, 199, 0.5)', 'rgba(254, 243, 199, 0.5)'];
                 const borderColors = ['#ef4444', '#f59e0b', '#f59e0b'];
                 const dotColors = ['linear-gradient(135deg, #f87171, #dc2626)', 'linear-gradient(135deg, #fbbf24, #d97706)', 'linear-gradient(135deg, #fbbf24, #d97706)'];
-                
+
                 const styleIdx = index < 3 ? index : 2;
-                
+
                 return (
-                  <div key={customer.id} style={{ 
-                    background: bgColors[styleIdx], 
+                  <div key={customer.id} style={{
+                    background: bgColors[styleIdx],
                     borderLeft: `4px solid ${borderColors[styleIdx]}`,
                     padding: '1rem 1.25rem',
                     borderRadius: '0.75rem',
@@ -1077,8 +1077,8 @@ const Dashboard = () => {
                     gap: '1rem',
                     flexShrink: 0
                   }}>
-                    <div style={{ 
-                      width: '12px', height: '12px', borderRadius: '50%', background: dotColors[styleIdx], 
+                    <div style={{
+                      width: '12px', height: '12px', borderRadius: '50%', background: dotColors[styleIdx],
                       boxShadow: '0 2px 4px rgba(0,0,0,0.1)', flexShrink: 0
                     }}></div>
                     <div style={{ flex: 1 }}>
@@ -1103,12 +1103,12 @@ const Dashboard = () => {
 
         {/* Today's Paused Deliveries Section */}
         <div className="glass-card" style={{ padding: '2rem', display: 'flex', flexDirection: 'column' }}>
-          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem'}}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
             <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#1e293b', fontSize: '1rem' }}>
               {t("Today's Paused Deliveries", 'رکی ہوئی سپلائی')}
             </h3>
           </div>
-          
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, maxHeight: '380px', overflowY: 'auto', paddingRight: '0.5rem' }}>
             {Array.isArray(alerts?.paused) && alerts.paused.length > 0 ? (
               alerts.paused.map(delivery => (
@@ -1133,7 +1133,7 @@ const Dashboard = () => {
               </div>
             )}
           </div>
-          
+
           <div style={{ marginTop: 'auto', paddingTop: '1.5rem', borderTop: '1px solid #e2e8f0' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
               <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>{t("Today's quantity changes", 'آج کی مقدار میں تبدیلی')}</span>

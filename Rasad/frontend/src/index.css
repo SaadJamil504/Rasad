@@ -43,7 +43,26 @@ body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
+  -ms-overflow-style: none; /* hide scrollbar in IE 10+ */
+  scrollbar-width: none; /* hide scrollbar in Firefox */
 }
+
+/* hide scrollbars in WebKit browsers */
+body::-webkit-scrollbar {
+  display: none;
+}
+
+
+/* global fix for right-side border artifact */
+html {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 
 h1, h2, h3, h4 {
   font-family: 'Outfit', sans-serif;
