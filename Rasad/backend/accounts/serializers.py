@@ -458,6 +458,9 @@ class PaymentSerializer(serializers.ModelSerializer):
         model = Payment
         fields = ('id', 'customer', 'customer_name', 'customer_username', 'amount', 'method', 'status', 'created_at', 'confirmed_at', 'date', 'note', 'received_by_name')
         read_only_fields = ('status', 'created_at', 'confirmed_at')
+        extra_kwargs = {
+            'customer': {'required': False}
+        }
 
     def get_received_by_name(self, obj):
         if obj.received_by:

@@ -456,6 +456,16 @@
   cursor: not-allowed;
 }
 
+.bill-summary-mini {
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.bill-summary-mini strong {
+  font-family: 'Outfit', sans-serif;
+  color: #1e293b;
+}
+
 /* Modal and Quick Action Styles */
 .modal-overlay {
   position: fixed;

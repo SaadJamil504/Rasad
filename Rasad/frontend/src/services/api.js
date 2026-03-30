@@ -170,6 +170,8 @@ export const deliveryAPI = {
   getDashboardAlerts: () => api.get('accounts/dashboard/alerts/'),
   getReports: () => api.get('accounts/dashboard/reports/'),
   getDriverStats: () => api.get('accounts/driver-stats/'),
+  getBillDetails: (params) => api.get('accounts/bill/details/', { params }),
+  getBillPDF: (params) => api.get('accounts/bill/pdf/', { params, responseType: 'blob' }),
 };
 
 export const dailyReportAPI = {

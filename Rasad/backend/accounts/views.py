@@ -18,9 +18,17 @@ from django.http import Http404
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
-from datetime import datetime
+from datetime import datetime, date
 import threading
 import logging
+import calendar
+import io
+from django.http import HttpResponse
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import inch
 
 logger = logging.getLogger(__name__)
 
@@ -648,6 +656,229 @@ class DeliveryHistoryView(APIView):
         deliveries = queryset.order_by('-date')
         serializer = DeliverySerializer(deliveries, many=True)
         return Response(serializer.data)
+
+class MonthlyBillView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_bill_data(self, customer, month, year):
+        # 1. Start/End Dates
+        start_date = date(year, month, 1)
+        last_day = calendar.monthrange(year, month)[1]
+        end_date = date(year, month, last_day)
+
+        # 2. Previous Balance (Sum deliveries before start_date - Sum confirmed payments before start_date)
+        prev_deliveries = Delivery.objects.filter(
+            customer=customer, 
+            date__lt=start_date,
+            is_delivered=True
+        ).aggregate(sum=models.Sum('total_amount'))['sum'] or 0
+        
+        prev_payments = Payment.objects.filter(
+            customer=customer,
+            date__lt=start_date,
+            status='confirmed'
+        ).aggregate(sum=models.Sum('amount'))['sum'] or 0
+        
+        opening_balance = float(prev_deliveries) - float(prev_payments)
+
+        # 3. Monthly Deliveries (Include paused too but with 0 total)
+        monthly_deliveries = Delivery.objects.filter(
+            customer=customer,
+            date__range=[start_date, end_date]
+        ).filter(models.Q(is_delivered=True) | models.Q(status='paused')).order_by('date')
+        
+        delivery_total = sum(d.total_amount for d in monthly_deliveries)
+
+        # 4. Monthly Payments
+        monthly_payments = Payment.objects.filter(
+            customer=customer,
+            date__range=[start_date, end_date],
+            status='confirmed'
+        ).order_by('date')
+        
+        payment_total = sum(p.amount for p in monthly_payments)
+
+        # 5. Closing Balance
+        closing_balance = opening_balance + float(delivery_total) - float(payment_total)
+
+        return {
+            'customer': customer,
+            'month_name': start_date.strftime('%B'),
+            'year': year,
+            'opening_balance': opening_balance,
+            'deliveries': monthly_deliveries,
+            'delivery_total': float(delivery_total),
+            'payments': monthly_payments,
+            'payment_total': float(payment_total),
+            'closing_balance': closing_balance
+        }
+
+    def get(self, request):
+        customer_id = request.query_params.get('customer_id')
+        month = request.query_params.get('month')
+        year = request.query_params.get('year')
+
+        if not month or not year:
+            return Response({'error': 'Month and Year are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            month = int(month)
+            year = int(year)
+        except ValueError:
+            return Response({'error': 'Invalid month or year.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if request.user.role == 'customer':
+            customer = request.user
+        elif request.user.role == 'owner':
+            if not customer_id:
+                return Response({'error': 'Customer ID is required for owners.'}, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                customer = User.objects.get(pk=customer_id, parent_owner=request.user, role='customer')
+            except User.DoesNotExist:
+                return Response({'error': 'Customer not found.'}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response({'error': 'Unauthorized.'}, status=status.HTTP_403_FORBIDDEN)
+
+        bill_data = self.get_bill_data(customer, month, year)
+        
+        # Format for JSON response
+        response_data = {
+            'customer_name': bill_data['customer'].first_name or bill_data['customer'].username,
+            'customer_addr': bill_data['customer'].address,
+            'month_name': bill_data['month_name'],
+            'year': bill_data['year'],
+            'opening_balance': bill_data['opening_balance'],
+            'deliveries': DeliverySerializer(bill_data['deliveries'], many=True).data,
+            'delivery_total': bill_data['delivery_total'],
+            'payments': PaymentSerializer(bill_data['payments'], many=True).data,
+            'payment_total': bill_data['payment_total'],
+            'closing_balance': bill_data['closing_balance']
+        }
+        return Response(response_data)
+
+class MonthlyBillPDFView(MonthlyBillView):
+    def get(self, request):
+        customer_id = request.query_params.get('customer_id')
+        month = request.query_params.get('month')
+        year = request.query_params.get('year')
+
+        if not month or not year:
+            return Response({'error': 'Month and Year are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            month = int(month)
+            year = int(year)
+        except ValueError:
+            return Response({'error': 'Invalid month or year.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if request.user.role == 'customer':
+            customer = request.user
+        elif request.user.role == 'owner':
+            if not customer_id:
+                return Response({'error': 'Customer ID is required for owners.'}, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                customer = User.objects.get(pk=customer_id, parent_owner=request.user, role='customer')
+            except User.DoesNotExist:
+                return Response({'error': 'Customer not found.'}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response({'error': 'Unauthorized.'}, status=status.HTTP_403_FORBIDDEN)
+
+        bill_data = self.get_bill_data(customer, month, year)
+        
+        # Generate PDF using reportlab
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
+        styles = getSampleStyleSheet()
+        elements = []
+
+        # Header
+        title_style = styles["Title"]
+        title_style.alignment = 1 # Center
+        elements.append(Paragraph(f"RASAD - Monthly Bill", title_style))
+        elements.append(Paragraph(f"{bill_data['month_name']} {bill_data['year']}", styles["Heading2"]))
+        elements.append(Spacer(1, 0.2 * inch))
+
+        # Customer Info
+        elements.append(Paragraph(f"<b>Customer Name:</b> {customer.first_name or customer.username}", styles["Normal"]))
+        elements.append(Paragraph(f"<b>Phone:</b> {customer.phone_number}", styles["Normal"]))
+        elements.append(Paragraph(f"<b>Address:</b> {customer.address or 'N/A'}", styles["Normal"]))
+        if customer.parent_owner:
+            elements.append(Paragraph(f"<b>Dairy:</b> {customer.parent_owner.dairy_name or 'Milk Supply'}", styles["Normal"]))
+        elements.append(Spacer(1, 0.3 * inch))
+
+        # Summary Table
+        summary_data = [
+            ["Opening Balance", f"Rs. {bill_data['opening_balance']:.2f}"],
+            ["Monthly Deliveries", f"Rs. {bill_data['delivery_total']:.2f}"],
+            ["Monthly Payments", f"Rs. {bill_data['payment_total']:.2f}"],
+            ["Closing Balance", f"Rs. {bill_data['closing_balance']:.2f}"],
+        ]
+        s_table = Table(summary_data, colWidths=[2 * inch, 2 * inch])
+        s_table.setStyle(TableStyle([
+            ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
+            ('BACKGROUND', (0,0), (0,-1), colors.whitesmoke),
+            ('FONTNAME', (0,-1), (-1,-1), 'Helvetica-Bold'),
+            ('TEXTCOLOR', (1,3), (1,3), colors.red if bill_data['closing_balance'] > 0 else colors.green),
+        ]))
+        elements.append(Paragraph("<b>Summary</b>", styles["Heading3"]))
+        elements.append(s_table)
+        elements.append(Spacer(1, 0.4 * inch))
+
+        # Deliveries Table
+        elements.append(Paragraph("<b>Delivery Details</b>", styles["Heading3"]))
+        d_header = ["Date", "Status", "Qty (L)", "Price", "Amount"]
+        d_rows = [d_header]
+        for d in bill_data['deliveries']:
+            status_text = "Delivered" if d.is_delivered else "Paused" if d.status == 'paused' else "Pending"
+            d_rows.append([
+                d.date.strftime('%Y-%m-%d'),
+                status_text,
+                f"{d.quantity:.1f}",
+                f"{d.price_at_delivery:.1f}",
+                f"{d.total_amount:.2f}"
+            ])
+        
+        d_table = Table(d_rows, colWidths=[1.2*inch, 1*inch, 0.8*inch, 0.8*inch, 1.2*inch])
+        d_table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.grey),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+            ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('BOTTOMPADDING', (0,0), (-1,0), 6),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
+        ]))
+        elements.append(d_table)
+        elements.append(Spacer(1, 0.4 * inch))
+
+        # Payments Table
+        if bill_data['payments'].exists():
+            elements.append(Paragraph("<b>Payment Details</b>", styles["Heading3"]))
+            p_header = ["Date", "Method", "Amount", "Status"]
+            p_rows = [p_header]
+            for p in bill_data['payments']:
+                p_rows.append([
+                    p.date.strftime('%Y-%m-%d'),
+                    p.method,
+                    f"Rs. {p.amount:.2f}",
+                    p.status.capitalize()
+                ])
+            
+            p_table = Table(p_rows, colWidths=[1.5*inch, 1.5*inch, 1.2*inch, 1*inch])
+            p_table.setStyle(TableStyle([
+                ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
+                ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+                ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
+            ]))
+            elements.append(p_table)
+
+        doc.build(elements)
+        buffer.seek(0)
+        
+        filename = f"Bill_{customer.username}_{bill_data['month_name']}_{year}.pdf"
+        response = HttpResponse(buffer, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
 
 class PaymentRequestView(APIView):
     permission_classes = (permissions.IsAuthenticated,)

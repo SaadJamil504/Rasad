@@ -29,8 +29,13 @@ const Dashboard = () => {
   const [prices, setPrices] = useState({ cow_price: 0, buffalo_price: 0 });
   const [pendingPayments, setPendingPayments] = useState([]);
   const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [paymentNote, setPaymentNote] = useState('');
   const [loading, setLoading] = useState(true);
   const [history, setHistory] = useState([]);
+  const [billData, setBillData] = useState(null);
+  const [loadingBill, setLoadingBill] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [updatingPrices, setUpdatingPrices] = useState(false);
   const [submittingPayment, setSubmittingPayment] = useState(false);
   const [showPauseModal, setShowPauseModal] = useState(false);
@@ -201,9 +206,14 @@ const Dashboard = () => {
     if (!paymentAmount || parseFloat(paymentAmount) <= 0) return;
     setSubmittingPayment(true);
     try {
-      await deliveryAPI.reportPayment({ amount: paymentAmount });
+      await deliveryAPI.reportPayment({ 
+        amount: paymentAmount,
+        date: paymentDate,
+        note: paymentNote
+      });
       alert(ts('Payment reported successfully! Waiting for owner confirmation.', 'ادائیگی کی رپورٹ ہو گئی! مالک کی تصدیق کا انتظار کریں۔'));
       setPaymentAmount('');
+      setPaymentNote('');
       // Refresh history/status/profile
       const [statusRes, historyRes, profileRes] = await Promise.all([
         deliveryAPI.getCustomerStatus(),
@@ -318,12 +328,32 @@ const Dashboard = () => {
   const handleFetchFilteredHistory = async () => {
     setLoadingHistory(true);
     try {
-      const res = await deliveryAPI.getDeliveryHistory(filterMonth, filterYear);
-      setFilteredHistory(res.data);
+      const res = await deliveryAPI.getBillDetails({ month: filterMonth, year: filterYear });
+      setBillData(res.data);
+      setFilteredHistory(res.data.deliveries);
     } catch (err) {
       console.error('Failed to fetch filtered history:', err);
     } finally {
       setLoadingHistory(false);
+    }
+  };
+
+  const handleDownloadBill = async () => {
+    setDownloadingPdf(true);
+    try {
+      const response = await deliveryAPI.getBillPDF({ month: filterMonth, year: filterYear });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Bill_${user.username}_${filterMonth}_${filterYear}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.error('Failed to download bill:', err);
+      alert('Error downloading bill.');
+    } finally {
+      setDownloadingPdf(false);
     }
   };
 
@@ -512,17 +542,29 @@ const Dashboard = () => {
         <div className="modal-overlay" onClick={() => setShowHistoryModal(false)}>
           <div className="glass-card modal-content" ref={historyModalRef} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px', width: '95%', maxHeight: '80vh', overflowY: 'auto', position: 'relative' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3>Past Bills & History</h3>
-              <button
-                className="close-btn"
-                onClick={() => setShowHistoryModal(false)}
-                style={{
-                  background: '#f8fafc', border: '1px solid #e2e8f0',
-                  width: '32px', height: '32px', borderRadius: '50%', color: '#64748b', fontSize: '1rem', cursor: 'pointer'
-                }}
-              >
-                &times;
-              </button>
+              <h3>{t('Past Bills & History', 'پرانے بل اور تاریخ')}</h3>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                {billData && (
+                  <button 
+                    className="premium-btn-green" 
+                    onClick={handleDownloadBill} 
+                    disabled={downloadingPdf}
+                    style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+                  >
+                    {downloadingPdf ? '...' : 'PDF'}
+                  </button>
+                )}
+                <button
+                  className="close-btn"
+                  onClick={() => setShowHistoryModal(false)}
+                  style={{
+                    background: '#f8fafc', border: '1px solid #e2e8f0',
+                    width: '32px', height: '32px', borderRadius: '50%', color: '#64748b', fontSize: '1rem', cursor: 'pointer'
+                  }}
+                >
+                  &times;
+                </button>
+              </div>
             </div>
 
             <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
@@ -546,20 +588,40 @@ const Dashboard = () => {
 
             <div className="bill-list">
               {loadingHistory ? <p>Loading history...</p> : (
-                filteredHistory.length > 0 ? (
+                (billData || filteredHistory.length > 0) ? (
                   <>
-                    {filteredHistory.map(item => (
-                      <div key={item.id} className="bill-item">
-                        <span className="bill-day">{new Date(item.date).getDate()}</span>
-                        <span className="bill-qty">{item.status === 'paused' ? 'Paused' : `${item.quantity} Liter`}</span>
-                        <span className="bill-price">Rs {item.status === 'paused' ? '0' : item.total_amount}</span>
+                    {billData && (
+                      <div className="bill-summary-mini" style={{ padding: '1rem', background: 'rgba(0,0,0,0.03)', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.85rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
+                          <span>{t('Opening Balance:', 'پچھلا بقایا:')}</span>
+                          <strong>Rs {Number(billData.opening_balance || 0).toFixed(0)}</strong>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
+                          <span>{t('Monthly Deliveries (+):', 'ماہانہ سپلائی (+):')}</span>
+                          <strong>Rs {Number(billData.delivery_total || 0).toFixed(0)}</strong>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
+                          <span>{t('Monthly Payments (-):', 'ماہانہ ادائیگی (-):')}</span>
+                          <strong>Rs {Number(billData.payment_total || 0).toFixed(0)}</strong>
+                        </div>
+                        <hr style={{ border: 'none', borderTop: '1px solid #ddd', margin: '0.5rem 0' }} />
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '0.9rem' }}>
+                          <span>{t('Closing Balance:', 'کل بقایا:')}</span>
+                          <span style={{ color: billData.closing_balance > 0 ? 'red' : 'green' }}>Rs {Number(billData.closing_balance || 0).toFixed(0)}</span>
+                        </div>
                       </div>
-                    ))}
-                    <div className="bill-item total-row">
-                      <span className="bill-day" style={{ visibility: 'hidden' }}>0</span>
-                      <span className="bill-qty">Total {filteredHistory.reduce((s, i) => s + parseFloat(i.quantity || 0), 0)} Liter</span>
-                      <span className="bill-price">Rs {filteredHistory.reduce((s, i) => s + parseFloat(i.total_amount || 0), 0)}</span>
-                    </div>
+                    )}
+                    {filteredHistory.length > 0 ? (
+                      filteredHistory.map(item => (
+                        <div key={item.id} className="bill-item">
+                          <span className="bill-day">{new Date(item.date).getDate()}</span>
+                          <span className="bill-qty">{item.status === 'paused' ? 'Paused' : `${item.quantity} Liter`}</span>
+                          <span className="bill-price">Rs {item.status === 'paused' ? '0' : item.total_amount}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <p style={{ textAlign: 'center', padding: '1rem', color: '#888', fontSize: '0.85rem' }}>No deliveries recorded for this month.</p>
+                    )}
                   </>
                 ) : <p style={{ textAlign: 'center', color: '#888' }}>No records found for this period.</p>
               )}
@@ -586,8 +648,8 @@ const Dashboard = () => {
               Report the amount you have paid to the owner for confirmation.
             </p>
             <form onSubmit={handleReportPayment}>
-              <div className="input-group" style={{ marginBottom: '1.5rem' }}>
-                <label>Amount (Rs.)</label>
+              <div className="input-group" style={{ marginBottom: '1rem' }}>
+                <label>{t('Amount (Rs.)', 'رقم (روپے)')}</label>
                 <input
                   type="number"
                   className="form-input"
@@ -595,6 +657,26 @@ const Dashboard = () => {
                   value={paymentAmount}
                   onChange={(e) => setPaymentAmount(e.target.value)}
                   required
+                />
+              </div>
+              <div className="input-group" style={{ marginBottom: '1rem' }}>
+                <label>{t('Payment Date', 'ادائیگی کی تاریخ')}</label>
+                <input
+                  type="date"
+                  className="form-input"
+                  value={paymentDate}
+                  onChange={(e) => setPaymentDate(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="input-group" style={{ marginBottom: '1.5rem' }}>
+                <label>{t('Note (optional)', 'نوٹ (اختیاری)')}</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder={ts('e.g. Paid via JazzCash', 'مثلاً جیز کیش کے ذریعے ادائیگی')}
+                  value={paymentNote}
+                  onChange={(e) => setPaymentNote(e.target.value)}
                 />
               </div>
               <div style={{ display: 'flex', gap: '1rem' }}>
@@ -682,6 +764,12 @@ const Dashboard = () => {
               <div className="action-card-btn" onClick={() => setShowHistoryModal(true)}>
                 <div>
                   <span className="btn-text-main">{t('Past Bills', 'پرانے بل')}</span>
+                </div>
+              </div>
+
+              <div className="action-card-btn" onClick={() => setShowPaymentModal(true)}>
+                <div>
+                  <span className="btn-text-main">{t('Record Payment', 'ادائیگی درج کریں')}</span>
                 </div>
               </div>
 
