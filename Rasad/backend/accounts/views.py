@@ -134,7 +134,7 @@ class InvitationListCreateView(APIView):
             invitation = serializer.save(invited_by=request.user)
             
             # Generate Link instead of sending email
-            frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173').rstrip('/')
+            frontend_url = settings.FRONTEND_URL.rstrip('/')
             signup_url = f"{frontend_url}/join/{invitation.token}"
             
             return Response({

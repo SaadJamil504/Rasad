@@ -21,7 +21,7 @@ DEBUG = env('DEBUG')
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['rasad-production.up.railway.app', 'localhost', '127.0.0.1'])
 
-FRONTEND_URL = env('FRONTEND_URL', default='http://localhost:5173')
+FRONTEND_URL = env('FRONTEND_URL', default='https://rasad-ten.vercel.app')
 
 
 # Application definition
