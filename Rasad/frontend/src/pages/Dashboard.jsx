@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { staffAPI, deliveryAPI, authAPI } from '../services/api';
+import { staffAPI, deliveryAPI, authAPI, dailyReportAPI } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -22,15 +22,17 @@ const Dashboard = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [counts, setCounts] = useState({ drivers: 0, customers: 0 });
   const [deliveries, setDeliveries] = useState([]);
-  const [history, setHistory] = useState([]);
+  const [adjustments, setAdjustments] = useState([]);
+  const [driverStats, setDriverStats] = useState({ today_collected: 0 });
+  const [reportSubmitted, setReportSubmitted] = useState(false);
   const [customerStatus, setCustomerStatus] = useState(null);
   const [prices, setPrices] = useState({ cow_price: 0, buffalo_price: 0 });
   const [pendingPayments, setPendingPayments] = useState([]);
   const [paymentAmount, setPaymentAmount] = useState('');
   const [loading, setLoading] = useState(true);
+  const [history, setHistory] = useState([]);
   const [updatingPrices, setUpdatingPrices] = useState(false);
   const [submittingPayment, setSubmittingPayment] = useState(false);
-  const [adjustments, setAdjustments] = useState([]);
   const [showPauseModal, setShowPauseModal] = useState(false);
   const [showQtyModal, setShowQtyModal] = useState(false);
   const [showComplaintModal, setShowComplaintModal] = useState(false);
@@ -111,12 +113,24 @@ const Dashboard = () => {
             setAdjustments(adjRes.data);
             setDeliveries([]);
           } else {
-            const [dailyRes, adjRes] = await Promise.all([
+            const [dailyRes, adjRes, statsRes] = await Promise.all([
               deliveryAPI.getDailyDeliveries(selectedDate),
-              deliveryAPI.getAdjustments({ date: selectedDate })
+              deliveryAPI.getAdjustments({ date: selectedDate }),
+              deliveryAPI.getDriverStats()
             ]);
             setDeliveries(dailyRes.data);
             setAdjustments(adjRes.data);
+            setDriverStats(statsRes.data);
+            
+            // Check if driver đã submit report today
+            try {
+              const reportRes = await dailyReportAPI.getTodayReport();
+              if (reportRes.data && reportRes.data.id) {
+                setReportSubmitted(true);
+              }
+            } catch (e) {
+              console.error("Error checking report status", e);
+            }
           }
         } else if (user.role === 'customer') {
           const [statusRes, historyRes, profileRes] = await Promise.all([
@@ -206,6 +220,19 @@ const Dashboard = () => {
       alert('Error: ' + errorMsg);
     } finally {
       setSubmittingPayment(false);
+    }
+  };
+
+  const handleSubmitDailyReport = async () => {
+    if (window.confirm(t('Are you sure you want to submit your final report for today?', 'کیا آپ آج کی فائنل رپورٹ جمع کرنا چاہتے ہیں؟'))) {
+      try {
+        await dailyReportAPI.submitReport();
+        setReportSubmitted(true);
+        alert(t('Daily report submitted successfully!', 'روزانہ رپورٹ کامیابی کے ساتھ جمع ہوگئی!'));
+      } catch (err) {
+        console.error('Failed to submit report:', err);
+        alert(err.response?.data?.error || t('Failed to submit report.', 'رپورٹ جمع کرنے میں ناکامی۔'));
+      }
     }
   };
 
@@ -773,6 +800,10 @@ const Dashboard = () => {
               <span className="stat-val orange">{left}</span>
               <span className="stat-lbl">{t('Left', 'باقی')}</span>
             </div>
+            <div className="stat-box">
+              <span className="stat-val purple" style={{ color: '#8b5cf6' }}>Rs {driverStats.today_collected.toLocaleString()}</span>
+              <span className="stat-lbl">{t('Collected', 'وصول شدہ')}</span>
+            </div>
           </div>
 
           {selectedDate === todayStr && deliveries.length > 0 && (
@@ -801,6 +832,34 @@ const Dashboard = () => {
               </div>
             </div>
           )}
+
+          <div className="quick-actions-section">
+            <div className="actions-grid" style={{ gridTemplateColumns: '1fr' }}>
+              <div className="action-card-btn" onClick={() => navigate('/cash')} style={{ background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)', color: 'white', border: 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}>
+                  <span style={{ fontSize: '1.25rem' }}>💰</span>
+                  <span className="btn-text-main" style={{ color: 'white' }}>{t('Cash Collection', 'نقدی وصولی')}</span>
+                </div>
+              </div>
+              <div 
+                className={`action-card-btn ${reportSubmitted ? 'disabled' : ''}`} 
+                onClick={!reportSubmitted ? handleSubmitDailyReport : undefined} 
+                style={{ 
+                  background: reportSubmitted ? '#f1f5f9' : 'linear-gradient(135deg, #1e293b 0%, #334155 100%)', 
+                  color: reportSubmitted ? '#94a3b8' : 'white', 
+                  border: 'none',
+                  cursor: reportSubmitted ? 'default' : 'pointer'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}>
+                  <span style={{ fontSize: '1.25rem' }}>📊</span>
+                  <span className="btn-text-main" style={{ color: reportSubmitted ? '#94a3b8' : 'white' }}>
+                    {reportSubmitted ? t('Report Submitted', 'رپورٹ جمع ہوگئی') : t('Submit Daily Report', 'روزانہ رپورٹ جمع کریں')}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <div className="today-list-section">
             <div className="section-title">
@@ -1145,6 +1204,50 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {user.role === 'owner' && pendingPayments.length > 0 && (
+        <div className="glass-card" style={{ padding: '2rem', marginTop: '2rem' }}>
+          <h3 style={{ margin: '0 0 1.5rem', color: '#1e293b', fontSize: '1.25rem', fontWeight: 800 }}>
+            {t('Pending Payment Approvals', 'ادائیگی کی منظوری باقی ہے')}
+          </h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+            {pendingPayments.map(payment => (
+              <div key={payment.id} className="glass-card" style={{ padding: '1.5rem', border: '1px solid #e2e8f0', background: '#f8fafc' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                  <div>
+                    <div style={{ fontWeight: 800, color: '#1e293b', fontSize: '1.1rem' }}>{payment.customer_name}</div>
+                    <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{payment.customer_address}</div>
+                  </div>
+                  <div style={{ fontWeight: 800, color: '#16a34a', fontSize: '1.25rem' }}>Rs {parseFloat(payment.amount).toLocaleString()}</div>
+                </div>
+                
+                <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <div><strong>{t('Method', 'طریقہ')}:</strong> {payment.method}</div>
+                  <div><strong>{t('Reported By', 'رپورٹ شدہ بذریعہ')}:</strong> {payment.received_by_name || t('Customer', 'گاہک')}</div>
+                  <div><strong>{t('Date', 'تاریخ')}:</strong> {new Date(payment.created_at).toLocaleDateString()}</div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <button 
+                    onClick={() => handleConfirmPayment(payment.id, 'reject')}
+                    className="btn-secondary"
+                    style={{ flex: 1, padding: '0.6rem', fontSize: '0.9rem' }}
+                  >
+                    {t('Reject', 'مسترد')}
+                  </button>
+                  <button 
+                    onClick={() => handleConfirmPayment(payment.id, 'confirm')}
+                    className="btn-primary"
+                    style={{ flex: 1, padding: '0.6rem', fontSize: '0.9rem', background: '#16a34a', borderColor: '#16a34a' }}
+                  >
+                    {t('Accept', 'منظور')}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
 
 

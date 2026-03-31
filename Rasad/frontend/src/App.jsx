@@ -13,6 +13,8 @@ import InvitationSignup from './pages/InvitationSignup';
 import MonthlyBills from './pages/MonthlyBills';
 import Reports from './pages/Reports';
 import Payments from './pages/Payments';
+import Cash from './pages/Cash';
+import DriversReport from './pages/DriversReport';
 
 import RoleRoute from './components/Auth/RoleRoute';
 
@@ -50,6 +52,14 @@ function App() {
             <Route
               path="payments"
               element={<RoleRoute><Payments /></RoleRoute>}
+            />
+            <Route
+              path="cash"
+              element={<RoleRoute requiredRole="driver"><Cash /></RoleRoute>}
+            />
+            <Route
+              path="drivers-report"
+              element={<RoleRoute><DriversReport /></RoleRoute>}
             />
           </Route>
         </Routes>

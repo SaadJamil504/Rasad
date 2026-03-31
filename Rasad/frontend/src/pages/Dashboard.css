@@ -586,10 +586,18 @@ driver-header-banner,
 
 .driver-stats-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-  padding: 2rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  padding: 1.5rem;
   margin-top: -3.5rem;
+}
+
+@media (min-width: 768px) {
+  .driver-stats-row {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    padding: 2rem;
+  }
 }
 
 .driver-stats-row .stat-box {

@@ -147,3 +147,19 @@ class DeliveryAdjustment(models.Model):
 
     def __str__(self):
         return f"{self.get_adjustment_type_display()} request by {self.customer.username} for {self.date}"
+
+class DailyReport(models.Model):
+    driver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='daily_reports')
+    date = models.DateField(default=timezone.now)
+    total_milk = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    total_cash = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    customers_served = models.PositiveIntegerField(default=0)
+    total_customers = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('driver', 'date')
+        ordering = ['-date', '-created_at']
+
+    def __str__(self):
+        return f"Daily Report by {self.driver.username} for {self.date}"

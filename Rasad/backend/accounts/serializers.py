@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import User, Invitation, Route, Delivery, Payment, DeliveryAdjustment
+from .models import User, Invitation, Route, Delivery, Payment, DeliveryAdjustment, DailyReport
 import uuid
 from django.utils import timezone
 from datetime import timedelta
@@ -479,3 +479,13 @@ class ManualCustomerSerializer(serializers.ModelSerializer):
         if User.objects.filter(phone_number=value).exists():
             raise serializers.ValidationError("A user with this phone number already exists.")
         return value
+
+class DailyReportSerializer(serializers.ModelSerializer):
+    driver_name = serializers.CharField(source='driver.first_name', read_only=True)
+    driver_username = serializers.CharField(source='driver.username', read_only=True)
+    dairy_name = serializers.CharField(source='driver.parent_owner.dairy_name', read_only=True)
+
+    class Meta:
+        model = DailyReport
+        fields = ('id', 'driver', 'driver_name', 'driver_username', 'dairy_name', 'date', 'total_milk', 'total_cash', 'customers_served', 'total_customers', 'created_at')
+        read_only_fields = ('driver', 'date', 'total_milk', 'total_cash', 'customers_served', 'total_customers', 'created_at')

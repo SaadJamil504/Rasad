@@ -141,6 +141,7 @@ export const staffAPI = {
   updateStaff: (id, data) => api.patch(`accounts/staff/${id}/`, data),
   deleteStaff: (id) => api.delete(`accounts/staff/${id}/`),
   getCollectionStats: () => api.get('accounts/collection-stats/'),
+  getDriverCustomers: () => api.get('accounts/driver-customers/'),
 };
 
 export const routeAPI = {
@@ -168,6 +169,12 @@ export const deliveryAPI = {
   getDashboardStats: () => api.get('accounts/dashboard/stats/'),
   getDashboardAlerts: () => api.get('accounts/dashboard/alerts/'),
   getReports: () => api.get('accounts/dashboard/reports/'),
+  getDriverStats: () => api.get('accounts/driver-stats/'),
+};
+
+export const dailyReportAPI = {
+  submitReport: () => api.post('accounts/daily-report/'),
+  getTodayReport: () => api.get('accounts/daily-report/'),
 };
 
 export default api;

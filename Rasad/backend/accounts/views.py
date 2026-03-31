@@ -10,9 +10,9 @@ from .serializers import (
     LoginSerializer, UserSerializer, SignupSerializer, 
     PasswordResetRequestSerializer, PasswordResetConfirmSerializer,
     InvitationSerializer, InvitationSignupSerializer, RouteSerializer,
-    DeliverySerializer, PaymentSerializer, DeliveryAdjustmentSerializer
+    DeliverySerializer, PaymentSerializer, DeliveryAdjustmentSerializer, DailyReportSerializer
 )
-from .models import User, Invitation, Route, Delivery, Payment, DeliveryAdjustment
+from .models import User, Invitation, Route, Delivery, Payment, DeliveryAdjustment, DailyReport
 from django.db import models, transaction
 from django.http import Http404
 from django.core.mail import send_mail
@@ -690,6 +690,32 @@ class PaymentRequestView(APIView):
                 target_customer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        elif request.user.role == 'driver':
+            # Driver records a payment for their assigned customer
+            customer_id = request.data.get('customer')
+            if not customer_id:
+                return Response({'error': 'Customer ID is required.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            try:
+                # Ensure the customer is on one of the driver's routes
+                route = Route.objects.get(driver=request.user)
+                target_customer = User.objects.get(pk=customer_id, route=route, role='customer')
+            except Route.DoesNotExist:
+                return Response({'error': 'No route assigned to this driver.'}, status=status.HTTP_404_NOT_FOUND)
+            except User.DoesNotExist:
+                return Response({'error': 'Customer not found on your route.'}, status=status.HTTP_404_NOT_FOUND)
+            
+            serializer = PaymentSerializer(data=request.data)
+            if serializer.is_valid():
+                # Drivers can report payments but they stay PENDING until owner confirms
+                payment = serializer.save(
+                    customer=target_customer,
+                    status='pending',
+                    received_by=request.user
+                )
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         return Response({'error': 'Unauthorized.'}, status=status.HTTP_403_FORBIDDEN)
 
@@ -1077,3 +1103,119 @@ class RouteReorderView(APIView):
             return Response({'error': 'Route not found'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+class DriverCustomerListView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    @extend_schema(
+        responses={200: UserSerializer(many=True)},
+        description="List all customers assigned to the driver's route."
+    )
+    def get(self, request):
+        if request.user.role != 'driver':
+            return Response({'error': 'Unauthorized. Only drivers can access this.'}, status=status.HTTP_403_FORBIDDEN)
+            
+        try:
+            # A driver might have multiple routes, but usually it's one. 
+            # The model says driver is ForeignKey on Route, so a driver can have multiple routes.
+            routes = Route.objects.filter(driver=request.user)
+            customers = User.objects.filter(route__in=routes, role='customer')
+            serializer = UserSerializer(customers, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+class DriverDailyStatsView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    @extend_schema(
+        responses={200: dict},
+        description="Get daily stats for the driver (e.g., cash collected today)."
+    )
+    def get(self, request):
+        if request.user.role != 'driver':
+            return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+            
+        today = timezone.now().date()
+        # Sum of payments received by this driver today
+        total_collected = Payment.objects.filter(
+            received_by=request.user,
+            date=today,
+            status__in=['pending', 'confirmed']
+        ).aggregate(total=models.Sum('amount'))['total'] or 0
+        
+        return Response({
+            'today_collected': float(total_collected)
+        })
+
+class DailyReportView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    @extend_schema(
+        responses={200: DailyReportSerializer(many=True)},
+        description="Owners see reports for today. Drivers see their own report for today if submitted."
+    )
+    def get(self, request):
+        today = timezone.now().date()
+        if request.user.role == 'owner':
+            # Owners see all reports from their drivers for today
+            reports = DailyReport.objects.filter(driver__parent_owner=request.user, date=today)
+            return Response(DailyReportSerializer(reports, many=True).data)
+        elif request.user.role == 'driver':
+            # Drivers see their own report for today
+            report = DailyReport.objects.filter(driver=request.user, date=today).first()
+            if report:
+                return Response(DailyReportSerializer(report).data)
+            return Response({'status': 'not_submitted'}, status=status.HTTP_200_OK)
+        return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+
+    @extend_schema(
+        responses={201: DailyReportSerializer},
+        description="Driver submits their final daily report."
+    )
+    def post(self, request):
+        if request.user.role != 'driver':
+            return Response({'error': 'Only drivers can submit reports.'}, status=status.HTTP_403_FORBIDDEN)
+            
+        today = timezone.now().date()
+        
+        # Check if report already exists for today
+        if DailyReport.objects.filter(driver=request.user, date=today).exists():
+            return Response({'error': 'You have already submitted today\'s report.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Calculate stats for today
+        # 1. Total milk delivered (only where is_delivered is True/status is 'delivered')
+        total_milk = Delivery.objects.filter(
+            route__driver=request.user, 
+            date=today, 
+            status='delivered'
+        ).aggregate(total=models.Sum('quantity'))['total'] or 0
+        
+        # 2. Total cash collected (pending or confirmed)
+        total_cash = Payment.objects.filter(
+            received_by=request.user,
+            date=today,
+            status__in=['pending', 'confirmed']
+        ).aggregate(total=models.Sum('amount'))['total'] or 0
+        
+        # 3. Total customers delivered to
+        customers_served = Delivery.objects.filter(
+            route__driver=request.user, 
+            date=today, 
+            status='delivered'
+        ).values('customer').distinct().count()
+
+        # 4. Total assigned customers for this driver
+        total_customers = User.objects.filter(route__driver=request.user, role='customer').count()
+        
+        # Create report
+        report = DailyReport.objects.create(
+            driver=request.user,
+            date=today,
+            total_milk=total_milk,
+            total_cash=total_cash,
+            customers_served=customers_served,
+            total_customers=total_customers
+        )
+        
+        return Response(DailyReportSerializer(report).data, status=status.HTTP_201_CREATED)
