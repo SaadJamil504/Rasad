@@ -789,32 +789,41 @@ class MonthlyBillPDFView(MonthlyBillView):
         buffer = io.BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=40)
         styles = getSampleStyleSheet()
+        
+        # Define some common styles
+        header_font_style = styles["Normal"].clone("HeaderFont")
+        header_font_style.fontName = "Helvetica-Bold"
+        header_font_style.fontSize = 11
+
         elements = []
 
-        # Colors and Styles
-        primary_color = colors.HexColor("#1A237E")  # Deep blue
-        header_color = colors.HexColor("#E3F2FD")   # Light blue
-        accent_color = colors.HexColor("#0D47A1")   # Deeper blue
+        # Colors - Minimalist and Eye-Comfort
+        primary_text = colors.black
+        secondary_text = colors.grey
+        border_color = colors.lightgrey
+        table_header_bg = colors.whitesmoke
+        summary_bg = colors.whitesmoke
         
         # Custom Title Style
-        title_style = styles["Title"]
+        title_style = styles["Title"].clone("BillTitle")
         title_style.fontName = "Helvetica-Bold"
-        title_style.fontSize = 24
-        title_style.textColor = primary_color
+        title_style.fontSize = 20
+        title_style.textColor = primary_text
         title_style.alignment = 1  # Center
-        title_style.spaceAfter = 20
+        title_style.spaceAfter = 10
 
         # Header Section
         elements.append(Paragraph("RASAD - Monthly Bill", title_style))
         
         # Month/Year Subtitle
-        subtitle_style = styles["Heading2"]
+        subtitle_style = styles["Heading2"].clone("BillSubtitle")
         subtitle_style.alignment = 1
-        subtitle_style.textColor = colors.grey
+        subtitle_style.textColor = secondary_text
+        subtitle_style.fontSize = 14
         elements.append(Paragraph(f"{bill_data['month_name']} {bill_data['year']}", subtitle_style))
         elements.append(Spacer(1, 0.4 * inch))
 
-        # Customer Info & Dairy Info (Side by Side in a table for better look)
+        # Customer Info & Dairy Info
         address_parts = [customer.house_no, customer.street, customer.area, customer.city]
         full_address = ", ".join([p for p in address_parts if p])
         if not full_address:
@@ -833,8 +842,10 @@ class MonthlyBillPDFView(MonthlyBillView):
         elements.append(info_table)
         elements.append(Spacer(1, 0.4 * inch))
 
-        # Summary Table Redesign (as a card)
-        elements.append(Paragraph("<b>ACCOUNT SUMMARY</b>", styles["Heading4"]))
+        # Summary Table
+        elements.append(Paragraph("ACCOUNT SUMMARY", header_font_style))
+        elements.append(Spacer(1, 0.05 * inch))
+        
         summary_data = [
             ["Opening Balance", f"Rs. {bill_data['opening_balance']:.2f}"],
             ["Monthly Deliveries (+)", f"Rs. {bill_data['delivery_total']:.2f}"],
@@ -842,24 +853,28 @@ class MonthlyBillPDFView(MonthlyBillView):
             ["Closing Balance", f"Rs. {bill_data['closing_balance']:.2f}"],
         ]
         s_table = Table(summary_data, colWidths=[2.5 * inch, 1.5 * inch])
-        closing_color = colors.red if bill_data['closing_balance'] > 0 else colors.green
+        closing_color = colors.black # Neutral for comfort, or subtle red
+        if bill_data['closing_balance'] > 0:
+            closing_color = colors.HexColor("#B71C1C") # Dark red
+        elif bill_data['closing_balance'] < 0:
+            closing_color = colors.HexColor("#1B5E20") # Dark green
+
         s_table.setStyle(TableStyle([
-            ('GRID', (0,0), (-1,-1), 0.5, colors.white),
-            ('BACKGROUND', (0,0), (0,-1), header_color),
-            ('BACKGROUND', (1,0), (1,-1), colors.whitesmoke),
+            ('GRID', (0,0), (-1,-1), 0.5, border_color),
+            ('BACKGROUND', (0,0), (0,-1), table_header_bg),
             ('FONTNAME', (0,-1), (-1,-1), 'Helvetica-Bold'),
             ('FONTNAME', (1,-1), (-1,-1), 'Helvetica-Bold'),
             ('TEXTCOLOR', (1,3), (1,3), closing_color),
             ('ALIGN', (1,0), (1,-1), 'RIGHT'),
-            ('PADDING', (0,0), (-1,-1), 8),
-            ('LINEBELOW', (0,3), (-1,3), 1, primary_color),
-            ('BOX', (0,0), (-1,-1), 1, primary_color),
+            ('PADDING', (0,0), (-1,-1), 6),
         ]))
         elements.append(s_table)
-        elements.append(Spacer(1, 0.5 * inch))
+        elements.append(Spacer(1, 0.4 * inch))
 
         # Deliveries Table
-        elements.append(Paragraph("<b>DELIVERY DETAILS</b>", styles["Heading4"]))
+        elements.append(Paragraph("DELIVERY DETAILS", header_font_style))
+        elements.append(Spacer(1, 0.05 * inch))
+        
         d_header = ["Date", "Status", "Qty (L)", "Price", "Total Amount"]
         d_rows = [d_header]
         total_qty = 0
@@ -874,29 +889,31 @@ class MonthlyBillPDFView(MonthlyBillView):
             ])
             total_qty += d.quantity
         
-        # Add a Total row to Deliveries
-        d_rows.append(["", "<b>TOTAL</b>", f"<b>{total_qty:.1f} L</b>", "", f"<b>Rs. {bill_data['delivery_total']:.2f}</b>"])
+        # Add a Total row (No HTML tags here, styling handled by TableStyle)
+        d_rows.append(["", "TOTAL", f"{total_qty:.1f} L", "", f"Rs. {bill_data['delivery_total']:.2f}"])
         
         d_table = Table(d_rows, colWidths=[1.2*inch, 1.2*inch, 1*inch, 1*inch, 1.5*inch])
         d_table.setStyle(TableStyle([
-            ('BACKGROUND', (0,0), (-1,0), primary_color),
-            ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+            ('BACKGROUND', (0,0), (-1,0), table_header_bg),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.black),
             ('ALIGN', (0,0), (-1,-1), 'CENTER'),
             ('ALIGN', (-1, 0), (-1, -1), 'RIGHT'),
             ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-            ('BOTTOMPADDING', (0,0), (-1,0), 10),
-            ('TOPPADDING', (0,0), (-1,0), 10),
-            ('GRID', (0,0), (-1,-2), 0.5, colors.grey),
-            ('BACKGROUND', (0,-1), (-1,-1), header_color),
-            ('LINEABOVE', (0,-1), (-1,-1), 1, primary_color),
+            ('GRID', (0,0), (-1,-2), 0.5, border_color),
+            ('LINEBELOW', (0,0), (-1,0), 1, colors.black),
+            # Total row styling
             ('FONTNAME', (0,-1), (-1,-1), 'Helvetica-Bold'),
+            ('BACKGROUND', (0,-1), (-1,-1), table_header_bg),
+            ('LINEABOVE', (0,-1), (-1,-1), 1, colors.black),
         ]))
         elements.append(d_table)
-        elements.append(Spacer(1, 0.5 * inch))
+        elements.append(Spacer(1, 0.4 * inch))
 
         # Payments Table
         if bill_data['payments'].exists():
-            elements.append(Paragraph("<b>PAYMENT HISTORY</b>", styles["Heading4"]))
+            elements.append(Paragraph("PAYMENT HISTORY", header_font_style))
+            elements.append(Spacer(1, 0.05 * inch))
+            
             p_header = ["Date", "Method", "Amount"]
             p_rows = [p_header]
             for p in bill_data['payments']:
@@ -906,28 +923,30 @@ class MonthlyBillPDFView(MonthlyBillView):
                     f"Rs. {p.amount:.2f}"
                 ])
             
-            # Add a Total row to Payments
-            p_rows.append(["", "<b>TOTAL RECEIVED</b>", f"<b>Rs. {bill_data['payment_total']:.2f}</b>"])
+            # Add a Total row
+            p_rows.append(["", "TOTAL RECEIVED", f"Rs. {bill_data['payment_total']:.2f}"])
 
-            p_table = Table(p_rows, colWidths=[2*inch, 2*inch, 2*inch])
+            p_table = Table(p_rows, colWidths=[2*inch, 2*inch, 2.3*inch])
             p_table.setStyle(TableStyle([
-                ('BACKGROUND', (0,0), (-1,0), accent_color),
-                ('TEXTCOLOR', (0,0), (-1,0), colors.white),
+                ('BACKGROUND', (0,0), (-1,0), table_header_bg),
                 ('ALIGN', (0,0), (-1,-1), 'CENTER'),
                 ('ALIGN', (-1, 0), (-1, -1), 'RIGHT'),
                 ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-                ('BOTTOMPADDING', (0,0), (-1,0), 8),
-                ('GRID', (0,0), (-1,-2), 0.5, colors.grey),
-                ('BACKGROUND', (0,-1), (-1,-1), colors.whitesmoke),
-                ('LINEABOVE', (0,-1), (-1,-1), 1, accent_color),
+                ('GRID', (0,0), (-1,-2), 0.5, border_color),
+                ('LINEBELOW', (0,0), (-1,0), 1, colors.black),
+                # Total row styling
+                ('FONTNAME', (0,-1), (-1,-1), 'Helvetica-Bold'),
+                ('BACKGROUND', (0,-1), (-1,-1), table_header_bg),
+                ('LINEABOVE', (0,-1), (-1,-1), 1, colors.black),
             ]))
             elements.append(p_table)
 
         # Footer
-        elements.append(Spacer(1, 0.8 * inch))
-        footer_style = styles["Normal"]
+        elements.append(Spacer(1, 0.5 * inch))
+        footer_style = styles["Normal"].clone("FooterStyle")
         footer_style.alignment = 1
-        footer_style.textColor = colors.grey
+        footer_style.textColor = secondary_text
+        footer_style.fontSize = 9
         elements.append(Paragraph("Thank you for choosing RASAD. For any queries, please contact your dairy supply.", footer_style))
 
         doc.build(elements)
