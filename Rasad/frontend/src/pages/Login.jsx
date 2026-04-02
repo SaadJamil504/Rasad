@@ -31,6 +31,19 @@ const Login = () => {
     }
   };
 
+  const handleBypassLogin = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await login('03010779759', 'saad1234');
+      navigate('/');
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Bypass login failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="login-page-bg">
       <div className="login-white-card">
@@ -64,6 +77,19 @@ const Login = () => {
           </div>
           <button type="submit" className="login-submit-btn" disabled={loading}>
             {loading ? 'Logging in...' : 'Login'}
+          </button>
+          
+          <div className="login-divider">
+            <span>OR</span>
+          </div>
+
+          <button 
+            type="button" 
+            className="bypass-login-btn" 
+            onClick={handleBypassLogin} 
+            disabled={loading}
+          >
+            {loading ? 'Bypassing...' : 'Bypass Login'}
           </button>
         </form>
         

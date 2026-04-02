@@ -3,6 +3,7 @@ import { staffAPI } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
 import { useClickOutside } from '../hooks/useClickOutside';
 import InvitationModal from '../components/InvitationModal';
+import ManualDriverModal from '../components/ManualDriverModal';
 import './Table.css';
 
 const DriverList = () => {
@@ -10,6 +11,7 @@ const DriverList = () => {
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isManualModalOpen, setIsManualModalOpen] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ first_name: '', email: '', phone_number: '', license_number: '' });
@@ -70,10 +72,18 @@ const DriverList = () => {
 
   return (
     <div className="page-container">
-      <div className="premium-toolbar" style={{ justifyContent: 'flex-end', marginBottom: '2rem' }}>
-        <button className="premium-btn-green" onClick={() => setIsModalOpen(true)}>
-          <span>+</span> {t('Add New Driver', 'نیا ڈرائیور')}
-        </button>
+      <div className="premium-toolbar">
+        <div className="toolbar-left"></div>
+        <div className="toolbar-right">
+          <div className="toolbar-actions">
+            <button className="btn-secondary" onClick={() => setIsModalOpen(true)}>
+              {t('Invite via Link', 'لنک سے بلاؤ')}
+            </button>
+            <button className="premium-btn-green" onClick={() => setIsManualModalOpen(true)}>
+              <span>+</span> {t('Add Driver Manually', 'ڈرائیور خود شامل کریں')}
+            </button>
+          </div>
+        </div>
       </div>
 
       {loading ? (
@@ -120,6 +130,12 @@ const DriverList = () => {
         onClose={() => setIsModalOpen(false)}
         role="driver"
         onInviteSuccess={() => fetchDrivers(true)}
+      />
+
+      <ManualDriverModal
+        isOpen={isManualModalOpen}
+        onClose={() => setIsManualModalOpen(false)}
+        onSuccess={() => fetchDrivers(true)}
       />
 
       {selectedDriver && (

@@ -223,13 +223,19 @@ class StaffListView(APIView):
         if request.user.role != 'owner':
             return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
         
-        from .serializers import ManualCustomerSerializer
-        serializer = ManualCustomerSerializer(data=request.data)
+        role = request.data.get('role', 'customer')
+        if role == 'driver':
+            from .serializers import ManualDriverSerializer
+            serializer = ManualDriverSerializer(data=request.data)
+        else:
+            from .serializers import ManualCustomerSerializer
+            serializer = ManualCustomerSerializer(data=request.data)
+            
         if serializer.is_valid():
             # Create a placeholder user
             user = serializer.save(
                 parent_owner=request.user,
-                role='customer',
+                role=role,
                 username=f"tmp_{request.data['phone_number']}"
             )
             return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)

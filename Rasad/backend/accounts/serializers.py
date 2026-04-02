@@ -203,8 +203,23 @@ class SignupSerializer(serializers.ModelSerializer):
         cow_price = validated_data.get('cow_price', 0)
         buffalo_price = validated_data.get('buffalo_price', 0)
         
-        # Map full_name to first_name for AbstractUser usage
-        # Set the username implicitly as the phone_number
+        # Check if a placeholder user exists for this phone number
+        existing_user = User.objects.filter(phone_number=phone_number, username__startswith='tmp_').first()
+        
+        if existing_user:
+            # Update the existing placeholder user
+            existing_user.username = phone_number
+            existing_user.first_name = full_name
+            existing_user.set_password(password)
+            # Update other provided fields
+            for attr, val in validated_data.items():
+                setattr(existing_user, attr, val)
+            existing_user.cow_price = cow_price
+            existing_user.buffalo_price = buffalo_price
+            existing_user.save()
+            return existing_user
+
+        # Traditional create
         user = User.objects.create_user(
             username=phone_number,
             first_name=full_name,
@@ -480,7 +495,17 @@ class ManualCustomerSerializer(serializers.ModelSerializer):
         fields = ('first_name', 'phone_number', 'house_no', 'street', 'area', 'city', 'address', 'latitude', 'longitude', 'milk_type', 'daily_quantity', 'route')
 
     def validate_phone_number(self, value):
-        if User.objects.filter(phone_number=value).exists():
+        if User.objects.filter(phone_number=value).exclude(username__startswith='tmp_').exists():
+            raise serializers.ValidationError("A user with this phone number already exists.")
+        return value
+
+class ManualDriverSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('first_name', 'phone_number', 'license_number')
+
+    def validate_phone_number(self, value):
+        if User.objects.filter(phone_number=value).exclude(username__startswith='tmp_').exists():
             raise serializers.ValidationError("A user with this phone number already exists.")
         return value
 

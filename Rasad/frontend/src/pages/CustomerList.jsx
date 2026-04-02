@@ -136,12 +136,14 @@ const CustomerList = () => {
               <option value="Paused">{t('Paused', 'رکا ہوا')}</option>
             </select>
           </div>
-          <button className="btn-secondary" onClick={() => setIsInviteModalOpen(true)}>
-            {t('Invite via Link', 'لنک سے بلاؤ')}
-          </button>
-          <button className="premium-btn-green" onClick={() => setIsManualModalOpen(true)}>
-            <span>+</span> {t('Add Customer', 'نیا گاہک')}
-          </button>
+          <div className="toolbar-actions">
+            <button className="btn-secondary" onClick={() => setIsInviteModalOpen(true)}>
+              {t('Invite via Link', 'لنک سے بلاؤ')}
+            </button>
+            <button className="premium-btn-green" onClick={() => setIsManualModalOpen(true)}>
+              <span>+</span> {t('Add Customer', 'نیا گاہک')}
+            </button>
+          </div>
         </div>
       </div>
 
