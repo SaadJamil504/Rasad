@@ -80,7 +80,7 @@ const ManualCustomerModal = ({ isOpen, onClose, onSuccess }) => {
 
   return (
     <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="modal-content glass-card" ref={modalRef} style={{ maxWidth: '500px', width: '90%' }}>
+      <div className="modal-content glass-card" ref={modalRef} style={{ maxWidth: '500px', width: '90%', maxHeight: '90vh', overflowY: 'auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1e293b', margin: 0 }}>
             {success ? t('Customer Added Successfully!', 'گاہک کامیابی سے شامل ہو گیا!') : t('Add New Customer', 'نیا گاہک شامل کریں')}

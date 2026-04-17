@@ -50,93 +50,99 @@ const Reports = () => {
   };
 
   return (
-    <div className="page-container fade-in" style={{ overflowX: 'hidden' }}>
-
-
+    <div className="page-container fade-in" style={{ 
+      overflowX: 'hidden', 
+      display: 'flex', 
+      flexDirection: 'column',
+      paddingBottom: '0.5rem'
+    }}>
       <div style={{ 
         display: 'grid', 
-        gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(280px, 1fr))', 
-        gap: '1rem', 
-        marginBottom: '2rem' 
+        gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(230px, 1fr))', 
+        gap: '0.75rem', 
+        marginBottom: '0.75rem' 
       }}>
         {/* Total Milk This Month */}
         <div className="glass-card" style={{ 
-          padding: '1.25rem', 
+          padding: '0.85rem', 
           display: 'flex', 
           alignItems: 'center', 
-          gap: '1rem', 
+          gap: '0.75rem', 
           borderLeft: '4px solid #3b82f6',
           background: 'white'
         }}>
-          <div style={{ background: '#eff6ff', width: '50px', height: '50px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', fontWeight: 800, color: '#3b82f6' }}>
+          <div style={{ background: '#eff6ff', width: '38px', height: '38px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', fontWeight: 800, color: '#3b82f6' }}>
             🥛
           </div>
           <div>
-            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>{t('Milk Delivered', 'ڈیلیور شدہ دودھ')}</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1e293b' }}>{reportData.this_month_milk}L</div>
+            <div style={{ fontSize: '0.6rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>{t('Milk Delivered', 'ڈیلیور شدہ دودھ')}</div>
+            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#1e293b' }}>{reportData.this_month_milk}L</div>
           </div>
         </div>
 
         {/* Total Revenue This Month */}
         <div className="glass-card" style={{ 
-          padding: '1.25rem', 
+          padding: '0.85rem', 
           display: 'flex', 
           alignItems: 'center', 
-          gap: '1rem', 
+          gap: '0.75rem', 
           borderLeft: '4px solid #10b981',
           background: 'white'
         }}>
-          <div style={{ background: '#f0fdf4', width: '50px', height: '50px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: 800, color: '#10b981' }}>
+          <div style={{ background: '#f0fdf4', width: '38px', height: '38px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 800, color: '#10b981' }}>
             PKR
           </div>
           <div>
-            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>{t('Revenue', 'آمدنی')}</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1e293b' }}>Rs {reportData.this_month_revenue.toLocaleString()}</div>
+            <div style={{ fontSize: '0.6rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>{t('Revenue', 'آمدنی')}</div>
+            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#1e293b' }}>Rs {reportData.this_month_revenue.toLocaleString()}</div>
           </div>
         </div>
 
         {/* Collection Percentage */}
         <div className="glass-card" style={{ 
-          padding: '1.25rem', 
+          padding: '0.85rem', 
           display: 'flex', 
           flexDirection: 'column',
-          gap: '0.75rem', 
+          gap: '0.4rem', 
           borderLeft: '4px solid #8b5cf6',
           background: 'white'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700 }}>{t('COLLECTION RATE', 'آمدنی کی شرح')}</span>
-            <span style={{ fontSize: '1rem', color: '#8b5cf6', fontWeight: 800 }}>{reportData.collection_percentage.toFixed(1)}%</span>
+            <span style={{ fontSize: '0.6rem', color: '#64748b', fontWeight: 700 }}>{t('COLLECTION RATE', 'آمدنی کی شرح')}</span>
+            <span style={{ fontSize: '0.85rem', color: '#8b5cf6', fontWeight: 800 }}>{reportData.collection_percentage.toFixed(1)}%</span>
           </div>
-          <div style={{ background: '#f1f5f9', height: '10px', borderRadius: '5px', overflow: 'hidden' }}>
-            <div style={{ background: 'linear-gradient(90deg, #8b5cf6, #a78bfa)', height: '100%', width: `${reportData.collection_percentage}%`, borderRadius: '5px' }}></div>
+          <div style={{ background: '#f1f5f9', height: '6px', borderRadius: '3px', overflow: 'hidden' }}>
+            <div style={{ background: 'linear-gradient(90deg, #8b5cf6, #a78bfa)', height: '100%', width: `${reportData.collection_percentage}%`, borderRadius: '3px' }}></div>
           </div>
         </div>
       </div>
 
-      <div className="glass-card" style={{ padding: isMobile ? '1rem' : '2.5rem', background: 'white' }}>
-        <h3 style={{ margin: '0 0 1.5rem 0', color: '#1e293b', fontSize: isMobile ? '1.1rem' : '1.3rem' }}>{t('Revenue Trends', 'آمدنی کے رجحانات')}</h3>
+      <div className="glass-card" style={{ 
+        padding: isMobile ? '0.75rem' : '1.5rem', 
+        background: 'white',
+        marginTop: '0.25rem'
+      }}>
+        <h3 style={{ margin: '0 0 0.25rem 0', color: '#1e293b', fontSize: isMobile ? '1rem' : '1.1rem' }}>{t('Revenue Trends', 'آمدنی کے رجحانات')}</h3>
 
         <div style={{ 
           width: '100%', 
-          height: isMobile ? '300px' : '400px', 
+          height: isMobile ? '240px' : '360px', 
           position: 'relative', 
-          marginTop: '1rem',
-          padding: '1rem 0'
+          paddingBottom: '1rem'
         }}>
           {/* SVG Area Chart */}
           <svg 
             width="100%" 
             height="100%" 
-            viewBox="0 -10 100 110" 
-            preserveAspectRatio="none" 
+            viewBox="0 -10 100 125" 
+            preserveAspectRatio="none"
             style={{ overflow: 'visible' }}
           >
             {/* Horizontal Grid Lines - Subtle */}
             {yAxisSteps.map((val, i) => {
               const y = (i * (100 / (yAxisSteps.length - 1)));
               return (
-                <line key={val} x1="0" y1={y} x2="100" y2={y} stroke="#f1f5f9" strokeWidth="0.3" strokeDasharray="2,2" />
+                <line key={val} x1="0" y1={y} x2="100" y2={y} stroke="#f1f5f9" strokeWidth="0.2" strokeDasharray="1,1" />
               );
             })}
             
@@ -167,7 +173,7 @@ const Reports = () => {
               `}
               fill="none"
               stroke="#10b981"
-              strokeWidth="0.8"
+              strokeWidth="0.6"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
@@ -175,7 +181,7 @@ const Reports = () => {
             {/* Gradient Definition */}
             <defs>
               <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#10b981" stopOpacity="0.15" />
+                <stop offset="0%" stopColor="#10b981" stopOpacity="0.1" />
                 <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
               </linearGradient>
             </defs>
@@ -186,30 +192,32 @@ const Reports = () => {
               const y = 100 - (d.revenue / maxRev) * 100;
               return (
                 <g key={i}>
-                  <circle cx={x} cy={y} r="0.8" fill="white" stroke="#10b981" strokeWidth="0.5" />
+                  <circle cx={x} cy={y} r="0.6" fill="white" stroke="#10b981" strokeWidth="0.4" />
                   {d.revenue > 0 && (
                     <text 
                       x={x} 
-                      y={y - 4} 
-                      fontSize="2.5" 
+                      y={y - 5} 
+                      fontSize="2" 
                       fill="#94a3b8" 
                       textAnchor="middle" 
-                      fontWeight="600"
+                      fontWeight="400"
                     >
                       {(d.revenue >= 1000 ? (d.revenue / 1000).toFixed(0) + 'k' : d.revenue)}
                     </text>
                   )}
                   
-                  {/* X-Axis Label - Smaller & Finer */}
+                  {/* X-Axis Label */}
                   <text
                     x={x}
-                    y={112}
-                    fontSize="2.8"
-                    fill="#94a3b8"
+                    y={118}
+                    fontSize="2.5"
+                    fill="#64748b"
                     textAnchor="middle"
-                    fontWeight="600"
+                    fontWeight="700"
                     className={language === 'ur' ? 'urdu-text' : ''}
-                    style={{ fontFamily: language === 'ur' ? 'Noto Nastaliq Urdu' : 'Inter, sans-serif' }}
+                    style={{ 
+                      fontFamily: language === 'ur' ? 'Noto Nastaliq Urdu' : 'Inter, sans-serif'
+                    }}
                   >
                     {language === 'ur' ? (monthNames[d.month.substring(0, 3)] || d.month.substring(0, 3)) : d.month.substring(0, 3)}
                   </text>
