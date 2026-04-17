@@ -134,13 +134,15 @@
 
 .modal-footer {
   display: flex;
-  justify-content: flex-end;
+  justify-content: stretch;
   gap: 1rem;
   margin-top: 2rem;
+  width: 100%;
 }
 
 .modal-footer button {
   flex: 1;
+  width: 100%;
 }
 
 .link-label {
@@ -190,7 +192,7 @@
 
 
 .btn-primary {
-  flex: 2;
+  flex: 1;
   padding: 1rem;
   background: var(--grad-main);
   color: white;
