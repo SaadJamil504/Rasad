@@ -25,7 +25,12 @@ const Login = () => {
       await login(phoneNumber, password);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Invalid credentials or server error.');
+      if (err.response?.data) {
+        const data = err.response.data;
+        setError(data.detail || data.non_field_errors?.[0] || 'Invalid credentials or server error.');
+      } else {
+        setError('Login failed. Please check your connection or try again later.');
+      }
     } finally {
       setLoading(false);
     }
@@ -38,7 +43,12 @@ const Login = () => {
       await login('03010779759', 'saad1234');
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Bypass login failed.');
+      if (err.response?.data) {
+        const data = err.response.data;
+        setError(data.detail || data.non_field_errors?.[0] || 'Bypass login failed: Account likely missing on new server.');
+      } else {
+        setError('Bypass login failed. Server may be down.');
+      }
     } finally {
       setLoading(false);
     }
