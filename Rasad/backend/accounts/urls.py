@@ -8,7 +8,7 @@ from .views import (
     DeliveryAdjustmentCreateView, DeliveryAdjustmentListView, DeliveryAdjustmentActionView,
     ProfileView, DashboardStatsView, DashboardAlertsView, DashboardReportsView, CollectionStatsView,
     RouteReorderView, DriverCustomerListView, DriverDailyStatsView, DailyReportView,
-    MonthlyBillView, MonthlyBillPDFView
+    MonthlyBillView, MonthlyBillPDFView, OwnerDailyDeliveriesView
 )
 from rest_framework_simplejwt.views import TokenRefreshView
 
@@ -31,6 +31,7 @@ urlpatterns = [
     path('deliveries/update/<int:pk>/', DeliveryUpdateView.as_view(), name='delivery_update'),
     path('deliveries/status/', CustomerDeliveryStatusView.as_view(), name='customer_delivery_status'),
     path('deliveries/history/', DeliveryHistoryView.as_view(), name='delivery_history'),
+    path('deliveries/owner-daily/', OwnerDailyDeliveriesView.as_view(), name='owner_daily_deliveries'),
     path('prices/update/', UpdateMilkPricesView.as_view(), name='update_prices'),
     path('payments/report/', PaymentRequestView.as_view(), name='payment_report'),
     path('payments/list/', PaymentListView.as_view(), name='payment_list'),

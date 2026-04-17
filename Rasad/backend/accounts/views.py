@@ -10,7 +10,8 @@ from .serializers import (
     LoginSerializer, UserSerializer, SignupSerializer, 
     PasswordResetRequestSerializer, PasswordResetConfirmSerializer,
     InvitationSerializer, InvitationSignupSerializer, RouteSerializer,
-    DeliverySerializer, PaymentSerializer, DeliveryAdjustmentSerializer, DailyReportSerializer
+    DeliverySerializer, PaymentSerializer, DeliveryAdjustmentSerializer, DailyReportSerializer,
+    UserSerializer as BaseUserSerializer
 )
 from .models import User, Invitation, Route, Delivery, Payment, DeliveryAdjustment, DailyReport
 from django.db import models, transaction
@@ -1533,3 +1534,79 @@ class DailyReportView(APIView):
         )
         
         return Response(DailyReportSerializer(report).data, status=status.HTTP_201_CREATED)
+
+class OwnerDailyDeliveriesView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    @extend_schema(
+        responses={200: DeliverySerializer(many=True)},
+        description="Get today's deliveries for all customers of the owner. Creates them if they don't exist."
+    )
+    def get(self, request):
+        if request.user.role != 'owner':
+            return Response({'error': 'Unauthorized. Only owners can access this.'}, status=status.HTTP_403_FORBIDDEN)
+            
+        target_date = timezone.now().date()
+        date_str = request.query_params.get('date')
+        if date_str:
+            try:
+                target_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            except ValueError:
+                return Response({'error': 'Invalid date format. Use YYYY-MM-DD.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Get all customers for this owner who are assigned to a route
+        customers = User.objects.filter(parent_owner=request.user, role='customer', route__isnull=False)
+        
+        # We need to ensure delivery records exist for today for all these customers
+        # to show a consistent list to the owner.
+        for customer in customers:
+            # Check for approved adjustments
+            adjustment = DeliveryAdjustment.objects.filter(
+                customer=customer, 
+                date=target_date, 
+                status='accepted'
+            ).first()
+
+            delivery, created = Delivery.objects.get_or_create(
+                customer=customer,
+                date=target_date,
+                defaults={
+                    'route': customer.route,
+                    'quantity': customer.daily_quantity or 0,
+                    'price_at_delivery': 0
+                }
+            )
+            
+            # If newly created OR if price not set (e.g. created without route driver login)
+            if created or (not delivery.is_delivered and delivery.status != 'paused' and delivery.price_at_delivery == 0):
+                # Capture current price from owner
+                price = 0
+                if customer.milk_type == 'cow':
+                    price = request.user.cow_price
+                elif customer.milk_type == 'buffalo':
+                    price = request.user.buffalo_price
+                
+                delivery.price_at_delivery = price
+                
+                if adjustment:
+                    if adjustment.adjustment_type == 'pause':
+                        delivery.status = 'paused'
+                        delivery.quantity = 0
+                    elif adjustment.adjustment_type == 'quantity':
+                        delivery.quantity = adjustment.new_quantity
+                        delivery.status = 'pending'
+                else:
+                    delivery.quantity = customer.daily_quantity or 0
+                    delivery.status = 'pending'
+
+                delivery.total_amount = delivery.quantity * price
+                delivery.save()
+        
+        # Fetch all deliveries for today for this owner
+        deliveries = Delivery.objects.filter(
+            customer__parent_owner=request.user, 
+            date=target_date
+        ).select_related('customer', 'route', 'customer__route').order_by('customer__route__name', 'customer__sequence_order')
+        
+        serializer = DeliverySerializer(deliveries, many=True)
+        return Response(serializer.data)

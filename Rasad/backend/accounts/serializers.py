@@ -427,13 +427,22 @@ class DeliverySerializer(serializers.ModelSerializer):
     customer_address = serializers.CharField(source='customer.address', read_only=True)
     customer_latitude = serializers.DecimalField(source='customer.latitude', max_digits=22, decimal_places=16, read_only=True)
     customer_longitude = serializers.DecimalField(source='customer.longitude', max_digits=22, decimal_places=16, read_only=True)
+    customer_phone = serializers.CharField(source='customer.phone_number', read_only=True)
     customer_milk_type = serializers.CharField(source='customer.milk_type', read_only=True)
     customer_quantity = serializers.CharField(source='customer.daily_quantity', read_only=True)
+    route_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Delivery
-        fields = ('id', 'customer', 'customer_name', 'customer_username', 'customer_house_no', 'customer_street', 'customer_area', 'customer_city', 'customer_address', 'customer_latitude', 'customer_longitude', 'customer_milk_type', 'customer_quantity', 'route', 'date', 'is_delivered', 'status', 'delivered_at', 'quantity', 'price_at_delivery', 'total_amount')
-        read_only_fields = ('delivered_at', 'total_amount')
+        fields = ('id', 'customer', 'customer_name', 'customer_username', 'customer_phone', 'customer_house_no', 'customer_street', 'customer_area', 'customer_city', 'customer_address', 'customer_latitude', 'customer_longitude', 'customer_milk_type', 'customer_quantity', 'route', 'route_name', 'date', 'is_delivered', 'status', 'delivered_at', 'quantity', 'price_at_delivery', 'total_amount')
+        read_only_fields = ('delivered_at', 'total_amount', 'route_name')
+
+    def get_route_name(self, obj):
+        if obj.route:
+            return obj.route.name
+        if obj.customer and obj.customer.route:
+            return obj.customer.route.name
+        return "No Route"
 
     def validate_quantity(self, value):
         if value < 0:

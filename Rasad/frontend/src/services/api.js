@@ -155,6 +155,7 @@ export const routeAPI = {
 
 export const deliveryAPI = {
   getDailyDeliveries: (date) => api.get('accounts/deliveries/daily/', { params: { date } }),
+  getOwnerDailyDeliveries: (date) => api.get('accounts/deliveries/owner-daily/', { params: { date } }),
   toggleDelivery: (id) => api.post(`accounts/deliveries/toggle/${id}/`),
   getCustomerStatus: () => api.get('accounts/deliveries/status/'),
   getHistory: () => api.get('accounts/deliveries/history/'),

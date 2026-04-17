@@ -15,6 +15,7 @@ import Reports from './pages/Reports';
 import Payments from './pages/Payments';
 import Cash from './pages/Cash';
 import DriversReport from './pages/DriversReport';
+import LiveDeliveries from './pages/LiveDeliveries';
 
 import RoleRoute from './components/Auth/RoleRoute';
 
@@ -56,6 +57,10 @@ function App() {
             <Route
               path="cash"
               element={<RoleRoute requiredRole="driver"><Cash /></RoleRoute>}
+            />
+            <Route
+              path="live-deliveries"
+              element={<RoleRoute><LiveDeliveries /></RoleRoute>}
             />
             <Route
               path="drivers-report"
