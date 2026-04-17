@@ -235,252 +235,254 @@ const RouteModal = ({ isOpen, onClose, onRouteCreated, editRoute }) => {
   return (
     <div className="modal-overlay">
       <div className="modal-content route-modal fade-in" ref={modalRef}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, color: '#1e293b' }}>
-            {editRoute ? t('Update Delivery Route', 'روٹ تبدیل کریں') : t('Create Delivery Route', 'نیا روٹ بنائیں')}
-          </h2>
-          <button className="close-btn" onClick={onClose}>&times;</button>
+        <div className="modal-header-container">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, color: '#1e293b' }}>
+              {editRoute ? t('Update Delivery Route', 'روٹ تبدیل کریں') : t('Create Delivery Route', 'نیا روٹ بنائیں')}
+            </h2>
+            <button className="close-btn" onClick={onClose}>&times;</button>
+          </div>
         </div>
         
         <div className="modal-form">
-          <div className="form-grid">
-            <div className="form-group">
-              <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748b', marginBottom: '0.4rem', display: 'block' }}>{t('Route Identity', 'روٹ کا نام')}</label>
-              <input
-                type="text"
-                className="glass-input"
-                style={{ height: '42px', fontSize: '0.9rem', width: '100%', padding: '0 12px' }}
-                placeholder={ts('e.g. Gulberg Morning', 'مثلاً گلبرگ مارننگ')}
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              />
-            </div>
-
-            <div className="form-group">
-              <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748b', marginBottom: '0.4rem', display: 'block' }}>{t('Assign Driver', 'ڈرائیور مقرر کریں')}</label>
-              <select
-                className="glass-input"
-                style={{ height: '42px', fontSize: '0.9rem', width: '100%', padding: '0 12px' }}
-                value={formData.driver}
-                onChange={(e) => setFormData({ ...formData, driver: e.target.value })}
-              >
-                <option value="">{ts('Select a Driver', 'ڈرائیور منتخب کریں')}</option>
-                {drivers.map(driver => (
-                  <option key={driver.id} value={driver.id}>
-                    {driver.first_name || driver.username}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="form-section">
-            <div className="section-header">
-              <div className="tab-buttons">
-                <button 
-                  type="button" 
-                  className={`tab-btn ${activeTab === 'select' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('select')}
-                >
-                  {t('Select', 'انتخاب')}
-                </button>
-                <button 
-                  type="button" 
-                  className={`tab-btn ${activeTab === 'sequence' ? 'active' : ''}`}
-                  onClick={() => {
-                    if (formData.customer_ids.length === 0) {
-                        alert(t('Select customers first', 'پہلے گاہک منتخب کریں'));
-                        return;
-                    }
-                    setActiveTab('sequence');
-                  }}
-                >
-                  {t('Sequence', 'ترتیب')}
-                </button>
-                <button 
-                  type="button" 
-                  className={`tab-btn add-customer-tab-btn ${activeTab === 'add' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('add')}
-                >
-                  {t('Add New', 'نیا گاہک')}
-                </button>
+          <div className="form-body-scrollable">
+            <div className="form-grid">
+              <div className="form-group">
+                <label>{t('Route Identity', 'روٹ کا نام')}</label>
+                <input
+                  type="text"
+                  className="glass-input"
+                  placeholder={ts('e.g. Gulberg Morning', 'مثلاً گلبرگ مارننگ')}
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                />
               </div>
-              
+
+              <div className="form-group">
+                <label>{t('Assign Driver', 'ڈرائیور مقرر کریں')}</label>
+                <select
+                  className="glass-input"
+                  value={formData.driver}
+                  onChange={(e) => setFormData({ ...formData, driver: e.target.value })}
+                >
+                  <option value="">{ts('Select a Driver', 'ڈرائیور منتخب کریں')}</option>
+                  {drivers.map(driver => (
+                    <option key={driver.id} value={driver.id}>
+                      {driver.first_name || driver.username}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="form-section">
+              <div className="section-header">
+                <div className="tab-buttons">
+                  <button 
+                    type="button" 
+                    className={`tab-btn ${activeTab === 'select' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('select')}
+                  >
+                    {t('Select', 'انتخاب')}
+                  </button>
+                  <button 
+                    type="button" 
+                    className={`tab-btn ${activeTab === 'sequence' ? 'active' : ''}`}
+                    onClick={() => {
+                      if (formData.customer_ids.length === 0) {
+                          alert(t('Select customers first', 'پہلے گاہک منتخب کریں'));
+                          return;
+                      }
+                      setActiveTab('sequence');
+                    }}
+                  >
+                    {t('Sequence', 'ترتیب')}
+                  </button>
+                  <button 
+                    type="button" 
+                    className={`tab-btn add-customer-tab-btn ${activeTab === 'add' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('add')}
+                  >
+                    {t('Add New', 'نیا گاہک')}
+                  </button>
+                </div>
+                
+                {activeTab === 'select' && (
+                  <div className="search-box">
+                      <input 
+                        type="text" 
+                        placeholder={ts('Search by name or area...', 'تلاش کریں...')} 
+                        className="search-input"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
+                  </div>
+                )}
+              </div>
+
+              {activeTab === 'sequence' && (
+                  <div className="sequencing-area fade-in">
+                      <div className="sortable-list">
+                          <DndContext 
+                              sensors={sensors}
+                              collisionDetection={closestCenter}
+                              onDragEnd={handleDragEnd}
+                          >
+                              <SortableContext 
+                                  items={orderedCustomers.map(c => c.id)}
+                                  strategy={verticalListSortingStrategy}
+                              >
+                                  {orderedCustomers.map((customer, index) => (
+                                      <SortableCustomerItem 
+                                          key={customer.id} 
+                                          customer={customer} 
+                                          index={index}
+                                          t={t}
+                                      />
+                                  ))}
+                              </SortableContext>
+                          </DndContext>
+                      </div>
+                  </div>
+              )}
+
               {activeTab === 'select' && (
-                <div className="search-box">
-                    <input 
-                      type="text" 
-                      placeholder={ts('Search by name or area...', 'تلاش کریں...')} 
-                      className="search-input"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+                  <div className="selection-grid fade-in">
+                    {filteredCustomers.length === 0 ? (
+                        <p style={{ textAlign: 'center', color: '#94a3b8', padding: '2rem', fontSize: '0.9rem' }}>{t('No customers found.', 'کوئی گاہک نہیں ملا۔')}</p>
+                    ) : (
+                        filteredCustomers.map(customer => {
+                          const isAssignedElsewhere = customer.route && (!editRoute || customer.route !== editRoute.id);
+                          const isSelected = formData.customer_ids.includes(customer.id);
+                          
+                          return (
+                              <div 
+                                key={customer.id} 
+                                className={`member-card ${isSelected ? 'selected' : ''} ${isAssignedElsewhere ? 'disabled' : ''}`}
+                                onClick={() => !isAssignedElsewhere && handleCustomerToggle(customer)}
+                              >
+                                <div className="check-circle"></div>
+                                <div className="member-info">
+                                    <span className="member-name">{customer.first_name || customer.username}</span>
+                                    <span className="member-detail">{customer.area}, {customer.city}</span>
+                                    {isAssignedElsewhere && <span style={{ color: '#ef4444', fontSize: '0.7rem', fontWeight: 700 }}>{t('In Route', 'روٹ میں ہے')}</span>}
+                                </div>
+                              </div>
+                          );
+                        })
+                    )}
+                  </div>
+              )}
+
+              {activeTab === 'add' && (
+                <div className="integrated-add-form fade-in">
+                  <form onSubmit={handleManualCustomerSubmit}>
+                    <div className="compact-form-grid">
+                      <div className="form-group">
+                        <label>{t('Full Name', 'پورا نام')}</label>
+                        <input 
+                          required 
+                          type="text" 
+                          className="search-input" 
+                          value={manualCustomerForm.first_name}
+                          onChange={e => setManualCustomerForm({...manualCustomerForm, first_name: e.target.value})}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>{t('Phone', 'فون')}</label>
+                        <input 
+                          required 
+                          type="text" 
+                          className="search-input" 
+                          value={manualCustomerForm.phone_number}
+                          onChange={e => setManualCustomerForm({...manualCustomerForm, phone_number: e.target.value})}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="compact-form-grid" style={{ marginTop: '0.5rem' }}>
+                      <div className="form-group">
+                        <label>{t('House No', 'گھر نمبر')}</label>
+                        <input 
+                          type="text" 
+                          className="search-input" 
+                          value={manualCustomerForm.house_no}
+                          onChange={e => setManualCustomerForm({...manualCustomerForm, house_no: e.target.value})}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>{t('Street', 'گلی')}</label>
+                        <input 
+                          type="text" 
+                          className="search-input" 
+                          value={manualCustomerForm.street}
+                          onChange={e => setManualCustomerForm({...manualCustomerForm, street: e.target.value})}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="compact-form-grid" style={{ marginTop: '0.5rem' }}>
+                      <div className="form-group">
+                        <label>{t('Area', 'علاقہ')}</label>
+                        <input 
+                          type="text" 
+                          className="search-input" 
+                          value={manualCustomerForm.area}
+                          onChange={e => setManualCustomerForm({...manualCustomerForm, area: e.target.value})}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>{t('City', 'شہر')}</label>
+                        <input 
+                          required
+                          type="text" 
+                          className="search-input" 
+                          value={manualCustomerForm.city}
+                          onChange={e => setManualCustomerForm({...manualCustomerForm, city: e.target.value})}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="compact-form-grid" style={{ marginTop: '0.5rem' }}>
+                      <div className="form-group">
+                        <label>{t('Milk Type', 'دودھ کی قسم')}</label>
+                        <select 
+                          className="search-input"
+                          value={manualCustomerForm.milk_type}
+                          onChange={e => setManualCustomerForm({...manualCustomerForm, milk_type: e.target.value})}
+                        >
+                          <option value="buffalo">{t('Buffalo', 'بھینس')}</option>
+                          <option value="cow">{t('Cow', 'گائے')}</option>
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label>{t('Daily Qty (L)', 'روزانہ مقدار')}</label>
+                        <input 
+                          required
+                          type="number" 
+                          step="0.5"
+                          className="search-input" 
+                          value={manualCustomerForm.daily_quantity}
+                          onChange={e => setManualCustomerForm({...manualCustomerForm, daily_quantity: e.target.value})}
+                        />
+                      </div>
+                    </div>
+
+                    <button 
+                      type="submit" 
+                      className="btn-p" 
+                      disabled={addingCustomer}
+                      style={{ marginTop: '1rem', width: '100%' }}
+                    >
+                      {addingCustomer ? t('Adding...', 'شامل ہو رہا ہے...') : t('Save & Select Customer', 'محفوظ کریں اور منتخب کریں')}
+                    </button>
+                  </form>
                 </div>
               )}
             </div>
 
-            {activeTab === 'sequence' && (
-                <div className="sequencing-area fade-in">
-                    <div className="sortable-list">
-                        <DndContext 
-                            sensors={sensors}
-                            collisionDetection={closestCenter}
-                            onDragEnd={handleDragEnd}
-                        >
-                            <SortableContext 
-                                items={orderedCustomers.map(c => c.id)}
-                                strategy={verticalListSortingStrategy}
-                            >
-                                {orderedCustomers.map((customer, index) => (
-                                    <SortableCustomerItem 
-                                        key={customer.id} 
-                                        customer={customer} 
-                                        index={index}
-                                        t={t}
-                                    />
-                                ))}
-                            </SortableContext>
-                        </DndContext>
-                    </div>
-                </div>
-            )}
-
-            {activeTab === 'select' && (
-                <div className="selection-grid fade-in">
-                  {filteredCustomers.length === 0 ? (
-                      <p style={{ textAlign: 'center', color: '#94a3b8', padding: '2rem', fontSize: '0.9rem' }}>{t('No customers found.', 'کوئی گاہک نہیں ملا۔')}</p>
-                  ) : (
-                      filteredCustomers.map(customer => {
-                        const isAssignedElsewhere = customer.route && (!editRoute || customer.route !== editRoute.id);
-                        const isSelected = formData.customer_ids.includes(customer.id);
-                        
-                        return (
-                            <div 
-                              key={customer.id} 
-                              className={`member-card ${isSelected ? 'selected' : ''} ${isAssignedElsewhere ? 'disabled' : ''}`}
-                              onClick={() => !isAssignedElsewhere && handleCustomerToggle(customer)}
-                            >
-                              <div className="check-circle"></div>
-                              <div className="member-info">
-                                  <span className="member-name">{customer.first_name || customer.username}</span>
-                                  <span className="member-detail">{customer.area}, {customer.city}</span>
-                                  {isAssignedElsewhere && <span style={{ color: '#ef4444', fontSize: '0.7rem', fontWeight: 700 }}>{t('In Route', 'روٹ میں ہے')}</span>}
-                              </div>
-                            </div>
-                        );
-                      })
-                  )}
-                </div>
-            )}
-
-            {activeTab === 'add' && (
-              <div className="integrated-add-form fade-in">
-                <form onSubmit={handleManualCustomerSubmit}>
-                  <div className="compact-form-grid">
-                    <div className="form-group">
-                      <label>{t('Full Name', 'پورا نام')}</label>
-                      <input 
-                        required 
-                        type="text" 
-                        className="search-input" 
-                        value={manualCustomerForm.first_name}
-                        onChange={e => setManualCustomerForm({...manualCustomerForm, first_name: e.target.value})}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>{t('Phone', 'فون')}</label>
-                      <input 
-                        required 
-                        type="text" 
-                        className="search-input" 
-                        value={manualCustomerForm.phone_number}
-                        onChange={e => setManualCustomerForm({...manualCustomerForm, phone_number: e.target.value})}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="compact-form-grid" style={{ marginTop: '0.5rem' }}>
-                    <div className="form-group">
-                      <label>{t('House No', 'گھر نمبر')}</label>
-                      <input 
-                        type="text" 
-                        className="search-input" 
-                        value={manualCustomerForm.house_no}
-                        onChange={e => setManualCustomerForm({...manualCustomerForm, house_no: e.target.value})}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>{t('Street', 'گلی')}</label>
-                      <input 
-                        type="text" 
-                        className="search-input" 
-                        value={manualCustomerForm.street}
-                        onChange={e => setManualCustomerForm({...manualCustomerForm, street: e.target.value})}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="compact-form-grid" style={{ marginTop: '0.5rem' }}>
-                    <div className="form-group">
-                      <label>{t('Area', 'علاقہ')}</label>
-                      <input 
-                        type="text" 
-                        className="search-input" 
-                        value={manualCustomerForm.area}
-                        onChange={e => setManualCustomerForm({...manualCustomerForm, area: e.target.value})}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>{t('City', 'شہر')}</label>
-                      <input 
-                        required
-                        type="text" 
-                        className="search-input" 
-                        value={manualCustomerForm.city}
-                        onChange={e => setManualCustomerForm({...manualCustomerForm, city: e.target.value})}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="compact-form-grid" style={{ marginTop: '0.5rem' }}>
-                    <div className="form-group">
-                      <label>{t('Milk Type', 'دودھ کی قسم')}</label>
-                      <select 
-                        className="search-input"
-                        value={manualCustomerForm.milk_type}
-                        onChange={e => setManualCustomerForm({...manualCustomerForm, milk_type: e.target.value})}
-                      >
-                        <option value="buffalo">{t('Buffalo', 'بھینس')}</option>
-                        <option value="cow">{t('Cow', 'گائے')}</option>
-                      </select>
-                    </div>
-                    <div className="form-group">
-                      <label>{t('Daily Qty (L)', 'روزانہ مقدار')}</label>
-                      <input 
-                        required
-                        type="number" 
-                        step="0.5"
-                        className="search-input" 
-                        value={manualCustomerForm.daily_quantity}
-                        onChange={e => setManualCustomerForm({...manualCustomerForm, daily_quantity: e.target.value})}
-                      />
-                    </div>
-                  </div>
-
-                  <button 
-                    type="submit" 
-                    className="btn-p" 
-                    disabled={addingCustomer}
-                    style={{ marginTop: '1rem', width: '100%' }}
-                  >
-                    {addingCustomer ? t('Adding...', 'شامل ہو رہا ہے...') : t('Save & Select Customer', 'محفوظ کریں اور منتخب کریں')}
-                  </button>
-                </form>
-              </div>
-            )}
+            {error && <div style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '-0.5rem', marginBottom: '0.5rem', fontWeight: 700 }}>{error}</div>}
           </div>
-
-          {error && <div style={{ color: '#ef4444', fontSize: '0.8rem', marginBottom: '0.5rem', fontWeight: 700 }}>{error}</div>}
 
           <div className="modal-footer">
             <button type="button" className="btn-s" onClick={onClose}>{t('Cancel', 'کینسل')}</button>

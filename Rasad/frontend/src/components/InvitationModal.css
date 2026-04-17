@@ -133,16 +133,33 @@
 }
 
 .modal-footer {
-  display: flex;
-  justify-content: stretch;
-  gap: 1rem;
-  margin-top: 2rem;
-  width: 100%;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 1.25rem !important;
+  margin-top: 2.5rem;
+  width: 100% !important;
 }
 
 .modal-footer button {
-  flex: 1;
-  width: 100%;
+  flex: 1 !important;
+  height: 54px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 0 !important; /* Allow shrinking */
+  white-space: nowrap;
+}
+
+@media (max-width: 450px) {
+  .modal-content.glass-card {
+    padding: 1.5rem !important;
+  }
+  
+  .modal-footer {
+    gap: 0.75rem !important;
+  }
 }
 
 .link-label {
@@ -176,12 +193,13 @@
   background: #25D366;
   color: white;
   border: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 12px;
-  font-weight: 600;
+  padding: 1rem;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 1rem;
   cursor: pointer;
   flex: 1;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-whatsapp:hover {
@@ -194,35 +212,40 @@
 .btn-primary {
   flex: 1;
   padding: 1rem;
-  background: var(--grad-main);
+  background: #10b981; /* Matching the green success color from screenshot */
   color: white;
   border: none;
   border-radius: 14px;
   font-weight: 700;
+  font-size: 1rem;
   cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
 }
 
 .btn-primary:hover:not(:disabled) {
+  background: #059669;
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
 }
 
 .btn-secondary {
   flex: 1;
   padding: 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #f8fafc;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
   border-radius: 14px;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 1rem;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
+  background: #f1f5f9;
+  color: #1e293b;
+  border-color: #cbd5e1;
 }
 
 button:disabled {
