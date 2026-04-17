@@ -1,6 +1,6 @@
 export const config = {
   // Backend API base URL (frontend -> backend).
-  API_URL: 'http://localhost:8000/api',
+  API_URL: 'http://localhost:8000',
   // Frontend URL
-  FRONTEND_URL: 'http://localhost:5173',
+  FRONTEND_URL: 'https://rasad-ten.vercel.app/',
 };
