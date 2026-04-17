@@ -39,10 +39,18 @@ const Login = () => {
   const handleBypassLogin = async () => {
     setLoading(true);
     setError(null);
+    
+    // Set field values for visual feedback
+    const bypassPhone = '03010779759';
+    const bypassPass = 'saad1234';
+    setPhoneNumber(bypassPhone);
+    setPassword(bypassPass);
+
     try {
-      await login('03010779759', 'saad1234');
+      await login(bypassPhone, bypassPass);
       navigate('/');
     } catch (err) {
+      console.error('Bypass login failed:', err);
       if (err.response?.data) {
         const data = err.response.data;
         setError(data.detail || data.non_field_errors?.[0] || 'Bypass login failed: Account likely missing on new server.');
