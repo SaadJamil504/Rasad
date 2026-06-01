@@ -41,7 +41,7 @@ const Login = () => {
     setError(null);
     
     // Set field values for visual feedback
-    const bypassPhone = '03010779759';
+    const bypassPhone = '03010000000';
     const bypassPass = 'saad1234';
     setPhoneNumber(bypassPhone);
     setPassword(bypassPass);
