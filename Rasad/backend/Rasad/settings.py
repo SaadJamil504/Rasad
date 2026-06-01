@@ -65,7 +65,7 @@ CORS_ALLOWED_ORIGINS = [
 if env('FRONTEND_URL', default=None):
     CORS_ALLOWED_ORIGINS.append(env('FRONTEND_URL').rstrip('/'))
 # Add production backend if needed for Swagger/Internal
-CORS_ALLOWED_ORIGINS.append("https://rasad-production-a567.up.railway.app")
+CORS_ALLOWED_ORIGINS.append("https://rasad-production-2bde.up.railway.app")
 CORS_ALLOWED_ORIGINS.append("https://rasad-production.up.railway.app")
 
 ROOT_URLCONF = 'Rasad.urls'
@@ -155,7 +155,7 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 if env('FRONTEND_URL', default=None):
     CSRF_TRUSTED_ORIGINS.append(env('FRONTEND_URL').rstrip('/'))
-CSRF_TRUSTED_ORIGINS.append("https://rasad-production-a567.up.railway.app")
+CSRF_TRUSTED_ORIGINS.append("https://rasad-production-2bde.up.railway.app")
 CSRF_TRUSTED_ORIGINS.append("https://rasad-production.up.railway.app")
 
 # SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
